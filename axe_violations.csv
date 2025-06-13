@@ -1,0 +1,3 @@
+﻿Règle;Impact;Résumé;Aide;Sélecteur;Résumé de l'échec;HTML concerné;Tags concernés;Attributs concernés;Recommandations;Critères WCAG concernés
+landmark-unique;moderate;Ensure landmarks are unique;https://dequeuniversity.com/rules/axe/4.10/landmark-unique?application=axeAPI;.main-navigation__wrapper;"Fix any of the following:
+  The landmark must have a unique aria-label, aria-labelledby, or title to make landmarks distinguishable";"<nav class=""astro-V3N62DYZ main-navigation__wrapper"">";;;The landmark must have a unique aria-label, aria-labelledby, or title to make landmarks distinguishable;
