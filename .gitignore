@@ -1,0 +1,47 @@
+# Ignorer le contenu du répertoire reports
+reports/
+
+# Ignorer les fichiers de logs
+*.log
+
+# Ignorer les fichiers temporaires
+*.tmp
+*.temp
+
+# Ignorer les fichiers de cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Ignorer les fichiers d'environnement virtuel
+venv/
+env/
+ENV/
+
+# Ignorer les fichiers de configuration locaux
+.env
+.env.local
+
+# Ignorer les fichiers de base de données
+*.db
+*.sqlite
+*.sqlite3
+
+# Ignorer les fichiers de sauvegarde
+*.bak
+*.backup
+
+# Ignorer les fichiers de zone Windows
+*Zone.Identifier
+
+# Ignorer les fichiers de téléchargement
+*.zip
+*.tar.gz
+*.rar
+
+# Ignorer les captures d'écran temporaires
+focus_screenshots/
+simulation_*.png 
