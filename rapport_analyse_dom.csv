@@ -1,0 +1,591 @@
+Élément,Tag,ID,Classe,Rôle,Aria-label,Aria-describedby,Aria-hidden,Aria-expanded,Aria-controls,Aria-labelledby,Texte,Alt,Title,Href,Src,Type,Value,Placeholder,Media Path,Media Type,XPath,CSS Selector,Is Visible,Is Displayed,Is Enabled,Is Focusable,Position,Computed Style,Problèmes
+html,top,,,,,,,,,"Aller au contenu
+Ouvrir le menu
+Aller au bas de page
+We
+Work
+With
+You
+Rejoignez-nous !
+Contactez-nous
+EN
+Notre site est écoconçu
+Notre site est écoconçu
+Découvrez notre démarche
+Nous sommes Niji
+Point de vue du PDG
+Nos engagements
+Notre site est écoconçu
+Chiffres clés
+L'équipe dirigeante
+Nos adresses
+Actualités
+Savoir-faire
+Mobilité
+Énergie
+Expérience client
+Agilité
+Industrie
+Innovation
+Data
+Cybersécurité
+Secteurs d'activité
+Dalkia
+Fermob
+L’Oréal
+Picard Surgelés
+APRR
+CCI
+BNPP LS
+Travailler chez Niji
+Vivre Niji
+Nijicast
+Rejoignez-nous
+Contact
+Bdx-io
+Mentions légales
+Politique de vie privée
+Nos documents utiles
+©Niji 2025
+Mode éco+",,,,,,,,,,"id(""top"")",#top,True,True,True,False,"(0, 0, 1920, 941)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+head,,,,,,,,,,,,,,,,,,,,"id(""top"")/head[1]",head,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+meta,,,,,,,,,,,,,,,,,,,,"id(""top"")/head[1]/meta[1]",meta,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+title,,,,,,,,,,,,,,,,,,,,"id(""top"")/head[1]/title[1]",title,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+link,,,,,,,,,,,,,https://www.niji.fr/fr/,,,,,,,"id(""top"")/head[1]/link[1]",link,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+meta,,,,,,,,,,,,,,,,,,,,"id(""top"")/head[1]/meta[2]",meta,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+meta,,,,,,,,,,,,,,,,,,,,"id(""top"")/head[1]/meta[3]",meta,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+link,,,,,,,,,,,,,https://www.niji.fr/fr/,,,,,,,"id(""top"")/head[1]/link[2]",link,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+link,,,,,,,,,,,,,https://www.niji.fr/en/,,,,,,,"id(""top"")/head[1]/link[3]",link,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+link,,,,,,,,,,,,,https://www.niji.fr/sitemap-index.xml,,,,,,,"id(""top"")/head[1]/link[4]",link,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+meta,,,,,,,,,,,,,,,,,,,,"id(""top"")/head[1]/meta[4]",meta,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+link,,,,,,,,,,,,,https://www.niji.fr/favicon.ico,,image/x-icon,,,,,"id(""top"")/head[1]/link[5]",link,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+link,,,,,,,,,,,,,https://www.niji.fr/favicon_16.png,,image/png,,,,,"id(""top"")/head[1]/link[6]",link,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+link,,,,,,,,,,,,,https://www.niji.fr/favicon_32.png,,image/png,,,,,"id(""top"")/head[1]/link[7]",link,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+link,,,,,,,,,,,,,https://www.niji.fr/apple-touch-icon.png,,,,,,,"id(""top"")/head[1]/link[8]",link,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+link,,,,,,,,,,,,,https://www.niji.fr/favicon-32x32.png,,image/png,,,,,"id(""top"")/head[1]/link[9]",link,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+link,,,,,,,,,,,,,https://www.niji.fr/favicon-16x16.png,,image/png,,,,,"id(""top"")/head[1]/link[10]",link,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+link,,,,,,,,,,,,,https://www.niji.fr/site.webmanifest,,,,,,,"id(""top"")/head[1]/link[11]",link,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+link,,,,,,,,,,,,,https://www.niji.fr/safari-pinned-tab.svg,,,,,,,"id(""top"")/head[1]/link[12]",link,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+meta,,,,,,,,,,,,,,,,,,,,"id(""top"")/head[1]/meta[5]",meta,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+meta,,,,,,,,,,,,,,,,,,,,"id(""top"")/head[1]/meta[6]",meta,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+meta,,,,,,,,,,,,,,,,,,,,"id(""top"")/head[1]/meta[7]",meta,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+link,,,,,,,,,,,,,https://www.niji.fr/fonts/n27-bold-webfont.woff2,,font/woff2,,,,,"id(""top"")/head[1]/link[13]",link,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+link,,,,,,,,,,,,,https://www.niji.fr/fonts/n27-bold-webfont.woff2,,font/woff2,,,,,"id(""top"")/head[1]/link[14]",link,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+link,,,,,,,,,,,,,https://www.niji.fr/fonts/n27-bold-webfont.woff2,,font/woff2,,,,,"id(""top"")/head[1]/link[15]",link,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+link,,,,,,,,,,,,,https://www.niji.fr/fonts/n27-medium-webfont.woff2,,font/woff2,,,,,"id(""top"")/head[1]/link[16]",link,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+style,,,,,,,,,,,,,,,,,,,,"id(""top"")/head[1]/style[1]",style,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+link,,,,,,,,,,,,,https://www.niji.fr/fr/,,,,,,,"id(""top"")/head[1]/link[17]",link,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+meta,,,,,,,,,,,,,,,,,,,,"id(""top"")/head[1]/meta[8]",meta,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+meta,,,,,,,,,,,,,,,,,,,,"id(""top"")/head[1]/meta[9]",meta,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+meta,,,,,,,,,,,,,,,,,,,,"id(""top"")/head[1]/meta[10]",meta,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+meta,,,,,,,,,,,,,,,,,,,,"id(""top"")/head[1]/meta[11]",meta,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+meta,,,,,,,,,,,,,,,,,,,,"id(""top"")/head[1]/meta[12]",meta,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+meta,,,,,,,,,,,,,,,,,,,,"id(""top"")/head[1]/meta[13]",meta,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+meta,,,,,,,,,,,,,,,,,,,,"id(""top"")/head[1]/meta[14]",meta,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+meta,,,,,,,,,,,,,,,,,,,,"id(""top"")/head[1]/meta[15]",meta,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+meta,,,,,,,,,,,,,,,,,,,,"id(""top"")/head[1]/meta[16]",meta,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+meta,,,,,,,,,,,,,,,,,,,,"id(""top"")/head[1]/meta[17]",meta,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+meta,,,,,,,,,,,,,,,,,,,,"id(""top"")/head[1]/meta[18]",meta,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+meta,,,,,,,,,,,,,,,,,,,,"id(""top"")/head[1]/meta[19]",meta,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+link,,,,,,,,,,,,,https://www.niji.fr/styles/print.css,,,,,,,"id(""top"")/head[1]/link[18]",link,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+meta,,,,,,,,,,,,,,,,,,,,"id(""top"")/head[1]/meta[20]",meta,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+script,,,,,,,,,,,,,,,application/ld+json,,,,,"id(""top"")/head[1]/script[1]",script,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+script,,,,,,,,,,,,,,https://plausible.io/js/script.tagged-events.outbound-links.js,,,,,,"id(""top"")/head[1]/script[2]",script,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+script,,,,,,,,,,,,,,https://www.niji.fr/hoisted.e6697596.js,module,,,,,"id(""top"")/head[1]/script[3]",script,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+link,,,,,,,,,,,,,https://www.niji.fr/styles/styles-e559e831c432f5e4d2c104b36fbd6321.css,,,,,,,"id(""top"")/head[1]/link[19]",link,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+body,,null js-mode-set eco,,,,,,,,"Aller au contenu
+Ouvrir le menu
+Aller au bas de page
+We
+Work
+With
+You
+Rejoignez-nous !
+Contactez-nous
+EN
+Notre site est écoconçu
+Notre site est écoconçu
+Découvrez notre démarche
+Nous sommes Niji
+Point de vue du PDG
+Nos engagements
+Notre site est écoconçu
+Chiffres clés
+L'équipe dirigeante
+Nos adresses
+Actualités
+Savoir-faire
+Mobilité
+Énergie
+Expérience client
+Agilité
+Industrie
+Innovation
+Data
+Cybersécurité
+Secteurs d'activité
+Dalkia
+Fermob
+L’Oréal
+Picard Surgelés
+APRR
+CCI
+BNPP LS
+Travailler chez Niji
+Vivre Niji
+Nijicast
+Rejoignez-nous
+Contact
+Bdx-io
+Mentions légales
+Politique de vie privée
+Nos documents utiles
+©Niji 2025
+Mode éco+",,,,,,,,,,body,body.null.js-mode-set.eco,True,True,True,False,"(0, 0, 1920, 941)","block visible 1 relative auto rgba(255, 255, 255, 1) rgba(0, 0, 0, 1) 16px 400",
+script,,,,,,,,,,,,,,,,,,,,body/script[1],script,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+div,,available-width,,,,,,,,,,,,,,,,,,body/div[1],div.available-width,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+header,header,astro-2AHPRVBM,,,,,,,,"Aller au contenu
+Ouvrir le menu
+Aller au bas de page
+We
+Work
+With
+You",,,,,,,,,,"id(""header"")",#header,True,True,True,False,"(0, 0, 1920, 0)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+div,skip-links,astro-2AHPRVBM,,,,,,,,"Aller au contenu
+Ouvrir le menu
+Aller au bas de page",,,,,,,,,,"id(""skip-links"")",#skip-links,True,True,True,False,"(0, 0, 1920, 0)","block visible 1 fixed 999 rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+a,,astro-2AHPRVBM focus:not-sr-only sr-only,,,,,,,,Aller au contenu,,,https://www.niji.fr/fr/#main-content,,,,,,,"id(""skip-links"")/a[1]",a.astro-2AHPRVBM.focus:not-sr-only.sr-only,True,True,True,True,"(-1, -1, 1, 1)","block visible 1 absolute auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+a,skiplink-sidemenu,astro-2AHPRVBM focus:not-sr-only sr-only,,,,,,,,Ouvrir le menu,,,https://www.niji.fr/fr/#btnOpenCloseSidemenu,,,,,,,"id(""skiplink-sidemenu"")",#skiplink-sidemenu,True,True,True,True,"(-1, -1, 1, 1)","block visible 1 absolute auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+a,,astro-2AHPRVBM focus:not-sr-only sr-only,,,,,,,,Aller au bas de page,,,https://www.niji.fr/fr/#footer,,,,,,,"id(""skip-links"")/a[3]",a.astro-2AHPRVBM.focus:not-sr-only.sr-only,True,True,True,True,"(-1, -1, 1, 1)","block visible 1 absolute auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+div,menu,astro-2AHPRVBM,,,,,,,,"We
+Work
+With
+You",,,,,,,,,,"id(""menu"")",#menu,True,True,True,False,"(0, 0, 1920, 80)","block visible 1 fixed 10 rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+div,main-navigation,astro-V3N62DYZ main-navigation nav,,Menu,,,,,,"We
+Work
+With
+You",,,,,,,,,,"id(""main-navigation"")",#main-navigation,True,True,True,False,"(0, 0, 1904, 80)","flex visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+a,,astro-WUY2AK4C logo-link,,,,,,,,,,Logo Niji,https://www.niji.fr/fr/,,,,,,,"id(""main-navigation"")/a[1]",a.astro-WUY2AK4C.logo-link,True,True,True,True,"(0, 0, 80, 80)","block visible 1 relative 1 rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",Lien sans texte explicite - Lien sans texte visible ni aria-label
+img,,astro-WUY2AK4C niji-logo logo-wire wire-only-opacity,,,,,,,,,Logo Niji,,,https://www.niji.fr/images/logo-niji-wire.svg,,,,https://www.niji.fr/images/logo-niji-wire.svg,image,"id(""main-navigation"")/a[1]/img[1]",img.astro-WUY2AK4C.niji-logo.logo-wire.wire-only-opacity,True,True,True,False,"(0, 0, 80, 80)","block visible 1 absolute auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+img,,astro-WUY2AK4C niji-logo logo-standard standard-only-opacity,presentation,,,,,,,,,,,https://www.niji.fr/images/logo-niji-standard.svg,,,,https://www.niji.fr/images/logo-niji-standard.svg,image,"id(""main-navigation"")/a[1]/img[2]",img.astro-WUY2AK4C.niji-logo.logo-standard.standard-only-opacity,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+img,,astro-WUY2AK4C niji-logo access-only-opacity,presentation,,,,,,,,,,,https://www.niji.fr/images/logo-niji-access.svg,,,,https://www.niji.fr/images/logo-niji-access.svg,image,"id(""main-navigation"")/a[1]/img[3]",img.astro-WUY2AK4C.niji-logo.access-only-opacity,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+nav,,astro-V3N62DYZ main-navigation__wrapper,,,,,,,,"We
+Work
+With
+You",,,,,,,,,,"id(""main-navigation"")/nav[1]",nav.astro-V3N62DYZ.main-navigation__wrapper,True,True,True,False,"(80, 29, 267, 22)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+ul,,astro-V3N62DYZ main-navigation__list,,,,,,,,"We
+Work
+With
+You",,,,,,,,,,"id(""main-navigation"")/nav[1]/ul[1]",ul.astro-V3N62DYZ.main-navigation__list,True,True,True,False,"(80, 29, 267, 22)","grid visible 1 static 1 rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+li,,astro-V3N62DYZ main-navigation__item,,,,,,,,We,,,,,,0,,,,"id(""main-navigation"")/nav[1]/ul[1]/li[1]",li.astro-V3N62DYZ.main-navigation__item,True,True,True,False,"(128, 29, 28, 22)","list-item visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+a,navWe,astro-V3N62DYZ js-header-nav main-navigation__link active,,,,,,,,We,,,https://www.niji.fr/fr/#we,,,,,,,"id(""navWe"")",#navWe,True,True,True,True,"(128, 29, 28, 22)","inline visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 20px 700","Lien avec texte insuffisant - Texte du lien trop court: ""We"""
+li,,astro-V3N62DYZ main-navigation__item,,,,,,,,Work,,,,,,0,,,,"id(""main-navigation"")/nav[1]/ul[1]/li[2]",li.astro-V3N62DYZ.main-navigation__item,True,True,True,False,"(180, 29, 45, 22)","list-item visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+a,navWork,astro-V3N62DYZ js-header-nav main-navigation__link,,,,,,,,Work,,,https://www.niji.fr/fr/#work,,,,,,,"id(""navWork"")",#navWork,True,True,True,True,"(180, 29, 45, 22)","inline visible 1 static auto rgba(0, 0, 0, 0) rgba(113, 113, 113, 1) 20px 700",
+li,,astro-V3N62DYZ main-navigation__item,,,,,,,,With,,,,,,0,,,,"id(""main-navigation"")/nav[1]/ul[1]/li[3]",li.astro-V3N62DYZ.main-navigation__item,True,True,True,False,"(249, 29, 41, 22)","list-item visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+a,navWith,astro-V3N62DYZ js-header-nav main-navigation__link,,,,,,,,With,,,https://www.niji.fr/fr/#with,,,,,,,"id(""navWith"")",#navWith,True,True,True,True,"(249, 29, 41, 22)","inline visible 1 static auto rgba(0, 0, 0, 0) rgba(113, 113, 113, 1) 20px 700",
+li,,astro-V3N62DYZ main-navigation__item,,,,,,,,You,,,,,,0,,,,"id(""main-navigation"")/nav[1]/ul[1]/li[4]",li.astro-V3N62DYZ.main-navigation__item,True,True,True,False,"(315, 29, 32, 22)","list-item visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+a,navYou,astro-V3N62DYZ js-header-nav main-navigation__link,,,,,,,,You,,,https://www.niji.fr/fr/#you,,,,,,,"id(""navYou"")",#navYou,True,True,True,True,"(315, 29, 32, 22)","inline visible 1 static auto rgba(0, 0, 0, 0) rgba(113, 113, 113, 1) 20px 700",
+nav,,astro-5QUVGTRI icon-navigation,,,,,,,,"Rejoignez-nous !
+Contactez-nous
+EN",,,,,,,,,,body/nav[1],nav.astro-5QUVGTRI.icon-navigation,True,True,True,False,"(1544, 16, 304, 48)","block visible 1 fixed 201 rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+ul,,astro-5QUVGTRI icon-navigation__list,,,,,,,,"Rejoignez-nous !
+Contactez-nous
+EN",,,,,,,,,,body/nav[1]/ul[1],ul.astro-5QUVGTRI.icon-navigation__list,True,True,True,False,"(1544, 16, 304, 48)","flex visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+li,,astro-5QUVGTRI icon-navigation__item,,,,,,,,Rejoignez-nous !,,,,,,0,,,,body/nav[1]/ul[1]/li[1],li.astro-5QUVGTRI.icon-navigation__item,True,True,True,False,"(1552, 16, 183, 48)","list-item visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+a,,btn btn--icon-txt btn--hide-txt astro-5QUVGTRI icon-navigation__link,,,,,,,,Rejoignez-nous !,,,https://www.niji.fr/fr/you/rejoignez-nous,,,,,,,body/nav[1]/ul[1]/li[1]/a[1],a.btn.btn--icon-txt.btn--hide-txt.astro-5QUVGTRI.icon-navigation__link,True,True,True,True,"(1552, 16, 183, 48)","flex visible 1 relative auto rgba(255, 255, 255, 1) rgba(0, 0, 0, 1) 16px 400",
+div,,astro-5QUVGTRI btn__txt,,,,,,,,Rejoignez-nous !,,,,,,,,,,body/nav[1]/ul[1]/li[1]/a[1]/div[1],div.astro-5QUVGTRI.btn__txt,True,True,True,False,"(1553, 30, 181, 21)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 700",
+div,,astro-5QUVGTRI btn__icon,,,,,,,,,,,,,,,,,,body/nav[1]/ul[1]/li[1]/a[1]/div[2],div.astro-5QUVGTRI.btn__icon,True,True,True,False,"(1687, 17, 46, 46)","flex visible 1 absolute auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+svg,,astro-5QUVGTRI,,,,,,,,,,,,,,,,,,body/nav[1]/ul[1]/li[1]/a[1]/div[2]/svg[1],svg.astro-5QUVGTRI,True,True,True,False,"(1701, 30, 20, 20)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+path,,astro-5QUVGTRI,,,,,,,,,,,,,,,,,,body/nav[1]/ul[1]/li[1]/a[1]/div[2]/svg[1]/path[1],path.astro-5QUVGTRI,True,True,True,False,"(1701, 30, 19.9990234375, 20.000167846679688)","inline visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+path,,astro-5QUVGTRI,,,,,,,,,,,,,,,,,,body/nav[1]/ul[1]/li[1]/a[1]/div[2]/svg[1]/path[2],path.astro-5QUVGTRI,True,True,True,False,"(1703, 34, 13.682861328125, 13.675971984863281)","inline visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+li,,astro-5QUVGTRI icon-navigation__item,,,,,,,,Contactez-nous,,,,,,0,,,,body/nav[1]/ul[1]/li[2],li.astro-5QUVGTRI.icon-navigation__item,True,True,True,False,"(1743, 16, 48, 48)","list-item visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+a,,btn btn--icon-txt btn--hide-txt astro-5QUVGTRI icon-navigation__link,,,,,,,,Contactez-nous,,,https://www.niji.fr/fr/you/contact,,,,,,,body/nav[1]/ul[1]/li[2]/a[1],a.btn.btn--icon-txt.btn--hide-txt.astro-5QUVGTRI.icon-navigation__link,True,True,True,True,"(1743, 16, 48, 48)","flex visible 1 relative auto rgba(255, 255, 255, 1) rgba(0, 0, 0, 1) 16px 400",
+div,,astro-5QUVGTRI btn__txt,,,,,,,,Contactez-nous,,,,,,,,,,body/nav[1]/ul[1]/li[2]/a[1]/div[1],div.astro-5QUVGTRI.btn__txt,True,True,True,False,"(1744, 30, 178, 21)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 700",
+div,,astro-5QUVGTRI btn__icon,,,,,,,,,,,,,,,,,,body/nav[1]/ul[1]/li[2]/a[1]/div[2],div.astro-5QUVGTRI.btn__icon,True,True,True,False,"(1744, 17, 46, 46)","flex visible 1 absolute auto rgba(255, 255, 255, 1) rgba(0, 0, 0, 1) 16px 400",
+svg,,astro-5QUVGTRI,,,,,,,,,,,,,,,,,,body/nav[1]/ul[1]/li[2]/a[1]/div[2]/svg[1],svg.astro-5QUVGTRI,True,True,True,False,"(1757, 32, 20, 16)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+path,,astro-5QUVGTRI,,,,,,,,,,,,,,,,,,body/nav[1]/ul[1]/li[2]/a[1]/div[2]/svg[1]/path[1],path.astro-5QUVGTRI,True,True,True,False,"(1757, 32, 20, 16)","inline visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+path,,astro-5QUVGTRI,,,,,,,,,,,,,,,,,,body/nav[1]/ul[1]/li[2]/a[1]/div[2]/svg[1]/path[2],path.astro-5QUVGTRI,True,True,True,False,"(1760, 35, 14, 7)","inline visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+li,,astro-5QUVGTRI icon-navigation__item hidden,,,,,,,,EN,,,,,,0,,,,body/nav[1]/ul[1]/li[3],li.astro-5QUVGTRI.icon-navigation__item.hidden,True,True,True,False,"(1799, 16, 48, 48)","list-item visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+a,,btn btn--icon-txt astro-5QUVGTRI icon-navigation__link lang,,,,,,,,EN,,English version,https://www.niji.fr/en/,,,,,,,body/nav[1]/ul[1]/li[3]/a[1],a.btn.btn--icon-txt.astro-5QUVGTRI.icon-navigation__link.lang,True,True,True,True,"(1799, 16, 48, 48)","flex visible 1 relative auto rgba(255, 255, 255, 1) rgba(0, 0, 0, 1) 16px 400","Lien avec texte insuffisant - Texte du lien trop court: ""EN"""
+div,,astro-5QUVGTRI btn__txt,,,,,,,,EN,,,,,,,,,,body/nav[1]/ul[1]/li[3]/a[1]/div[1],div.astro-5QUVGTRI.btn__txt,True,True,True,False,"(1813, 30, 21, 21)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+button,btnOpenCloseSidemenu,btn btn--common astro-VJKHDL36 bottom-navigation__link btn--bottom btn--icon-txt burger-button,,Menu,,,,,,,,,,,submit,,,,,"id(""btnOpenCloseSidemenu"")",#btnOpenCloseSidemenu,True,True,True,True,"(1856, 16, 48, 48)","block visible 1 fixed 201 rgba(255, 255, 255, 1) rgba(0, 0, 0, 1) 16px 400",
+span,,astro-VJKHDL36 btn__icon,,,,,,,,,,,,,,,,,,"id(""btnOpenCloseSidemenu"")/span[1]",span.astro-VJKHDL36.btn__icon,True,True,True,False,"(1857, 17, 46, 46)","flex visible 1 absolute auto rgba(255, 255, 255, 1) rgba(0, 0, 0, 1) 16px 400",
+span,,astro-VJKHDL36,,,,,,,,,,,,,,,,,,"id(""btnOpenCloseSidemenu"")/span[1]/span[1]",span.astro-VJKHDL36,True,True,True,False,"(1870, 35, 19, 1)","block visible 1 absolute auto rgba(0, 0, 0, 1) rgba(0, 0, 0, 1) 16px 400",
+span,,astro-VJKHDL36,,,,,,,,,,,,,,,,,,"id(""btnOpenCloseSidemenu"")/span[1]/span[2]",span.astro-VJKHDL36,True,True,True,False,"(1870, 40, 19, 1)","block visible 1 absolute auto rgba(0, 0, 0, 1) rgba(0, 0, 0, 1) 16px 400",
+span,,astro-VJKHDL36,,,,,,,,,,,,,,,,,,"id(""btnOpenCloseSidemenu"")/span[1]/span[3]",span.astro-VJKHDL36,True,True,True,False,"(1870, 45, 19, 1)","block visible 1 absolute auto rgba(0, 0, 0, 1) rgba(0, 0, 0, 1) 16px 400",
+div,burger-navigation,astro-QG7NCWER,,,,,,,,,,,,,,,,,,"id(""burger-navigation"")",#burger-navigation,True,True,True,False,"(0, 0, 1920, 941)","block visible 1 fixed 200 rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+div,burger-overlay,astro-QG7NCWER,,,,,,,,,,,,,,,,,,"id(""burger-overlay"")",#burger-overlay,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+nav,sidemenu,astro-QG7NCWER burger-nav,,,,true,,,,,,,,,,,,,,"id(""sidemenu"")",#sidemenu,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+ul,,astro-QG7NCWER burger-nav__list,,,,,,,,,,,,,,,,,,"id(""sidemenu"")/ul[1]",ul.astro-QG7NCWER.burger-nav__list,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+div,,astro-NTVJQKKV lazy-loader,,,,,,,,,,,,,,,,,,"id(""sidemenu"")/ul[1]/div[1]",div.astro-NTVJQKKV.lazy-loader,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+template,,astro-NTVJQKKV,,,,,,,,,,,,,,,,,,"id(""sidemenu"")/ul[1]/div[1]/template[1]",template.astro-NTVJQKKV,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+main,main-content,,,,,,,,,"Notre site est écoconçu
+Notre site est écoconçu
+Découvrez notre démarche
+Nous sommes Niji
+Point de vue du PDG
+Nos engagements
+Notre site est écoconçu
+Chiffres clés
+L'équipe dirigeante
+Nos adresses
+Actualités
+Savoir-faire
+Mobilité
+Énergie
+Expérience client
+Agilité
+Industrie
+Innovation
+Data
+Cybersécurité
+Secteurs d'activité
+Dalkia
+Fermob
+L’Oréal
+Picard Surgelés
+APRR
+CCI
+BNPP LS
+Travailler chez Niji
+Vivre Niji
+Nijicast
+Rejoignez-nous
+Contact
+Bdx-io
+Mentions légales
+Politique de vie privée
+Nos documents utiles
+©Niji 2025",,,,,,,,,,"id(""main-content"")",#main-content,True,True,True,False,"(0, 0, 1920, 941)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+h1,,sr-only astro-UNKHNG6A,,,,,,,,Notre site est écoconçu,,,,,,,,,,"id(""main-content"")/h1[1]",h1.sr-only.astro-UNKHNG6A,True,True,True,False,"(-1, -1, 1, 1)","block visible 1 absolute auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 32px 700",Titre masqué visuellement - Titre h1 masqué visuellement
+div,,astro-UNKHNG6A landing-container,,,,,,,,"Notre site est écoconçu
+Découvrez notre démarche
+Nous sommes Niji
+Point de vue du PDG
+Nos engagements
+Notre site est écoconçu
+Chiffres clés
+L'équipe dirigeante
+Nos adresses
+Actualités
+Savoir-faire
+Mobilité
+Énergie
+Expérience client
+Agilité
+Industrie
+Innovation
+Data
+Cybersécurité
+Secteurs d'activité
+Dalkia
+Fermob
+L’Oréal
+Picard Surgelés
+APRR
+CCI
+BNPP LS
+Travailler chez Niji
+Vivre Niji
+Nijicast
+Rejoignez-nous
+Contact
+Bdx-io
+Mentions légales
+Politique de vie privée
+Nos documents utiles
+©Niji 2025",,,,,,,,,,"id(""main-content"")/div[1]",div.astro-UNKHNG6A.landing-container,True,True,True,False,"(0, 0, 1920, 941)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+div,,astro-ICMXTWYB parallax snap,,,,,,,,"Notre site est écoconçu
+Découvrez notre démarche
+Nous sommes Niji
+Point de vue du PDG
+Nos engagements
+Notre site est écoconçu
+Chiffres clés
+L'équipe dirigeante
+Nos adresses
+Actualités",,,,,,,,,,"id(""main-content"")/div[1]/div[1]",div.astro-ICMXTWYB.parallax.snap,True,True,True,False,"(0, 0, 1905, 941)","flex visible 1 relative auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+div,,astro-ICMXTWYB image-wrapper,,,,,,,,,,,,,,,,,,"id(""main-content"")/div[1]/div[1]/div[1]",div.astro-ICMXTWYB.image-wrapper,True,True,True,False,"(964, 0, 941, 941)","block visible 1 absolute -1 rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+div,,astro-IGVEK2JK switchable-image,,,,,,,,,,,,,,,,,,"id(""main-content"")/div[1]/div[1]/div[1]/div[1]",div.astro-IGVEK2JK.switchable-image,True,True,True,False,"(964, 0, 941, 941)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+div,,astro-IGVEK2JK wire-image,,,,,,,,,,,,,,,,,,"id(""main-content"")/div[1]/div[1]/div[1]/div[1]/div[1]",div.astro-IGVEK2JK.wire-image,True,True,True,False,"(964, 0, 941, 941)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+picture,,astro-IGVEK2JK,,,,,,,,,,,,,,,,,,"id(""main-content"")/div[1]/div[1]/div[1]/div[1]/div[1]/picture[1]",picture.astro-IGVEK2JK,True,True,True,False,"(964, 0, 941, 941)","flex visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+img,,astro-IGVEK2JK,,,,,,,,,we2.jpg,,,https://www.niji.fr/assets/we_a4db31553d.svg,,,,https://www.niji.fr/assets/we_a4db31553d.svg,image,"id(""main-content"")/div[1]/div[1]/div[1]/div[1]/div[1]/picture[1]/img[1]",img.astro-IGVEK2JK,True,True,True,False,"(964, 0, 941, 941)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400","Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: we2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: we2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: work2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: work2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: with2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: with2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: you.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: you.jpg"
+div,,astro-IGVEK2JK standard-image,,,,,,,,,,,,,,,,,,"id(""main-content"")/div[1]/div[1]/div[1]/div[1]/div[2]",div.astro-IGVEK2JK.standard-image,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+picture,,,,,,,,,,,,,,,,,,,,"id(""main-content"")/div[1]/div[1]/div[1]/div[1]/div[2]/picture[1]",picture,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+source,,,,,,,,,,,,,,,image/avif,,,,,"id(""main-content"")/div[1]/div[1]/div[1]/div[1]/div[2]/picture[1]/source[1]",source,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+source,,,,,,,,,,,,,,,image/webp,,,,,"id(""main-content"")/div[1]/div[1]/div[1]/div[1]/div[2]/picture[1]/source[2]",source,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+source,,,,,,,,,,,,,,,image/jpeg,,,,,"id(""main-content"")/div[1]/div[1]/div[1]/div[1]/div[2]/picture[1]/source[3]",source,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+img,,astro-IGVEK2JK,,,,,,,,,we2.jpg,,,https://www.niji.fr/assets/we2_d735ce75ec_1mUk6P.jpg,,,,https://www.niji.fr/assets/we2_d735ce75ec_1mUk6P.jpg,image,"id(""main-content"")/div[1]/div[1]/div[1]/div[1]/div[2]/picture[1]/img[1]",img.astro-IGVEK2JK,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,"Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: we2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: we2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: work2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: work2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: with2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: with2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: you.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: you.jpg"
+section,we,astro-JLJ3B2F4 landing-component,,,,,,,,"Notre site est écoconçu
+Découvrez notre démarche
+Nous sommes Niji
+Point de vue du PDG
+Nos engagements
+Notre site est écoconçu
+Chiffres clés
+L'équipe dirigeante
+Nos adresses
+Actualités",,,,,,,,,,"id(""we"")",#we,True,True,True,False,"(0, 0, 1905, 941)","block visible 1 relative auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+div,,astro-JLJ3B2F4 js-disappear-on-scroll landing-link,,,,,,,,"Notre site est écoconçu
+Découvrez notre démarche",,,,,,,,,,"id(""we"")/div[1]",div.astro-JLJ3B2F4.js-disappear-on-scroll.landing-link,True,True,True,False,"(0, 0, 1905, 941)","flex visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+a,,astro-JLJ3B2F4 landing-txt,,,,,,,,"Notre site est écoconçu
+Découvrez notre démarche",,,https://www.niji.fr/fr/we/notre-site-est-ecoconcu,,,,,,,"id(""we"")/div[1]/a[1]",a.astro-JLJ3B2F4.landing-txt,True,True,True,True,"(238, 344, 1066, 254)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400","Lien sans texte explicite - Lien sans texte visible ni aria-label, Lien sans texte explicite - Lien sans texte visible ni aria-label, Lien sans texte explicite - Lien sans texte visible ni aria-label"
+h2,,astro-JLJ3B2F4 fade-in-up-anim delay400 text-stroke title visible,,,,,,,,Notre site est écoconçu,,,,,,,,,,"id(""we"")/div[1]/a[1]/h2[1]",h2.astro-JLJ3B2F4.fade-in-up-anim.delay400.text-stroke.title.visible,True,True,True,False,"(238, 344, 799, 192)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(255, 255, 255, 1) 96px 800",
+span,,astro-JLJ3B2F4 highlight-bg,,,,,,,,Notre site est écoconçu,,,,,,,,,,"id(""we"")/div[1]/a[1]/h2[1]/span[1]",span.astro-JLJ3B2F4.highlight-bg,True,True,True,False,"(238, 344, 634, 192)","inline visible 1 static auto rgba(255, 255, 255, 1) rgba(255, 255, 255, 1) 96px 800",
+div,,astro-JLJ3B2F4 fade-in-up-anim delay600 discover-wrapper visible,,,,,,,,Découvrez notre démarche,,,,,,,,,,"id(""we"")/div[1]/a[1]/div[1]",div.astro-JLJ3B2F4.fade-in-up-anim.delay600.discover-wrapper.visible,True,True,True,False,"(238, 558, 261, 40)","block visible 1 relative auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+div,,astro-JLJ3B2F4 highlight-bg discover,,,,,,,,Découvrez notre démarche,,,,,,,,,,"id(""we"")/div[1]/a[1]/div[1]/div[1]",div.astro-JLJ3B2F4.highlight-bg.discover,True,True,True,False,"(238, 566, 253, 24)","block visible 1 static auto rgba(255, 255, 255, 1) rgba(0, 0, 0, 1) 16px 700",
+nav,,astro-NDMLHUYC js-disappear-on-scroll landing-nav,,,,,,,,"Nous sommes Niji
+Point de vue du PDG
+Nos engagements
+Notre site est écoconçu
+Chiffres clés
+L'équipe dirigeante
+Nos adresses
+Actualités",,,,,,,,,,"id(""we"")/nav[1]",nav.astro-NDMLHUYC.js-disappear-on-scroll.landing-nav,True,True,True,False,"(16, 670, 170, 255)","block visible 1 absolute 1 rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+ul,,astro-NDMLHUYC landing-nav__list,,,,,,,,"Nous sommes Niji
+Point de vue du PDG
+Nos engagements
+Notre site est écoconçu
+Chiffres clés
+L'équipe dirigeante
+Nos adresses
+Actualités",,,,,,,,,,"id(""we"")/nav[1]/ul[1]",ul.astro-NDMLHUYC.landing-nav__list,True,True,True,False,"(16, 670, 170, 255)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+li,,astro-NDMLHUYC landing-nav__item,,,,,,,,Nous sommes Niji,,,,,,0,,,,"id(""we"")/nav[1]/ul[1]/li[1]",li.astro-NDMLHUYC.landing-nav__item,True,True,True,False,"(16, 670, 134, 28)","list-item visible 1 relative auto rgba(255, 255, 255, 1) rgba(0, 0, 0, 1) 16px 400",
+a,,astro-NDMLHUYC landing-nav__link,,,,,,,,Nous sommes Niji,,,https://www.niji.fr/fr/we/nous-sommes-niji,,,,,,,"id(""we"")/nav[1]/ul[1]/li[1]/a[1]",a.astro-NDMLHUYC.landing-nav__link,True,True,True,True,"(17, 671, 132, 26)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 14.4px 600",
+li,,astro-NDMLHUYC landing-nav__item,,,,,,,,Point de vue du PDG,,,,,,0,,,,"id(""we"")/nav[1]/ul[1]/li[2]",li.astro-NDMLHUYC.landing-nav__item,True,True,True,False,"(16, 702, 147, 28)","list-item visible 1 relative auto rgba(255, 255, 255, 1) rgba(0, 0, 0, 1) 16px 400",
+a,,astro-NDMLHUYC landing-nav__link,,,,,,,,Point de vue du PDG,,,https://www.niji.fr/fr/we/point-de-vue-du-pdg,,,,,,,"id(""we"")/nav[1]/ul[1]/li[2]/a[1]",a.astro-NDMLHUYC.landing-nav__link,True,True,True,True,"(17, 703, 145, 26)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 14.4px 600",
+li,,astro-NDMLHUYC landing-nav__item,,,,,,,,Nos engagements,,,,,,0,,,,"id(""we"")/nav[1]/ul[1]/li[3]",li.astro-NDMLHUYC.landing-nav__item,True,True,True,False,"(16, 735, 135, 28)","list-item visible 1 relative auto rgba(255, 255, 255, 1) rgba(0, 0, 0, 1) 16px 400",
+a,,astro-NDMLHUYC landing-nav__link,,,,,,,,Nos engagements,,,https://www.niji.fr/fr/we/nos-engagements,,,,,,,"id(""we"")/nav[1]/ul[1]/li[3]/a[1]",a.astro-NDMLHUYC.landing-nav__link,True,True,True,True,"(17, 736, 133, 26)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 14.4px 600",
+li,,astro-NDMLHUYC landing-nav__item,,,,,,,,Notre site est écoconçu,,,,,,0,,,,"id(""we"")/nav[1]/ul[1]/li[4]",li.astro-NDMLHUYC.landing-nav__item,True,True,True,False,"(16, 767, 170, 28)","list-item visible 1 relative auto rgba(255, 255, 255, 1) rgba(0, 0, 0, 1) 16px 400",
+a,,astro-NDMLHUYC landing-nav__link,,,,,,,,Notre site est écoconçu,,,https://www.niji.fr/fr/we/notre-site-est-ecoconcu,,,,,,,"id(""we"")/nav[1]/ul[1]/li[4]/a[1]",a.astro-NDMLHUYC.landing-nav__link,True,True,True,True,"(17, 768, 168, 26)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 14.4px 600",
+li,,astro-NDMLHUYC landing-nav__item,,,,,,,,Chiffres clés,,,,,,0,,,,"id(""we"")/nav[1]/ul[1]/li[5]",li.astro-NDMLHUYC.landing-nav__item,True,True,True,False,"(16, 799, 99, 28)","list-item visible 1 relative auto rgba(255, 255, 255, 1) rgba(0, 0, 0, 1) 16px 400",
+a,,astro-NDMLHUYC landing-nav__link,,,,,,,,Chiffres clés,,,https://www.niji.fr/fr/we/chiffres-cles,,,,,,,"id(""we"")/nav[1]/ul[1]/li[5]/a[1]",a.astro-NDMLHUYC.landing-nav__link,True,True,True,True,"(17, 800, 97, 26)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 14.4px 600",
+li,,astro-NDMLHUYC landing-nav__item,,,,,,,,L'équipe dirigeante,,,,,,0,,,,"id(""we"")/nav[1]/ul[1]/li[6]",li.astro-NDMLHUYC.landing-nav__item,True,True,True,False,"(16, 832, 139, 28)","list-item visible 1 relative auto rgba(255, 255, 255, 1) rgba(0, 0, 0, 1) 16px 400",
+a,,astro-NDMLHUYC landing-nav__link,,,,,,,,L'équipe dirigeante,,,https://www.niji.fr/fr/we/lequipe-dirigeante,,,,,,,"id(""we"")/nav[1]/ul[1]/li[6]/a[1]",a.astro-NDMLHUYC.landing-nav__link,True,True,True,True,"(17, 833, 137, 26)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 14.4px 600",
+li,,astro-NDMLHUYC landing-nav__item,,,,,,,,Nos adresses,,,,,,0,,,,"id(""we"")/nav[1]/ul[1]/li[7]",li.astro-NDMLHUYC.landing-nav__item,True,True,True,False,"(16, 864, 105, 28)","list-item visible 1 relative auto rgba(255, 255, 255, 1) rgba(0, 0, 0, 1) 16px 400",
+a,,astro-NDMLHUYC landing-nav__link,,,,,,,,Nos adresses,,,https://www.niji.fr/fr/we/nos-adresses,,,,,,,"id(""we"")/nav[1]/ul[1]/li[7]/a[1]",a.astro-NDMLHUYC.landing-nav__link,True,True,True,True,"(17, 865, 103, 26)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 14.4px 600",
+li,,astro-NDMLHUYC landing-nav__item,,,,,,,,Actualités,,,,,,0,,,,"id(""we"")/nav[1]/ul[1]/li[8]",li.astro-NDMLHUYC.landing-nav__item,True,True,True,False,"(16, 897, 83, 28)","list-item visible 1 relative auto rgba(255, 255, 255, 1) rgba(0, 0, 0, 1) 16px 400",
+a,,astro-NDMLHUYC landing-nav__link,,,,,,,,Actualités,,,https://www.niji.fr/fr/we/actualites,,,,,,,"id(""we"")/nav[1]/ul[1]/li[8]/a[1]",a.astro-NDMLHUYC.landing-nav__link,True,True,True,True,"(17, 898, 81, 26)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 14.4px 600",
+div,,astro-ICMXTWYB parallax snap,,,,,,,,"Savoir-faire
+Mobilité
+Énergie
+Expérience client
+Agilité
+Industrie
+Innovation
+Data
+Cybersécurité",,,,,,,,,,"id(""main-content"")/div[1]/div[2]",div.astro-ICMXTWYB.parallax.snap,True,True,True,False,"(0, 941, 1905, 941)","flex visible 1 relative auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+div,,astro-ICMXTWYB image-wrapper,,,,,,,,,,,,,,,,,,"id(""main-content"")/div[1]/div[2]/div[1]",div.astro-ICMXTWYB.image-wrapper,True,True,True,False,"(964, 941, 941, 941)","block visible 1 absolute -1 rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+div,,astro-IGVEK2JK switchable-image,,,,,,,,,,,,,,,,,,"id(""main-content"")/div[1]/div[2]/div[1]/div[1]",div.astro-IGVEK2JK.switchable-image,True,True,True,False,"(964, 941, 941, 941)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+div,,astro-IGVEK2JK wire-image,,,,,,,,,,,,,,,,,,"id(""main-content"")/div[1]/div[2]/div[1]/div[1]/div[1]",div.astro-IGVEK2JK.wire-image,True,True,True,False,"(964, 941, 941, 941)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+picture,,astro-IGVEK2JK,,,,,,,,,,,,,,,,,,"id(""main-content"")/div[1]/div[2]/div[1]/div[1]/div[1]/picture[1]",picture.astro-IGVEK2JK,True,True,True,False,"(964, 941, 941, 941)","flex visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+img,,astro-IGVEK2JK,,,,,,,,,work2.jpg,,,https://www.niji.fr/assets/work_f6e6c96111.svg,,,,https://www.niji.fr/assets/work_f6e6c96111.svg,image,"id(""main-content"")/div[1]/div[2]/div[1]/div[1]/div[1]/picture[1]/img[1]",img.astro-IGVEK2JK,True,True,True,False,"(964, 941, 941, 941)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400","Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: we2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: we2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: work2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: work2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: with2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: with2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: you.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: you.jpg"
+div,,astro-IGVEK2JK standard-image,,,,,,,,,,,,,,,,,,"id(""main-content"")/div[1]/div[2]/div[1]/div[1]/div[2]",div.astro-IGVEK2JK.standard-image,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+picture,,,,,,,,,,,,,,,,,,,,"id(""main-content"")/div[1]/div[2]/div[1]/div[1]/div[2]/picture[1]",picture,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+source,,,,,,,,,,,,,,,image/avif,,,,,"id(""main-content"")/div[1]/div[2]/div[1]/div[1]/div[2]/picture[1]/source[1]",source,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+source,,,,,,,,,,,,,,,image/webp,,,,,"id(""main-content"")/div[1]/div[2]/div[1]/div[1]/div[2]/picture[1]/source[2]",source,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+source,,,,,,,,,,,,,,,image/jpeg,,,,,"id(""main-content"")/div[1]/div[2]/div[1]/div[1]/div[2]/picture[1]/source[3]",source,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+img,,astro-IGVEK2JK,,,,,,,,,work2.jpg,,,https://www.niji.fr/assets/work2_704296e59e_ZeqvKX.jpg,,,,https://www.niji.fr/assets/work2_704296e59e_ZeqvKX.jpg,image,"id(""main-content"")/div[1]/div[2]/div[1]/div[1]/div[2]/picture[1]/img[1]",img.astro-IGVEK2JK,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,"Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: we2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: we2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: work2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: work2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: with2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: with2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: you.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: you.jpg"
+section,work,astro-JLJ3B2F4 landing-component,,,,,,,,"Savoir-faire
+Mobilité
+Énergie
+Expérience client
+Agilité
+Industrie
+Innovation
+Data
+Cybersécurité",,,,,,,,,,"id(""work"")",#work,True,True,True,False,"(0, 941, 1905, 941)","block visible 1 relative auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+div,,astro-JLJ3B2F4 js-disappear-on-scroll landing-link,,,,,,,,,,,,,,,,,,"id(""work"")/div[1]",div.astro-JLJ3B2F4.js-disappear-on-scroll.landing-link,True,True,True,False,"(0, 941, 1905, 941)","flex visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+a,,astro-JLJ3B2F4 landing-txt,,,,,,,,,,,https://www.niji.fr/fr/work/savoir-faire,,,,,,,"id(""work"")/div[1]/a[1]",a.astro-JLJ3B2F4.landing-txt,True,True,True,True,"(238, 1285, 851, 254)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400","Lien sans texte explicite - Lien sans texte visible ni aria-label, Lien sans texte explicite - Lien sans texte visible ni aria-label, Lien sans texte explicite - Lien sans texte visible ni aria-label"
+h2,,astro-JLJ3B2F4 fade-in-up-anim delay400 text-stroke title,,,,,,,,,,,,,,,,,,"id(""work"")/div[1]/a[1]/h2[1]",h2.astro-JLJ3B2F4.fade-in-up-anim.delay400.text-stroke.title,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+span,,astro-JLJ3B2F4 highlight-bg,,,,,,,,,,,,,,,,,,"id(""work"")/div[1]/a[1]/h2[1]/span[1]",span.astro-JLJ3B2F4.highlight-bg,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+div,,astro-JLJ3B2F4 fade-in-up-anim delay600 discover-wrapper,,,,,,,,,,,,,,,,,,"id(""work"")/div[1]/a[1]/div[1]",div.astro-JLJ3B2F4.fade-in-up-anim.delay600.discover-wrapper,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+div,,astro-JLJ3B2F4 highlight-bg discover,,,,,,,,,,,,,,,,,,"id(""work"")/div[1]/a[1]/div[1]/div[1]",div.astro-JLJ3B2F4.highlight-bg.discover,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+nav,,astro-NDMLHUYC js-disappear-on-scroll landing-nav,,,,,,,,"Savoir-faire
+Mobilité
+Énergie
+Expérience client
+Agilité
+Industrie
+Innovation
+Data
+Cybersécurité",,,,,,,,,,"id(""work"")/nav[1]",nav.astro-NDMLHUYC.js-disappear-on-scroll.landing-nav,True,True,True,False,"(16, 1578, 128, 288)","block visible 1 absolute 1 rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+ul,,astro-NDMLHUYC landing-nav__list,,,,,,,,"Savoir-faire
+Mobilité
+Énergie
+Expérience client
+Agilité
+Industrie
+Innovation
+Data
+Cybersécurité",,,,,,,,,,"id(""work"")/nav[1]/ul[1]",ul.astro-NDMLHUYC.landing-nav__list,True,True,True,False,"(16, 1578, 128, 288)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+li,,astro-NDMLHUYC landing-nav__item,,,,,,,,Savoir-faire,,,,,,0,,,,"id(""work"")/nav[1]/ul[1]/li[1]",li.astro-NDMLHUYC.landing-nav__item,True,True,True,False,"(16, 1578, 94, 28)","list-item visible 1 relative auto rgba(255, 255, 255, 1) rgba(0, 0, 0, 1) 16px 400",
+a,,astro-NDMLHUYC landing-nav__link,,,,,,,,Savoir-faire,,,https://www.niji.fr/fr/work/savoir-faire,,,,,,,"id(""work"")/nav[1]/ul[1]/li[1]/a[1]",a.astro-NDMLHUYC.landing-nav__link,True,True,True,True,"(17, 1579, 92, 26)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 14.4px 600",
+li,,astro-NDMLHUYC landing-nav__item,,,,,,,,Mobilité,,,,,,0,,,,"id(""work"")/nav[1]/ul[1]/li[2]",li.astro-NDMLHUYC.landing-nav__item,True,True,True,False,"(16, 1611, 70, 28)","list-item visible 1 relative auto rgba(255, 255, 255, 1) rgba(0, 0, 0, 1) 16px 400",
+a,,astro-NDMLHUYC landing-nav__link,,,,,,,,Mobilité,,,https://www.niji.fr/fr/work/mobilite,,,,,,,"id(""work"")/nav[1]/ul[1]/li[2]/a[1]",a.astro-NDMLHUYC.landing-nav__link,True,True,True,True,"(17, 1612, 68, 26)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 14.4px 600",
+li,,astro-NDMLHUYC landing-nav__item,,,,,,,,Énergie,,,,,,0,,,,"id(""work"")/nav[1]/ul[1]/li[3]",li.astro-NDMLHUYC.landing-nav__item,True,True,True,False,"(16, 1643, 66, 28)","list-item visible 1 relative auto rgba(255, 255, 255, 1) rgba(0, 0, 0, 1) 16px 400",
+a,,astro-NDMLHUYC landing-nav__link,,,,,,,,Énergie,,,https://www.niji.fr/fr/work/energie,,,,,,,"id(""work"")/nav[1]/ul[1]/li[3]/a[1]",a.astro-NDMLHUYC.landing-nav__link,True,True,True,True,"(17, 1644, 64, 26)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 14.4px 600",
+li,,astro-NDMLHUYC landing-nav__item,,,,,,,,Expérience client,,,,,,0,,,,"id(""work"")/nav[1]/ul[1]/li[4]",li.astro-NDMLHUYC.landing-nav__item,True,True,True,False,"(16, 1676, 128, 28)","list-item visible 1 relative auto rgba(255, 255, 255, 1) rgba(0, 0, 0, 1) 16px 400",
+a,,astro-NDMLHUYC landing-nav__link,,,,,,,,Expérience client,,,https://www.niji.fr/fr/work/experience-client,,,,,,,"id(""work"")/nav[1]/ul[1]/li[4]/a[1]",a.astro-NDMLHUYC.landing-nav__link,True,True,True,True,"(17, 1677, 126, 26)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 14.4px 600",
+li,,astro-NDMLHUYC landing-nav__item,,,,,,,,Agilité,,,,,,0,,,,"id(""work"")/nav[1]/ul[1]/li[5]",li.astro-NDMLHUYC.landing-nav__item,True,True,True,False,"(16, 1708, 59, 28)","list-item visible 1 relative auto rgba(255, 255, 255, 1) rgba(0, 0, 0, 1) 16px 400",
+a,,astro-NDMLHUYC landing-nav__link,,,,,,,,Agilité,,,https://www.niji.fr/fr/work/agilite,,,,,,,"id(""work"")/nav[1]/ul[1]/li[5]/a[1]",a.astro-NDMLHUYC.landing-nav__link,True,True,True,True,"(17, 1709, 57, 26)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 14.4px 600",
+li,,astro-NDMLHUYC landing-nav__item,,,,,,,,Industrie,,,,,,0,,,,"id(""work"")/nav[1]/ul[1]/li[6]",li.astro-NDMLHUYC.landing-nav__item,True,True,True,False,"(16, 1740, 79, 28)","list-item visible 1 relative auto rgba(255, 255, 255, 1) rgba(0, 0, 0, 1) 16px 400",
+a,,astro-NDMLHUYC landing-nav__link,,,,,,,,Industrie,,,https://www.niji.fr/fr/work/industrie,,,,,,,"id(""work"")/nav[1]/ul[1]/li[6]/a[1]",a.astro-NDMLHUYC.landing-nav__link,True,True,True,True,"(17, 1741, 77, 26)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 14.4px 600",
+li,,astro-NDMLHUYC landing-nav__item,,,,,,,,Innovation,,,,,,0,,,,"id(""work"")/nav[1]/ul[1]/li[7]",li.astro-NDMLHUYC.landing-nav__item,True,True,True,False,"(16, 1773, 89, 28)","list-item visible 1 relative auto rgba(255, 255, 255, 1) rgba(0, 0, 0, 1) 16px 400",
+a,,astro-NDMLHUYC landing-nav__link,,,,,,,,Innovation,,,https://www.niji.fr/fr/work/innovation,,,,,,,"id(""work"")/nav[1]/ul[1]/li[7]/a[1]",a.astro-NDMLHUYC.landing-nav__link,True,True,True,True,"(17, 1774, 87, 26)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 14.4px 600",
+li,,astro-NDMLHUYC landing-nav__item,,,,,,,,Data,,,,,,0,,,,"id(""work"")/nav[1]/ul[1]/li[8]",li.astro-NDMLHUYC.landing-nav__item,True,True,True,False,"(16, 1805, 49, 28)","list-item visible 1 relative auto rgba(255, 255, 255, 1) rgba(0, 0, 0, 1) 16px 400",
+a,,astro-NDMLHUYC landing-nav__link,,,,,,,,Data,,,https://www.niji.fr/fr/work/data,,,,,,,"id(""work"")/nav[1]/ul[1]/li[8]/a[1]",a.astro-NDMLHUYC.landing-nav__link,True,True,True,True,"(17, 1806, 47, 26)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 14.4px 600",
+li,,astro-NDMLHUYC landing-nav__item,,,,,,,,Cybersécurité,,,,,,0,,,,"id(""work"")/nav[1]/ul[1]/li[9]",li.astro-NDMLHUYC.landing-nav__item,True,True,True,False,"(16, 1838, 109, 28)","list-item visible 1 relative auto rgba(255, 255, 255, 1) rgba(0, 0, 0, 1) 16px 400",
+a,,astro-NDMLHUYC landing-nav__link,,,,,,,,Cybersécurité,,,https://www.niji.fr/fr/work/cybersecurite,,,,,,,"id(""work"")/nav[1]/ul[1]/li[9]/a[1]",a.astro-NDMLHUYC.landing-nav__link,True,True,True,True,"(17, 1839, 107, 26)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 14.4px 600",
+div,,astro-ICMXTWYB parallax snap,,,,,,,,"Secteurs d'activité
+Dalkia
+Fermob
+L’Oréal
+Picard Surgelés
+APRR
+CCI
+BNPP LS",,,,,,,,,,"id(""main-content"")/div[1]/div[3]",div.astro-ICMXTWYB.parallax.snap,True,True,True,False,"(0, 1882, 1905, 941)","flex visible 1 relative auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+div,,astro-ICMXTWYB image-wrapper,,,,,,,,,,,,,,,,,,"id(""main-content"")/div[1]/div[3]/div[1]",div.astro-ICMXTWYB.image-wrapper,True,True,True,False,"(964, 1882, 941, 941)","block visible 1 absolute -1 rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+div,,astro-IGVEK2JK switchable-image,,,,,,,,,,,,,,,,,,"id(""main-content"")/div[1]/div[3]/div[1]/div[1]",div.astro-IGVEK2JK.switchable-image,True,True,True,False,"(964, 1882, 941, 941)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+div,,astro-IGVEK2JK wire-image,,,,,,,,,,,,,,,,,,"id(""main-content"")/div[1]/div[3]/div[1]/div[1]/div[1]",div.astro-IGVEK2JK.wire-image,True,True,True,False,"(964, 1882, 941, 941)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+picture,,astro-IGVEK2JK,,,,,,,,,,,,,,,,,,"id(""main-content"")/div[1]/div[3]/div[1]/div[1]/div[1]/picture[1]",picture.astro-IGVEK2JK,True,True,True,False,"(964, 1882, 941, 941)","flex visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+img,,astro-IGVEK2JK,,,,,,,,,with2.jpg,,,https://www.niji.fr/assets/with_467de734f1.svg,,,,https://www.niji.fr/assets/with_467de734f1.svg,image,"id(""main-content"")/div[1]/div[3]/div[1]/div[1]/div[1]/picture[1]/img[1]",img.astro-IGVEK2JK,True,True,True,False,"(964, 1882, 941, 941)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400","Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: we2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: we2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: work2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: work2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: with2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: with2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: you.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: you.jpg"
+div,,astro-IGVEK2JK standard-image,,,,,,,,,,,,,,,,,,"id(""main-content"")/div[1]/div[3]/div[1]/div[1]/div[2]",div.astro-IGVEK2JK.standard-image,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+picture,,,,,,,,,,,,,,,,,,,,"id(""main-content"")/div[1]/div[3]/div[1]/div[1]/div[2]/picture[1]",picture,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+source,,,,,,,,,,,,,,,image/avif,,,,,"id(""main-content"")/div[1]/div[3]/div[1]/div[1]/div[2]/picture[1]/source[1]",source,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+source,,,,,,,,,,,,,,,image/webp,,,,,"id(""main-content"")/div[1]/div[3]/div[1]/div[1]/div[2]/picture[1]/source[2]",source,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+source,,,,,,,,,,,,,,,image/jpeg,,,,,"id(""main-content"")/div[1]/div[3]/div[1]/div[1]/div[2]/picture[1]/source[3]",source,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+img,,astro-IGVEK2JK,,,,,,,,,with2.jpg,,,https://www.niji.fr/assets/with2_07c18e997b_ZKaP2x.jpg,,,,https://www.niji.fr/assets/with2_07c18e997b_ZKaP2x.jpg,image,"id(""main-content"")/div[1]/div[3]/div[1]/div[1]/div[2]/picture[1]/img[1]",img.astro-IGVEK2JK,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,"Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: we2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: we2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: work2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: work2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: with2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: with2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: you.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: you.jpg"
+section,with,astro-JLJ3B2F4 landing-component,,,,,,,,"Secteurs d'activité
+Dalkia
+Fermob
+L’Oréal
+Picard Surgelés
+APRR
+CCI
+BNPP LS",,,,,,,,,,"id(""with"")",#with,True,True,True,False,"(0, 1882, 1905, 941)","block visible 1 relative auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+div,,astro-JLJ3B2F4 js-disappear-on-scroll landing-link,,,,,,,,,,,,,,,,,,"id(""with"")/div[1]",div.astro-JLJ3B2F4.js-disappear-on-scroll.landing-link,True,True,True,False,"(0, 1882, 1905, 941)","flex visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+a,,astro-JLJ3B2F4 landing-txt,,,,,,,,,,,https://www.niji.fr/fr/with/dalkia,,,,,,,"id(""with"")/div[1]/a[1]",a.astro-JLJ3B2F4.landing-txt,True,True,True,True,"(238, 2226, 1159, 254)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400","Lien sans texte explicite - Lien sans texte visible ni aria-label, Lien sans texte explicite - Lien sans texte visible ni aria-label, Lien sans texte explicite - Lien sans texte visible ni aria-label"
+h2,,astro-JLJ3B2F4 fade-in-up-anim delay400 text-stroke title,,,,,,,,,,,,,,,,,,"id(""with"")/div[1]/a[1]/h2[1]",h2.astro-JLJ3B2F4.fade-in-up-anim.delay400.text-stroke.title,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+span,,astro-JLJ3B2F4 highlight-bg,,,,,,,,,,,,,,,,,,"id(""with"")/div[1]/a[1]/h2[1]/span[1]",span.astro-JLJ3B2F4.highlight-bg,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+div,,astro-JLJ3B2F4 fade-in-up-anim delay600 discover-wrapper,,,,,,,,,,,,,,,,,,"id(""with"")/div[1]/a[1]/div[1]",div.astro-JLJ3B2F4.fade-in-up-anim.delay600.discover-wrapper,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+div,,astro-JLJ3B2F4 highlight-bg discover,,,,,,,,,,,,,,,,,,"id(""with"")/div[1]/a[1]/div[1]/div[1]",div.astro-JLJ3B2F4.highlight-bg.discover,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+nav,,astro-NDMLHUYC js-disappear-on-scroll landing-nav,,,,,,,,"Secteurs d'activité
+Dalkia
+Fermob
+L’Oréal
+Picard Surgelés
+APRR
+CCI
+BNPP LS",,,,,,,,,,"id(""with"")/nav[1]",nav.astro-NDMLHUYC.js-disappear-on-scroll.landing-nav,True,True,True,False,"(16, 2552, 139, 255)","block visible 1 absolute 1 rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+ul,,astro-NDMLHUYC landing-nav__list,,,,,,,,"Secteurs d'activité
+Dalkia
+Fermob
+L’Oréal
+Picard Surgelés
+APRR
+CCI
+BNPP LS",,,,,,,,,,"id(""with"")/nav[1]/ul[1]",ul.astro-NDMLHUYC.landing-nav__list,True,True,True,False,"(16, 2552, 139, 255)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+li,,astro-NDMLHUYC landing-nav__item,,,,,,,,Secteurs d'activité,,,,,,0,,,,"id(""with"")/nav[1]/ul[1]/li[1]",li.astro-NDMLHUYC.landing-nav__item,True,True,True,False,"(16, 2552, 139, 28)","list-item visible 1 relative auto rgba(255, 255, 255, 1) rgba(0, 0, 0, 1) 16px 400",
+a,,astro-NDMLHUYC landing-nav__link,,,,,,,,Secteurs d'activité,,,https://www.niji.fr/fr/with/secteurs-dactivite,,,,,,,"id(""with"")/nav[1]/ul[1]/li[1]/a[1]",a.astro-NDMLHUYC.landing-nav__link,True,True,True,True,"(17, 2553, 137, 26)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 14.4px 600",
+li,,astro-NDMLHUYC landing-nav__item,,,,,,,,Dalkia,,,,,,0,,,,"id(""with"")/nav[1]/ul[1]/li[2]",li.astro-NDMLHUYC.landing-nav__item,True,True,True,False,"(16, 2584, 58, 28)","list-item visible 1 relative auto rgba(255, 255, 255, 1) rgba(0, 0, 0, 1) 16px 400",
+a,,astro-NDMLHUYC landing-nav__link,,,,,,,,Dalkia,,,https://www.niji.fr/fr/with/dalkia,,,,,,,"id(""with"")/nav[1]/ul[1]/li[2]/a[1]",a.astro-NDMLHUYC.landing-nav__link,True,True,True,True,"(17, 2585, 56, 26)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 14.4px 600",
+li,,astro-NDMLHUYC landing-nav__item,,,,,,,,Fermob,,,,,,0,,,,"id(""with"")/nav[1]/ul[1]/li[3]",li.astro-NDMLHUYC.landing-nav__item,True,True,True,False,"(16, 2617, 68, 28)","list-item visible 1 relative auto rgba(255, 255, 255, 1) rgba(0, 0, 0, 1) 16px 400",
+a,,astro-NDMLHUYC landing-nav__link,,,,,,,,Fermob,,,https://www.niji.fr/fr/with/fermob,,,,,,,"id(""with"")/nav[1]/ul[1]/li[3]/a[1]",a.astro-NDMLHUYC.landing-nav__link,True,True,True,True,"(17, 2618, 66, 26)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 14.4px 600",
+li,,astro-NDMLHUYC landing-nav__item,,,,,,,,L’Oréal,,,,,,0,,,,"id(""with"")/nav[1]/ul[1]/li[4]",li.astro-NDMLHUYC.landing-nav__item,True,True,True,False,"(16, 2649, 61, 28)","list-item visible 1 relative auto rgba(255, 255, 255, 1) rgba(0, 0, 0, 1) 16px 400",
+a,,astro-NDMLHUYC landing-nav__link,,,,,,,,L’Oréal,,,https://www.niji.fr/fr/with/l-oreal,,,,,,,"id(""with"")/nav[1]/ul[1]/li[4]/a[1]",a.astro-NDMLHUYC.landing-nav__link,True,True,True,True,"(17, 2650, 59, 26)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 14.4px 600",
+li,,astro-NDMLHUYC landing-nav__item,,,,,,,,Picard Surgelés,,,,,,0,,,,"id(""with"")/nav[1]/ul[1]/li[5]",li.astro-NDMLHUYC.landing-nav__item,True,True,True,False,"(16, 2681, 119, 28)","list-item visible 1 relative auto rgba(255, 255, 255, 1) rgba(0, 0, 0, 1) 16px 400",
+a,,astro-NDMLHUYC landing-nav__link,,,,,,,,Picard Surgelés,,,https://www.niji.fr/fr/with/picard-surgeles,,,,,,,"id(""with"")/nav[1]/ul[1]/li[5]/a[1]",a.astro-NDMLHUYC.landing-nav__link,True,True,True,True,"(17, 2682, 117, 26)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 14.4px 600",
+li,,astro-NDMLHUYC landing-nav__item,,,,,,,,APRR,,,,,,0,,,,"id(""with"")/nav[1]/ul[1]/li[6]",li.astro-NDMLHUYC.landing-nav__item,True,True,True,False,"(16, 2714, 55, 28)","list-item visible 1 relative auto rgba(255, 255, 255, 1) rgba(0, 0, 0, 1) 16px 400",
+a,,astro-NDMLHUYC landing-nav__link,,,,,,,,APRR,,,https://www.niji.fr/fr/with/aprr,,,,,,,"id(""with"")/nav[1]/ul[1]/li[6]/a[1]",a.astro-NDMLHUYC.landing-nav__link,True,True,True,True,"(17, 2715, 53, 26)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 14.4px 600",
+li,,astro-NDMLHUYC landing-nav__item,,,,,,,,CCI,,,,,,0,,,,"id(""with"")/nav[1]/ul[1]/li[7]",li.astro-NDMLHUYC.landing-nav__item,True,True,True,False,"(16, 2746, 45, 28)","list-item visible 1 relative auto rgba(255, 255, 255, 1) rgba(0, 0, 0, 1) 16px 400",
+a,,astro-NDMLHUYC landing-nav__link,,,,,,,,CCI,,,https://www.niji.fr/fr/with/cci,,,,,,,"id(""with"")/nav[1]/ul[1]/li[7]/a[1]",a.astro-NDMLHUYC.landing-nav__link,True,True,True,True,"(17, 2747, 43, 26)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 14.4px 600",
+li,,astro-NDMLHUYC landing-nav__item,,,,,,,,BNPP LS,,,,,,0,,,,"id(""with"")/nav[1]/ul[1]/li[8]",li.astro-NDMLHUYC.landing-nav__item,True,True,True,False,"(16, 2779, 76, 28)","list-item visible 1 relative auto rgba(255, 255, 255, 1) rgba(0, 0, 0, 1) 16px 400",
+a,,astro-NDMLHUYC landing-nav__link,,,,,,,,BNPP LS,,,https://www.niji.fr/fr/with/bnpp-ls,,,,,,,"id(""with"")/nav[1]/ul[1]/li[8]/a[1]",a.astro-NDMLHUYC.landing-nav__link,True,True,True,True,"(17, 2780, 74, 26)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 14.4px 600",
+div,,astro-ICMXTWYB parallax snap,,,,,,,,"Travailler chez Niji
+Vivre Niji
+Nijicast
+Rejoignez-nous
+Contact
+Bdx-io",,,,,,,,,,"id(""main-content"")/div[1]/div[4]",div.astro-ICMXTWYB.parallax.snap,True,True,True,False,"(0, 2823, 1905, 941)","flex visible 1 relative auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+div,,astro-ICMXTWYB image-wrapper,,,,,,,,,,,,,,,,,,"id(""main-content"")/div[1]/div[4]/div[1]",div.astro-ICMXTWYB.image-wrapper,True,True,True,False,"(964, 2823, 941, 941)","block visible 1 absolute -1 rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+div,,astro-IGVEK2JK switchable-image,,,,,,,,,,,,,,,,,,"id(""main-content"")/div[1]/div[4]/div[1]/div[1]",div.astro-IGVEK2JK.switchable-image,True,True,True,False,"(964, 2823, 941, 941)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+div,,astro-IGVEK2JK wire-image,,,,,,,,,,,,,,,,,,"id(""main-content"")/div[1]/div[4]/div[1]/div[1]/div[1]",div.astro-IGVEK2JK.wire-image,True,True,True,False,"(964, 2823, 941, 941)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+picture,,astro-IGVEK2JK,,,,,,,,,,,,,,,,,,"id(""main-content"")/div[1]/div[4]/div[1]/div[1]/div[1]/picture[1]",picture.astro-IGVEK2JK,True,True,True,False,"(964, 2823, 941, 941)","flex visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+img,,astro-IGVEK2JK,,,,,,,,,you.jpg,,,https://www.niji.fr/assets/you_d32ad0f462.svg,,,,https://www.niji.fr/assets/you_d32ad0f462.svg,image,"id(""main-content"")/div[1]/div[4]/div[1]/div[1]/div[1]/picture[1]/img[1]",img.astro-IGVEK2JK,True,True,True,False,"(964, 2823, 941, 941)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400","Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: we2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: we2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: work2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: work2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: with2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: with2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: you.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: you.jpg"
+div,,astro-IGVEK2JK standard-image,,,,,,,,,,,,,,,,,,"id(""main-content"")/div[1]/div[4]/div[1]/div[1]/div[2]",div.astro-IGVEK2JK.standard-image,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+picture,,,,,,,,,,,,,,,,,,,,"id(""main-content"")/div[1]/div[4]/div[1]/div[1]/div[2]/picture[1]",picture,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+source,,,,,,,,,,,,,,,image/avif,,,,,"id(""main-content"")/div[1]/div[4]/div[1]/div[1]/div[2]/picture[1]/source[1]",source,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+source,,,,,,,,,,,,,,,image/webp,,,,,"id(""main-content"")/div[1]/div[4]/div[1]/div[1]/div[2]/picture[1]/source[2]",source,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+source,,,,,,,,,,,,,,,image/jpeg,,,,,"id(""main-content"")/div[1]/div[4]/div[1]/div[1]/div[2]/picture[1]/source[3]",source,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+img,,astro-IGVEK2JK,,,,,,,,,you.jpg,,,https://www.niji.fr/assets/you_d4125e1334_eM6qU.jpg,,,,https://www.niji.fr/assets/you_d4125e1334_eM6qU.jpg,image,"id(""main-content"")/div[1]/div[4]/div[1]/div[1]/div[2]/picture[1]/img[1]",img.astro-IGVEK2JK,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,"Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: we2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: we2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: work2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: work2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: with2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: with2.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: you.jpg, Image avec nom de fichier comme alternative - L'attribut alt contient un nom de fichier: you.jpg"
+section,you,astro-JLJ3B2F4 landing-component,,,,,,,,"Travailler chez Niji
+Vivre Niji
+Nijicast
+Rejoignez-nous
+Contact
+Bdx-io",,,,,,,,,,"id(""you"")",#you,True,True,True,False,"(0, 2823, 1905, 941)","block visible 1 relative auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+div,,astro-JLJ3B2F4 js-disappear-on-scroll landing-link,,,,,,,,,,,,,,,,,,"id(""you"")/div[1]",div.astro-JLJ3B2F4.js-disappear-on-scroll.landing-link,True,True,True,False,"(0, 2823, 1905, 941)","flex visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+a,,astro-JLJ3B2F4 landing-txt,,,,,,,,,,,https://www.niji.fr/fr/you/rejoignez-nous/,,,,,,,"id(""you"")/div[1]/a[1]",a.astro-JLJ3B2F4.landing-txt,True,True,True,True,"(238, 3167, 1195, 254)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400","Lien sans texte explicite - Lien sans texte visible ni aria-label, Lien sans texte explicite - Lien sans texte visible ni aria-label, Lien sans texte explicite - Lien sans texte visible ni aria-label"
+h2,,astro-JLJ3B2F4 fade-in-up-anim delay400 text-stroke title,,,,,,,,,,,,,,,,,,"id(""you"")/div[1]/a[1]/h2[1]",h2.astro-JLJ3B2F4.fade-in-up-anim.delay400.text-stroke.title,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+span,,astro-JLJ3B2F4 highlight-bg,,,,,,,,,,,,,,,,,,"id(""you"")/div[1]/a[1]/h2[1]/span[1]",span.astro-JLJ3B2F4.highlight-bg,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+div,,astro-JLJ3B2F4 fade-in-up-anim delay600 discover-wrapper,,,,,,,,,,,,,,,,,,"id(""you"")/div[1]/a[1]/div[1]",div.astro-JLJ3B2F4.fade-in-up-anim.delay600.discover-wrapper,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+div,,astro-JLJ3B2F4 highlight-bg discover,,,,,,,,,,,,,,,,,,"id(""you"")/div[1]/a[1]/div[1]/div[1]",div.astro-JLJ3B2F4.highlight-bg.discover,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+nav,,astro-NDMLHUYC js-disappear-on-scroll landing-nav,,,,,,,,"Travailler chez Niji
+Vivre Niji
+Nijicast
+Rejoignez-nous
+Contact
+Bdx-io",,,,,,,,,,"id(""you"")/nav[1]",nav.astro-NDMLHUYC.js-disappear-on-scroll.landing-nav,True,True,True,False,"(16, 3558, 137, 190)","block visible 1 absolute 1 rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+ul,,astro-NDMLHUYC landing-nav__list,,,,,,,,"Travailler chez Niji
+Vivre Niji
+Nijicast
+Rejoignez-nous
+Contact
+Bdx-io",,,,,,,,,,"id(""you"")/nav[1]/ul[1]",ul.astro-NDMLHUYC.landing-nav__list,True,True,True,False,"(16, 3558, 137, 190)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+li,,astro-NDMLHUYC landing-nav__item,,,,,,,,Travailler chez Niji,,,,,,0,,,,"id(""you"")/nav[1]/ul[1]/li[1]",li.astro-NDMLHUYC.landing-nav__item,True,True,True,False,"(16, 3558, 137, 28)","list-item visible 1 relative auto rgba(255, 255, 255, 1) rgba(0, 0, 0, 1) 16px 400",
+a,,astro-NDMLHUYC landing-nav__link,,,,,,,,Travailler chez Niji,,,https://www.niji.fr/fr/you/travailler-chez-niji,,,,,,,"id(""you"")/nav[1]/ul[1]/li[1]/a[1]",a.astro-NDMLHUYC.landing-nav__link,True,True,True,True,"(17, 3559, 135, 26)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 14.4px 600",
+li,,astro-NDMLHUYC landing-nav__item,,,,,,,,Vivre Niji,,,,,,0,,,,"id(""you"")/nav[1]/ul[1]/li[2]",li.astro-NDMLHUYC.landing-nav__item,True,True,True,False,"(16, 3590, 75, 28)","list-item visible 1 relative auto rgba(255, 255, 255, 1) rgba(0, 0, 0, 1) 16px 400",
+a,,astro-NDMLHUYC landing-nav__link,,,,,,,,Vivre Niji,,,https://www.niji.fr/fr/you/vivre-niji,,,,,,,"id(""you"")/nav[1]/ul[1]/li[2]/a[1]",a.astro-NDMLHUYC.landing-nav__link,True,True,True,True,"(17, 3591, 73, 26)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 14.4px 600",
+li,,astro-NDMLHUYC landing-nav__item,,,,,,,,Nijicast,,,,,,0,,,,"id(""you"")/nav[1]/ul[1]/li[3]",li.astro-NDMLHUYC.landing-nav__item,True,True,True,False,"(16, 3622, 67, 28)","list-item visible 1 relative auto rgba(255, 255, 255, 1) rgba(0, 0, 0, 1) 16px 400",
+a,,astro-NDMLHUYC landing-nav__link,,,,,,,,Nijicast,,,https://www.niji.fr/fr/you/nijicast,,,,,,,"id(""you"")/nav[1]/ul[1]/li[3]/a[1]",a.astro-NDMLHUYC.landing-nav__link,True,True,True,True,"(17, 3623, 65, 26)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 14.4px 600",
+li,,astro-NDMLHUYC landing-nav__item,,,,,,,,Rejoignez-nous,,,,,,0,,,,"id(""you"")/nav[1]/ul[1]/li[4]",li.astro-NDMLHUYC.landing-nav__item,True,True,True,False,"(16, 3655, 118, 28)","list-item visible 1 relative auto rgba(255, 255, 255, 1) rgba(0, 0, 0, 1) 16px 400",
+a,,astro-NDMLHUYC landing-nav__link,,,,,,,,Rejoignez-nous,,,https://www.niji.fr/fr/you/rejoignez-nous,,,,,,,"id(""you"")/nav[1]/ul[1]/li[4]/a[1]",a.astro-NDMLHUYC.landing-nav__link,True,True,True,True,"(17, 3656, 116, 26)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 14.4px 600",
+li,,astro-NDMLHUYC landing-nav__item,,,,,,,,Contact,,,,,,0,,,,"id(""you"")/nav[1]/ul[1]/li[5]",li.astro-NDMLHUYC.landing-nav__item,True,True,True,False,"(16, 3687, 70, 28)","list-item visible 1 relative auto rgba(255, 255, 255, 1) rgba(0, 0, 0, 1) 16px 400",
+a,,astro-NDMLHUYC landing-nav__link,,,,,,,,Contact,,,https://www.niji.fr/fr/you/contact,,,,,,,"id(""you"")/nav[1]/ul[1]/li[5]/a[1]",a.astro-NDMLHUYC.landing-nav__link,True,True,True,True,"(17, 3688, 68, 26)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 14.4px 600",
+li,,astro-NDMLHUYC landing-nav__item,,,,,,,,Bdx-io,,,,,,0,,,,"id(""you"")/nav[1]/ul[1]/li[6]",li.astro-NDMLHUYC.landing-nav__item,True,True,True,False,"(16, 3720, 60, 28)","list-item visible 1 relative auto rgba(255, 255, 255, 1) rgba(0, 0, 0, 1) 16px 400",
+a,,astro-NDMLHUYC landing-nav__link,,,,,,,,Bdx-io,,,https://www.niji.fr/fr/you/bdx-io,,,,,,,"id(""you"")/nav[1]/ul[1]/li[6]/a[1]",a.astro-NDMLHUYC.landing-nav__link,True,True,True,True,"(17, 3721, 58, 26)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 14.4px 600",
+div,footer,astro-26EX6VA3 footer js-footer,,,,,,,,"Mentions légales
+Politique de vie privée
+Nos documents utiles
+©Niji 2025",,,,,,,,,,"id(""footer"")",#footer,True,True,True,False,"(0, 3764, 1905, 74)","block visible 1 static auto rgba(0, 0, 0, 1) rgba(0, 0, 0, 1) 16px 400",
+nav,,astro-26EX6VA3 footer-nav,,Pied de page,,,,,,"Mentions légales
+Politique de vie privée
+Nos documents utiles
+©Niji 2025",,,,,,,,,,"id(""footer"")/nav[1]",nav.astro-26EX6VA3.footer-nav,True,True,True,False,"(72, 3765, 1761, 73)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+ul,,astro-26EX6VA3 footer-nav__list,,,,,,,,"Mentions légales
+Politique de vie privée
+Nos documents utiles
+©Niji 2025",,,,,,,,,,"id(""footer"")/nav[1]/ul[1]",ul.astro-26EX6VA3.footer-nav__list,True,True,True,False,"(72, 3765, 1761, 73)","flex visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+li,,astro-26EX6VA3 footer-nav__item,,,,,,,,Mentions légales,,,,,,0,,,,"id(""footer"")/nav[1]/ul[1]/li[1]",li.astro-26EX6VA3.footer-nav__item,True,True,True,False,"(248, 3789, 131, 26)","list-item visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+a,,astro-26EX6VA3 footer-nav__txt footer-nav__txt--link,,,,,,,,Mentions légales,,,https://www.niji.fr/fr/mentions-legales,,,,,,,"id(""footer"")/nav[1]/ul[1]/li[1]/a[1]",a.astro-26EX6VA3.footer-nav__txt.footer-nav__txt--link,True,True,True,True,"(248, 3793, 131, 17)","inline visible 1 static auto rgba(0, 0, 0, 0) rgba(255, 255, 255, 1) 16px 400",
+li,,astro-26EX6VA3 footer-nav__item,,,,,,,,Politique de vie privée,,,,,,0,,,,"id(""footer"")/nav[1]/ul[1]/li[2]",li.astro-26EX6VA3.footer-nav__item,True,True,True,False,"(666, 3789, 166, 26)","list-item visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+a,,astro-26EX6VA3 footer-nav__txt footer-nav__txt--link,,,,,,,,Politique de vie privée,,,https://www.niji.fr/fr/politique-de-vie-privee,,,,,,,"id(""footer"")/nav[1]/ul[1]/li[2]/a[1]",a.astro-26EX6VA3.footer-nav__txt.footer-nav__txt--link,True,True,True,True,"(666, 3793, 166, 17)","inline visible 1 static auto rgba(0, 0, 0, 0) rgba(255, 255, 255, 1) 16px 400",
+li,,astro-26EX6VA3 footer-nav__item,,,,,,,,Nos documents utiles,,,,,,0,,,,"id(""footer"")/nav[1]/ul[1]/li[3]",li.astro-26EX6VA3.footer-nav__item,True,True,True,False,"(1118, 3789, 165, 26)","list-item visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+a,,astro-26EX6VA3 footer-nav__txt footer-nav__txt--link,,,,,,,,Nos documents utiles,,,https://www.niji.fr/fr/nos-documents-utiles,,,,,,,"id(""footer"")/nav[1]/ul[1]/li[3]/a[1]",a.astro-26EX6VA3.footer-nav__txt.footer-nav__txt--link,True,True,True,True,"(1118, 3793, 165, 17)","inline visible 1 static auto rgba(0, 0, 0, 0) rgba(255, 255, 255, 1) 16px 400",
+li,,astro-26EX6VA3 footer-nav__item,,,,,,,,©Niji 2025,,,,,,0,,,,"id(""footer"")/nav[1]/ul[1]/li[4]",li.astro-26EX6VA3.footer-nav__item,True,True,True,False,"(1570, 3789, 87, 26)","list-item visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+span,,astro-26EX6VA3 footer-nav__txt,,,,,,,,©Niji 2025,,,,,,,,,,"id(""footer"")/nav[1]/ul[1]/li[4]/span[1]",span.astro-26EX6VA3.footer-nav__txt,True,True,True,False,"(1570, 3793, 87, 17)","inline visible 1 static auto rgba(0, 0, 0, 0) rgba(255, 255, 255, 1) 16px 400",
+div,,astro-65ZFI6E7 bottom-navigation,,,,,,,,Mode éco+,,,,,,,,,,body/div[3],div.astro-65ZFI6E7.bottom-navigation,True,True,True,False,"(0, 941, 1920, 0)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+ul,,astro-65ZFI6E7 bottom-navigation__list,,,,,,,,Mode éco+,,,,,,,,,,body/div[3]/ul[1],ul.astro-65ZFI6E7.bottom-navigation__list,True,True,True,False,"(0, 925, 0, 0)","flex visible 1 fixed 11 rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+li,,astro-65ZFI6E7 bottom-navigation__item bottom-navigation__item--right,,,,,,,,Mode éco+,,,,,,0,,,,body/div[3]/ul[1]/li[1],li.astro-65ZFI6E7.bottom-navigation__item.bottom-navigation__item--right,True,True,True,False,"(1856, 877, 48, 48)","flex visible 1 fixed 10 rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+button,btnSwitchEcoMode,btn btn--icon-txt btn--hide-txt astro-65ZFI6E7 bottom-navigation__link btn--bottom btn--eco-mode plausible-event-name=Eco+Mode plausible-event-eco=on,,,,,,,,Mode éco+,,,,,submit,,,,,"id(""btnSwitchEcoMode"")",#btnSwitchEcoMode,True,True,True,True,"(1856, 877, 48, 48)","block visible 1 relative auto rgba(255, 255, 255, 1) rgba(0, 0, 0, 1) 16px 400",
+span,,astro-65ZFI6E7 btn__icon,,,,,,,,,,,,,,,,,,"id(""btnSwitchEcoMode"")/span[1]",span.astro-65ZFI6E7.btn__icon,True,True,True,False,"(1857, 878, 46, 46)","flex visible 1 absolute auto rgba(255, 255, 255, 1) rgba(0, 0, 0, 1) 16px 400",
+svg,,astro-65ZFI6E7 switch-on,,,,,,,,,,,,,,,,,,"id(""btnSwitchEcoMode"")/span[1]/svg[1]",svg.astro-65ZFI6E7.switch-on,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+path,,astro-65ZFI6E7,,,,,,,,,,,,,,,,,,"id(""btnSwitchEcoMode"")/span[1]/svg[1]/path[1]",path.astro-65ZFI6E7,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+circle,,astro-65ZFI6E7,,,,,,,,,,,,,,,,,,"id(""btnSwitchEcoMode"")/span[1]/svg[1]/circle[1]",circle.astro-65ZFI6E7,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+svg,,astro-65ZFI6E7 switch-off,,,,,,,,,,,,,,,,,,"id(""btnSwitchEcoMode"")/span[1]/svg[2]",svg.astro-65ZFI6E7.switch-off,True,True,True,False,"(1864, 891, 32, 20)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+path,,astro-65ZFI6E7,,,,,,,,,,,,,,,,,,"id(""btnSwitchEcoMode"")/span[1]/svg[2]/path[1]",path.astro-65ZFI6E7,True,True,True,False,"(1864, 891, 31, 19)","inline visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+circle,,astro-65ZFI6E7,,,,,,,,,,,,,,,,,,"id(""btnSwitchEcoMode"")/span[1]/svg[2]/circle[1]",circle.astro-65ZFI6E7,True,True,True,False,"(1879, 894, 13, 13)","inline visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 16px 400",
+span,,astro-65ZFI6E7 btn__txt btn__txt--eco,,,,,,,,Mode éco+,,,,,,,,,,"id(""btnSwitchEcoMode"")/span[2]",span.astro-65ZFI6E7.btn__txt.btn__txt--eco,True,True,True,False,"(1857, 895, 78, 12)","block visible 1 static auto rgba(0, 0, 0, 0) rgba(0, 0, 0, 1) 12px 700",
+span,,astro-65ZFI6E7 btn__txt btn__txt--standard,,,,,,,,,,,,,,,,,,"id(""btnSwitchEcoMode"")/span[3]",span.astro-65ZFI6E7.btn__txt.btn__txt--standard,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,
+noscript,,,,,,,,,,,,,,,,,,,,body/noscript[1],noscript,False,False,True,False,"(0, 0, 0, 0)",N/A N/A N/A N/A N/A N/A N/A N/A N/A,

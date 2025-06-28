@@ -15,7 +15,6 @@ from selenium.webdriver.support import expected_conditions as EC
 import random
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
-from modules.dom_analyzer import DOMAnalyzer
 from modules.image_analyzer import ImageAnalyzer
 import subprocess
 import logging
@@ -527,15 +526,6 @@ if __name__ == "__main__":
         crawler.crawl()
         crawler.generate_report()
 
-        # Initialiser l'analyseur DOM
-        dom_analyzer = DOMAnalyzer(driver, logger)
-        dom_results = dom_analyzer.run()
-        
-        # Vérifier que les résultats DOM ne sont pas None
-        if dom_results is None:
-            dom_results = []
-            log_with_step(logger, logging.WARNING, "DRIVER", "Aucun résultat d'analyse DOM obtenu, utilisation d'une liste vide")
-        
         # Si l'analyse des images est activée
         if 'image' in args.modules:
             image_analyzer = ImageAnalyzer(driver, logger, args.url, args.output_dir)

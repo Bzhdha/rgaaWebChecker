@@ -3,6 +3,7 @@ from modules.color_simulator import ColorSimulator
 from modules.tab_navigator import TabNavigator
 from modules.screen_reader import ScreenReader
 from modules.image_analyzer import ImageAnalyzer
+from modules.dom_analyzer import DOMAnalyzer
 from utils.log_utils import setup_logger
 
 class AccessibilityCrawler:
@@ -15,6 +16,8 @@ class AccessibilityCrawler:
     def _load_modules(self):
         if 'contrast' in self.config.get_enabled_modules():
             self.modules.append(ContrastChecker(self.driver, self.logger))
+        if 'dom_analyzer' in self.config.get_enabled_modules():
+            self.modules.append(DOMAnalyzer(self.driver, self.logger))
         if 'accessibility' in self.config.get_enabled_modules():
             self.modules.append(ScreenReader(self.driver, self.logger))
         if 'daltonism' in self.config.get_enabled_modules():
