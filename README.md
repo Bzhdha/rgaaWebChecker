@@ -3,6 +3,202 @@
 ## Présentation
 RGAA Web Checker est un outil d'analyse d'accessibilité web qui permet de vérifier la conformité des sites web selon les critères RGAA (Référentiel Général d'Amélioration de l'Accessibilité).
 
+## Interface Graphique
+
+### 🖥️ Lancement de l'Interface Graphique
+
+RGAA Web Checker dispose d'une interface graphique moderne et intuitive pour faciliter l'analyse d'accessibilité.
+
+#### Windows (PowerShell)
+```powershell
+# Lancement automatique avec environnement virtuel
+.\launch_gui.ps1
+
+# Lancement sans environnement virtuel
+.\launch_gui.ps1 -NoVenv
+
+# Afficher l'aide
+.\launch_gui.ps1 -Help
+```
+
+#### Ubuntu/Linux
+```bash
+# Rendre le script exécutable (une seule fois)
+chmod +x launch_gui.sh
+
+# Lancement automatique avec environnement virtuel
+./launch_gui.sh
+
+# Lancement sans environnement virtuel
+./launch_gui.sh --no-venv
+
+# Afficher l'aide
+./launch_gui.sh --help
+```
+
+#### Lancement direct (Python)
+```bash
+# Après activation de l'environnement virtuel
+python launch_gui.py
+```
+
+### 🎯 Fonctionnalités de l'Interface Graphique
+
+#### 1. **Configuration de l'Analyse**
+- **Saisie d'URL** : Champ de saisie pour l'URL du site à analyser
+- **Sélection des modules** : Cases à cocher pour activer/désactiver les modules :
+  - ✅ Analyse des contrastes
+  - ✅ Analyse DOM
+  - ✅ Simulation daltonisme
+  - ✅ Navigation tabulation
+  - ✅ Lecteur d'écran
+  - ✅ Analyse d'images
+
+#### 2. **Options Avancées**
+- **Navigateur** : Choix entre Chrome, Chromium ou détection automatique
+- **Encodage** : UTF-8 ou CP1252
+- **Bannière cookies** : Texte du bouton à cliquer
+- **Répertoire de sortie** : Dossier pour sauvegarder les résultats
+- **Mode debug** : Affichage des logs détaillés
+
+#### 3. **Onglet Résultats**
+- **Statistiques** : Vue d'ensemble des problèmes détectés
+- **Tableau détaillé** : Liste complète des résultats avec :
+  - Module source
+  - Type de problème
+  - Message descriptif
+  - Niveau de sévérité
+- **Export** : Sauvegarde en CSV ou JSON
+
+#### 4. **Onglet Images Capturées**
+- **Navigation** : Boutons précédent/suivant
+- **Affichage** : Visualisation des captures d'écran
+- **Zoom** : Défilement pour voir les détails
+- **Informations** : Nom et numéro de l'image
+
+#### 5. **Onglet Logs**
+- **Logs en temps réel** : Affichage des messages d'analyse
+- **Sauvegarde** : Export des logs en fichier texte
+- **Nettoyage** : Effacement des logs
+
+### 🚀 Utilisation de l'Interface
+
+#### Étape 1 : Configuration
+1. Saisissez l'URL du site à analyser
+2. Sélectionnez les modules d'analyse souhaités
+3. Configurez les options avancées si nécessaire
+
+#### Étape 2 : Lancement de l'Analyse
+1. Cliquez sur "Démarrer l'analyse"
+2. Suivez la progression dans l'onglet Logs
+3. L'analyse s'exécute en arrière-plan
+
+#### Étape 3 : Consultation des Résultats
+1. **Onglet Résultats** : Consultez les statistiques et la liste détaillée
+2. **Onglet Images** : Visualisez les captures d'écran
+3. **Export** : Sauvegardez les résultats en CSV ou JSON
+
+### 🔧 Fonctionnalités Avancées
+
+#### Gestion des Erreurs
+- **Vérification automatique** des dépendances au lancement
+- **Messages d'erreur** explicites en cas de problème
+- **Suggestions de résolution** automatiques
+
+#### Performance
+- **Analyse asynchrone** : L'interface reste responsive pendant l'analyse
+- **Threading** : L'analyse s'exécute en arrière-plan
+- **Arrêt sécurisé** : Possibilité d'arrêter l'analyse en cours
+
+#### Personnalisation
+- **Taille de fenêtre** : Redimensionnable (minimum 1000x600)
+- **Thème moderne** : Interface claire et professionnelle
+- **Barre de statut** : Informations sur l'état de l'application
+
+### 📋 Prérequis pour l'Interface Graphique
+
+#### Dépendances Python
+```bash
+# Installation automatique
+pip install -r requirements.txt
+
+# Ou installation manuelle
+pip install tkinter pillow selenium webdriver-manager
+```
+
+#### Dépendances Système
+- **Windows** : Python avec tkinter (inclus par défaut)
+- **Ubuntu/Linux** : `sudo apt install python3-tk`
+- **macOS** : Python avec tkinter (inclus par défaut)
+
+### 🛠️ Dépannage de l'Interface Graphique
+
+#### Erreur "tkinter not found"
+```bash
+# Ubuntu/Linux
+sudo apt install python3-tk
+
+# Windows
+# Réinstaller Python en cochant "tcl/tk and IDLE"
+```
+
+#### Erreur "PIL not found"
+```bash
+pip install Pillow
+```
+
+#### Erreur "selenium not found"
+```bash
+pip install selenium webdriver-manager
+```
+
+#### Interface qui ne se lance pas
+1. Vérifiez que vous êtes dans le répertoire racine de l'application
+2. Activez l'environnement virtuel : `source venv/bin/activate` ou `.\venv\Scripts\activate`
+3. Lancez avec le script : `./launch_gui.sh` ou `.\launch_gui.ps1`
+
+### 💡 Conseils d'Utilisation
+
+1. **Première utilisation** : Lancez tous les modules pour une analyse complète
+2. **Analyse ciblée** : Désactivez les modules non nécessaires pour plus de rapidité
+3. **Mode debug** : Activez pour voir les détails de l'analyse
+4. **Export régulier** : Sauvegardez vos résultats pour comparaison
+5. **Images** : Consultez les captures pour comprendre les problèmes visuels
+
+### 🎯 Démonstration de l'Interface
+
+Pour tester l'interface graphique sans effectuer de vraie analyse, utilisez la démonstration :
+
+#### Windows (PowerShell)
+```powershell
+# Lancement de la démonstration
+.\demo_gui.ps1
+```
+
+#### Ubuntu/Linux
+```bash
+# Rendre le script exécutable (une seule fois)
+chmod +x demo_gui.sh
+
+# Lancement de la démonstration
+./demo_gui.sh
+```
+
+#### Lancement direct (Python)
+```bash
+# Après activation de l'environnement virtuel
+python demo_gui.py
+```
+
+#### Fonctionnalités de la Démonstration
+- **Interface complète** : Toutes les fonctionnalités de l'interface
+- **Données fictives** : Résultats d'exemple pour tester l'affichage
+- **Export test** : Test des fonctions d'export CSV/JSON
+- **Navigation images** : Test de la visualisation d'images
+- **Gestion logs** : Test de l'affichage et sauvegarde des logs
+
+**Note** : La démonstration utilise des données fictives. Pour une vraie analyse, utilisez `launch_gui.ps1` ou `launch_gui.sh`.
+
 ## Installation et Configuration
 
 ### Prérequis
