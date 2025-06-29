@@ -492,6 +492,21 @@ class DOMAnalyzer:
                         'priority': 4
                     }
             
+            # 4️⃣ Nom accessible hérité d'une image enfant (cas des liens avec logo)
+            if tag_name == 'a':
+                try:
+                    img = element.find_element(By.TAG_NAME, 'img')
+                    if img:
+                        alt_text = img.get_attribute('alt')
+                        if alt_text and alt_text.strip():
+                            return {
+                                'name': alt_text.strip(),
+                                'source': 'alt (img enfant)',
+                                'priority': 4
+                            }
+                except Exception:
+                    pass
+            
             # Aucun nom accessible trouvé
             return {
                 'name': '',

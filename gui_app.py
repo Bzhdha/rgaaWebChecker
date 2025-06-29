@@ -801,7 +801,7 @@ class RGAAWebCheckerGUI:
     def sort_dom_tree(self, column):
         """Trie le tableau DOM par colonne"""
         if not self.dom_data:
-Affi            return
+            return
         # Déterminer la direction de tri
         if self.dom_sort_column == column:
             self.dom_sort_reverse = not self.dom_sort_reverse
