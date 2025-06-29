@@ -302,25 +302,34 @@ class RGAAWebCheckerGUI:
         # Frame pour le tableau des éléments DOM
         dom_table_frame = ttk.LabelFrame(dom_frame, text="Éléments DOM analysés", padding="10")
         dom_table_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
-        
-        # Colonnes pour le tableau DOM
-        dom_columns = ('Tag', 'ID', 'Classe', 'Rôle', 'Aria-label', 'Texte', 'Alt', 'Visible', 'Focusable', 'XPath')
-        self.dom_tree = ttk.Treeview(dom_table_frame, columns=dom_columns, show='headings', height=15)
-        
+
+        # --- Correction placement ascenseurs ---
+        # Frame conteneur pour le tableau et les scrollbars
+        table_container = ttk.Frame(dom_table_frame)
+        table_container.pack(fill=tk.BOTH, expand=True)
+        # Colonnes pour le tableau DOM (toutes les colonnes du JSON)
+        dom_columns = (
+            'Tag', 'ID', 'Classe', 'Rôle', 'Aria-label', 'Aria-describedby', 'Aria-hidden', 'Aria-expanded', 'Aria-controls', 'Aria-labelledby',
+            'Texte', 'Alt', 'Title', 'Href', 'Src', 'Type', 'Value', 'Placeholder',
+            'Media Path', 'Media Type', 'XPath', 'CSS Selector',
+            'Is Visible', 'Is Displayed', 'Is Enabled', 'Is Focusable',
+            'Position', 'Computed Style', 'Accessible Name'
+        )
+        self.dom_tree = ttk.Treeview(table_container, columns=dom_columns, show='headings', height=15)
         # Configuration des colonnes avec tri
         for col in dom_columns:
             self.dom_tree.heading(col, text=col, command=lambda c=col: self.sort_dom_tree(c))
-            self.dom_tree.column(col, width=120)
-        
+            self.dom_tree.column(col, width=140)
         # Scrollbars
-        dom_v_scrollbar = ttk.Scrollbar(dom_table_frame, orient=tk.VERTICAL, command=self.dom_tree.yview)
-        dom_h_scrollbar = ttk.Scrollbar(dom_table_frame, orient=tk.HORIZONTAL, command=self.dom_tree.xview)
+        dom_v_scrollbar = ttk.Scrollbar(table_container, orient=tk.VERTICAL, command=self.dom_tree.yview)
+        dom_h_scrollbar = ttk.Scrollbar(table_container, orient=tk.HORIZONTAL, command=self.dom_tree.xview)
         self.dom_tree.configure(yscrollcommand=dom_v_scrollbar.set, xscrollcommand=dom_h_scrollbar.set)
-        
-        # Pack du tableau
+        # Placement dans le frame conteneur
         self.dom_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         dom_v_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         dom_h_scrollbar.pack(side=tk.BOTTOM, fill=tk.X)
+        # Ajout du binding double-clic pour copier le xpath
+        self.dom_tree.bind('<Double-1>', self.copy_xpath_on_double_click)
         
         # Boutons d'export pour DOM
         dom_export_frame = ttk.Frame(dom_frame)
@@ -673,47 +682,64 @@ class RGAAWebCheckerGUI:
             for item in self.dom_tree.get_children():
                 self.dom_tree.delete(item)
     
+    def get_dom_row_values(self, element):
+        """Retourne le tuple de valeurs pour une ligne du tableau DOM, pour toutes les colonnes"""
+        tag = element.get('tag', 'N/A')
+        element_id = element.get('id', '')
+        class_attr = element.get('class', '')
+        role = element.get('role', '')
+        aria_label = element.get('aria_label', '')
+        aria_describedby = element.get('aria_describedby', '')
+        aria_hidden = element.get('aria_hidden', '')
+        aria_expanded = element.get('aria_expanded', '')
+        aria_controls = element.get('aria_controls', '')
+        aria_labelledby = element.get('aria_labelledby', '')
+        text = element.get('text', '')
+        alt = element.get('alt', '')
+        title = element.get('title', '')
+        href = element.get('href', '')
+        src = element.get('src', '')
+        type_ = element.get('type', '')
+        value = element.get('value', '')
+        placeholder = element.get('placeholder', '')
+        media_path = element.get('media_path', '')
+        media_type = element.get('media_type', '')
+        xpath = element.get('xpath', '')
+        css_selector = element.get('css_selector', '')
+        is_visible = element.get('is_visible', False)
+        is_displayed = element.get('is_displayed', False)
+        is_enabled = element.get('is_enabled', False)
+        is_focusable = element.get('is_focusable', False)
+        position = element.get('position', {})
+        pos_str = f"x={position.get('x','')}, y={position.get('y','')}, w={position.get('width','')}, h={position.get('height','')}" if position else ''
+        computed_style = element.get('computed_style', {})
+        style_str = ', '.join([f"{k}={v}" for k,v in computed_style.items()]) if computed_style else ''
+        accessible_name = element.get('accessible_name', {})
+        acc_name_str = f"name={accessible_name.get('name','')}, source={accessible_name.get('source','')}, priority={accessible_name.get('priority','')}" if accessible_name else ''
+        return (
+            tag, element_id, class_attr, role, aria_label, aria_describedby, aria_hidden, aria_expanded, aria_controls, aria_labelledby,
+            text, alt, title, href, src, type_, value, placeholder,
+            media_path, media_type, xpath, css_selector,
+            'Oui' if is_visible else 'Non', 'Oui' if is_displayed else 'Non', 'Oui' if is_enabled else 'Non', 'Oui' if is_focusable else 'Non',
+            pos_str, style_str, acc_name_str
+        )
+
     def load_dom_data(self, elements):
         """Charge les données DOM dans le tableau"""
         # Effacer les données précédentes
         for item in self.dom_tree.get_children():
             self.dom_tree.delete(item)
-        
-        # Stocker les données brutes pour le filtrage
         self.dom_data = elements
-        
         self.update_logs(f"Chargement de {len(elements)} éléments DOM dans le tableau")
-        
-        # Ajouter les éléments au tableau
         for i, element in enumerate(elements):
             try:
-                # Extraire les données pour l'affichage
-                tag = element.get('tag', 'N/A')
-                element_id = element.get('id', '')
-                class_attr = element.get('class', '')
-                role = element.get('role', '')
-                aria_label = element.get('aria_label', '')
-                text = element.get('text', '')[:50] + '...' if len(element.get('text', '')) > 50 else element.get('text', '')
-                alt = element.get('alt', '')
-                visible = 'Oui' if element.get('is_visible', False) else 'Non'
-                focusable = 'Oui' if element.get('is_focusable', False) else 'Non'
-                xpath = element.get('xpath', '')[:30] + '...' if len(element.get('xpath', '')) > 30 else element.get('xpath', '')
-                
-                self.dom_tree.insert('', tk.END, values=(
-                    tag, element_id, class_attr, role, aria_label, text, alt, visible, focusable, xpath
-                ))
-                
-                # Log tous les 100 éléments pour éviter de surcharger
+                self.dom_tree.insert('', tk.END, values=self.get_dom_row_values(element))
                 if (i + 1) % 100 == 0:
                     self.update_logs(f"Éléments DOM chargés: {i + 1}/{len(elements)}")
-                    
             except Exception as e:
                 self.update_logs(f"Erreur lors du chargement de l'élément {i}: {str(e)}")
                 continue
-        
         self.update_logs(f"Chargement terminé: {len(elements)} éléments DOM affichés")
-        
-        # Mettre à jour les filtres
         self.update_dom_filters()
     
     def update_dom_filters(self):
@@ -735,16 +761,13 @@ class RGAAWebCheckerGUI:
         """Filtre les données DOM selon les critères sélectionnés"""
         if not self.dom_data:
             return
-        
         # Effacer le tableau
         for item in self.dom_tree.get_children():
             self.dom_tree.delete(item)
-        
         # Appliquer les filtres
         search_term = self.dom_search_var.get().lower()
         tag_filter = self.tag_filter_var.get()
         visibility_filter = self.visibility_filter_var.get()
-        
         filtered_data = []
         for element in self.dom_data:
             # Filtre de recherche
@@ -752,12 +775,10 @@ class RGAAWebCheckerGUI:
                 searchable_text = f"{element.get('tag', '')} {element.get('id', '')} {element.get('class', '')} {element.get('text', '')} {element.get('alt', '')}".lower()
                 if search_term not in searchable_text:
                     continue
-            
             # Filtre par tag
             if tag_filter and tag_filter != "Tous":
                 if element.get('tag', '').lower() != tag_filter.lower():
                     continue
-            
             # Filtre par visibilité
             if visibility_filter and visibility_filter != "Tous":
                 is_visible = element.get('is_visible', False)
@@ -765,25 +786,10 @@ class RGAAWebCheckerGUI:
                     continue
                 if visibility_filter == "Masqué" and is_visible:
                     continue
-            
             filtered_data.append(element)
-        
         # Afficher les données filtrées
         for element in filtered_data:
-            tag = element.get('tag', 'N/A')
-            element_id = element.get('id', '')
-            class_attr = element.get('class', '')
-            role = element.get('role', '')
-            aria_label = element.get('aria_label', '')
-            text = element.get('text', '')[:50] + '...' if len(element.get('text', '')) > 50 else element.get('text', '')
-            alt = element.get('alt', '')
-            visible = 'Oui' if element.get('is_visible', False) else 'Non'
-            focusable = 'Oui' if element.get('is_focusable', False) else 'Non'
-            xpath = element.get('xpath', '')[:30] + '...' if len(element.get('xpath', '')) > 30 else element.get('xpath', '')
-            
-            self.dom_tree.insert('', tk.END, values=(
-                tag, element_id, class_attr, role, aria_label, text, alt, visible, focusable, xpath
-            ))
+            self.dom_tree.insert('', tk.END, values=self.get_dom_row_values(element))
     
     def reset_dom_filters(self):
         """Réinitialise tous les filtres DOM"""
@@ -795,53 +801,54 @@ class RGAAWebCheckerGUI:
     def sort_dom_tree(self, column):
         """Trie le tableau DOM par colonne"""
         if not self.dom_data:
-            return
-        
+Affi            return
         # Déterminer la direction de tri
         if self.dom_sort_column == column:
             self.dom_sort_reverse = not self.dom_sort_reverse
         else:
             self.dom_sort_reverse = False
-        
         self.dom_sort_column = column
-        
-        # Trier les données
+        # Mapping colonne -> clé JSON
         column_index = {
             'Tag': 'tag',
             'ID': 'id',
             'Classe': 'class',
             'Rôle': 'role',
             'Aria-label': 'aria_label',
+            'Aria-describedby': 'aria_describedby',
+            'Aria-hidden': 'aria_hidden',
+            'Aria-expanded': 'aria_expanded',
+            'Aria-controls': 'aria_controls',
+            'Aria-labelledby': 'aria_labelledby',
             'Texte': 'text',
             'Alt': 'alt',
-            'Visible': 'is_visible',
-            'Focusable': 'is_focusable',
-            'XPath': 'xpath'
+            'Title': 'title',
+            'Href': 'href',
+            'Src': 'src',
+            'Type': 'type',
+            'Value': 'value',
+            'Placeholder': 'placeholder',
+            'Media Path': 'media_path',
+            'Media Type': 'media_type',
+            'XPath': 'xpath',
+            'CSS Selector': 'css_selector',
+            'Is Visible': 'is_visible',
+            'Is Displayed': 'is_displayed',
+            'Is Enabled': 'is_enabled',
+            'Is Focusable': 'is_focusable',
+            'Position': 'position',
+            'Computed Style': 'computed_style',
+            'Accessible Name': 'accessible_name',
         }.get(column, 'tag')
-        
-        sorted_data = sorted(self.dom_data, 
-                           key=lambda x: str(x.get(column_index, '')).lower(),
-                           reverse=self.dom_sort_reverse)
-        
-        # Recharger le tableau avec les données triées
+        # Tri
+        sorted_data = sorted(self.dom_data,
+            key=lambda x: str(x.get(column_index, '')).lower() if not isinstance(x.get(column_index, ''), dict) else str(x.get(column_index, '')),
+            reverse=self.dom_sort_reverse)
+        # Recharger le tableau avec toutes les colonnes
         for item in self.dom_tree.get_children():
             self.dom_tree.delete(item)
-        
         for element in sorted_data:
-            tag = element.get('tag', 'N/A')
-            element_id = element.get('id', '')
-            class_attr = element.get('class', '')
-            role = element.get('role', '')
-            aria_label = element.get('aria_label', '')
-            text = element.get('text', '')[:50] + '...' if len(element.get('text', '')) > 50 else element.get('text', '')
-            alt = element.get('alt', '')
-            visible = 'Oui' if element.get('is_visible', False) else 'Non'
-            focusable = 'Oui' if element.get('is_focusable', False) else 'Non'
-            xpath = element.get('xpath', '')[:30] + '...' if len(element.get('xpath', '')) > 30 else element.get('xpath', '')
-            
-            self.dom_tree.insert('', tk.END, values=(
-                tag, element_id, class_attr, role, aria_label, text, alt, visible, focusable, xpath
-            ))
+            self.dom_tree.insert('', tk.END, values=self.get_dom_row_values(element))
     
     def export_dom_csv(self):
         """Exporte les résultats DOM en CSV"""
@@ -1129,6 +1136,21 @@ class RGAAWebCheckerGUI:
                 subprocess.run(["xdg-open", str(output_dir)])
         else:
             messagebox.showinfo("Information", "Le dossier de résultats n'existe pas encore")
+    
+    def copy_xpath_on_double_click(self, event):
+        """Copie le xpath complet dans le presse-papier si double-clic sur la colonne XPath"""
+        item_id = self.dom_tree.identify_row(event.y)
+        col = self.dom_tree.identify_column(event.x)
+        if not item_id or not col:
+            return
+        col_index = int(col.replace('#','')) - 1
+        # Vérifier si c'est la colonne XPath
+        if self.dom_tree['columns'][col_index] == 'XPath':
+            xpath_value = self.dom_tree.item(item_id, 'values')[col_index]
+            self.root.clipboard_clear()
+            self.root.clipboard_append(xpath_value)
+            self.root.update()  # nécessaire pour le clipboard
+            messagebox.showinfo("Copié", "XPath copié dans le presse-papier !")
 
 def main():
     """Fonction principale"""
