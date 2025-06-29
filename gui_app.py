@@ -691,11 +691,8 @@ class RGAAWebCheckerGUI:
         self.filtered_dom_data = elements
         self.update_logs(f"Chargement de {len(elements)} éléments DOM dans le tableau")
         
-        # Affichage dans PandasTable
-        if self.dom_ptable:
-            self.dom_ptable.destroy()
-        self.dom_ptable = Table(self.dom_table_canvas, dataframe=self.dom_df, showtoolbar=True, showstatusbar=True)
-        self.dom_ptable.show()
+        # Affichage dans PandasTable avec options pour éviter le bug atdivider
+        self.create_dom_table(self.dom_df)
         self.update_dom_filters()
     
     def update_dom_filters(self):
@@ -758,10 +755,7 @@ class RGAAWebCheckerGUI:
         self.filtered_dom_data = filtered_data
         
         # Affichage dans PandasTable
-        if self.dom_ptable:
-            self.dom_ptable.destroy()
-        self.dom_ptable = Table(self.dom_table_canvas, dataframe=self.dom_df, showtoolbar=True, showstatusbar=True)
-        self.dom_ptable.show()
+        self.create_dom_table(self.dom_df)
     
     def reset_dom_filters(self):
         """Réinitialise tous les filtres DOM"""
@@ -770,69 +764,7 @@ class RGAAWebCheckerGUI:
         self.visibility_filter_var.set('Tous')
         # Recharger toutes les données
         if self.dom_data:
-            if self.dom_ptable:
-                self.dom_ptable.destroy()
-            self.dom_ptable = None
-            self.dom_df = pd.DataFrame()
-    
-    def sort_dom_sheet(self, column):
-        """Trie le tableau DOM par colonne"""
-        # Utiliser les données filtrées si elles existent, sinon les données complètes
-        data_to_sort = self.filtered_dom_data if self.filtered_dom_data else self.dom_data
-        
-        if not data_to_sort:
-            return
-        
-        # Mapping colonne -> clé JSON
-        column_mapping = {
-            'Tag': 'tag',
-            'ID': 'id',
-            'Classe': 'class',
-            'Rôle': 'role',
-            'Aria-label': 'aria_label',
-            'Aria-describedby': 'aria_describedby',
-            'Aria-hidden': 'aria_hidden',
-            'Aria-expanded': 'aria_expanded',
-            'Aria-controls': 'aria_controls',
-            'Aria-labelledby': 'aria_labelledby',
-            'Texte': 'text',
-            'Alt': 'alt',
-            'Title': 'title',
-            'Href': 'href',
-            'Src': 'src',
-            'Type': 'type',
-            'Value': 'value',
-            'Placeholder': 'placeholder',
-            'Media Path': 'media_path',
-            'Media Type': 'media_type',
-            'XPath': 'xpath',
-            'CSS Selector': 'css_selector',
-            'Is Visible': 'is_visible',
-            'Is Displayed': 'is_displayed',
-            'Is Enabled': 'is_enabled',
-            'Is Focusable': 'is_focusable',
-            'Position': 'position',
-            'Computed Style': 'computed_style',
-            'Accessible Name': 'accessible_name',
-        }
-        
-        column_key = column_mapping.get(column, 'tag')
-        
-        # Tri
-        sorted_data = sorted(data_to_sort,
-            key=lambda x: str(x.get(column_key, '')).lower() if not isinstance(x.get(column_key, ''), dict) else str(x.get(column_key, '')),
-            reverse=False)
-        
-        # Préparer les données triées
-        df = pd.DataFrame([self.get_dom_row_dict(element) for element in sorted_data])
-        self.dom_df = df
-        self.filtered_dom_data = sorted_data
-        
-        # Recharger le tableau
-        if self.dom_ptable:
-            self.dom_ptable.destroy()
-        self.dom_ptable = Table(self.dom_table_canvas, dataframe=self.dom_df, showtoolbar=True, showstatusbar=True)
-        self.dom_ptable.show()
+            self.create_dom_table(self.dom_df)
     
     def export_dom_csv(self):
         """Exporte les résultats DOM en CSV"""
@@ -1285,6 +1217,178 @@ class RGAAWebCheckerGUI:
             messagebox.showinfo("Fichiers de résultats", info_text)
         except Exception as e:
             messagebox.showerror("Erreur", f"Erreur lors de la lecture des fichiers: {str(e)}")
+
+    def create_dom_table(self, dataframe):
+        """Crée un tableau PandasTable avec des options sécurisées pour éviter le bug atdivider"""
+        # Détruire le tableau existant s'il y en a un
+        if self.dom_ptable:
+            self.dom_ptable.destroy()
+        
+        # Créer le tableau avec des options qui permettent le tri et le filtrage
+        self.dom_ptable = Table(
+            self.dom_table_canvas, 
+            dataframe=dataframe, 
+            showtoolbar=True, 
+            showstatusbar=True,
+            width=800,
+            height=400,
+            cellwidth=100,
+            cellheight=25,
+            thefont=('Arial', 10),
+            rowheight=25,
+            colselectedcolor='lightblue',
+            rowselectedcolor='lightblue',
+            selectedcolor='lightblue',
+            read_only=True,  # Désactiver l'édition pour éviter les problèmes
+            multiple_cell_selection=False,  # Désactiver la sélection multiple
+            enable_menus=True,  # Activer les menus pour le tri
+            enable_drag_drop=False,  # Désactiver le drag & drop
+            enable_undo=False,  # Désactiver l'undo
+            enable_clipboard=False,  # Désactiver le presse-papiers
+            show_index=False,  # Masquer l'index
+            show_vertical_scrollbar=True,
+            show_horizontal_scrollbar=True
+        )
+        
+        # Patch pour le bug atdivider - approche plus complète
+        self.patch_atdivider_bug()
+        
+        # Configurer les événements de tri
+        self.setup_sorting_events()
+        
+        self.dom_ptable.show()
+        return self.dom_ptable
+    
+    def patch_atdivider_bug(self):
+        """Applique un patch pour éviter le bug atdivider"""
+        try:
+            # Patch simple : ajouter l'attribut manquant si nécessaire
+            if hasattr(self.dom_ptable, 'tableheader'):
+                for child in self.dom_ptable.tableheader.winfo_children():
+                    if hasattr(child, '__class__') and 'ColumnHeader' in str(child.__class__):
+                        if not hasattr(child, 'atdivider'):
+                            child.atdivider = 0
+                        if not hasattr(child, 'atseparator'):
+                            child.atseparator = 0
+        except Exception as e:
+            self.update_logs(f"Patch atdivider échoué: {e}")
+    
+    def setup_sorting_events(self):
+        """Configure les événements de tri pour les colonnes"""
+        try:
+            if hasattr(self.dom_ptable, 'tableheader'):
+                # Configurer le tri par clic sur l'en-tête
+                self.dom_ptable.tableheader.bind('<Button-1>', self.handle_header_click)
+                
+                # Configurer les événements pour chaque colonne
+                for i, child in enumerate(self.dom_ptable.tableheader.winfo_children()):
+                    if hasattr(child, 'bind'):
+                        child.bind('<Button-1>', lambda e, col=i: self.handle_column_click(e, col))
+                        child.bind('<Double-Button-1>', lambda e, col=i: self.handle_column_double_click(e, col))
+        except Exception as e:
+            self.update_logs(f"Configuration des événements de tri échouée: {e}")
+    
+    def handle_header_click(self, event):
+        """Gestionnaire pour le clic sur l'en-tête du tableau"""
+        try:
+            # Obtenir la position du clic
+            x = event.x
+            # Trouver la colonne correspondante
+            column_index = self.get_column_from_x_position(x)
+            if column_index is not None:
+                self.sort_column(column_index)
+        except Exception as e:
+            self.update_logs(f"Erreur dans handle_header_click: {e}")
+    
+    def handle_column_click(self, event, column_index):
+        """Gestionnaire pour le clic sur une colonne spécifique"""
+        try:
+            self.sort_column(column_index)
+        except Exception as e:
+            self.update_logs(f"Erreur dans handle_column_click: {e}")
+    
+    def handle_column_double_click(self, event, column_index):
+        """Gestionnaire pour le double-clic sur une colonne"""
+        try:
+            # Double-clic pour tri inverse
+            self.sort_column(column_index, reverse=True)
+        except Exception as e:
+            self.update_logs(f"Erreur dans handle_column_double_click: {e}")
+    
+    def get_column_from_x_position(self, x):
+        """Détermine l'index de la colonne à partir de la position X"""
+        try:
+            if not self.dom_df.empty:
+                # Calculer la largeur approximative de chaque colonne
+                total_width = 800  # Largeur du tableau
+                col_width = total_width / len(self.dom_df.columns)
+                column_index = int(x / col_width)
+                if 0 <= column_index < len(self.dom_df.columns):
+                    return column_index
+        except Exception as e:
+            self.update_logs(f"Erreur dans get_column_from_x_position: {e}")
+        return None
+    
+    def sort_column(self, column_index, reverse=False):
+        """Trie les données par colonne"""
+        try:
+            if not self.dom_df.empty and 0 <= column_index < len(self.dom_df.columns):
+                column_name = self.dom_df.columns[column_index]
+                self.update_logs(f"Tri de la colonne: {column_name}")
+                
+                # Utiliser les données filtrées si elles existent, sinon les données complètes
+                data_to_sort = self.filtered_dom_data if self.filtered_dom_data else self.dom_data
+                
+                if data_to_sort:
+                    # Mapping colonne -> clé JSON
+                    column_mapping = {
+                        'Tag': 'tag',
+                        'ID': 'id',
+                        'Classe': 'class',
+                        'Rôle': 'role',
+                        'Aria-label': 'aria_label',
+                        'Aria-describedby': 'aria_describedby',
+                        'Aria-hidden': 'aria_hidden',
+                        'Aria-expanded': 'aria_expanded',
+                        'Aria-controls': 'aria_controls',
+                        'Aria-labelledby': 'aria_labelledby',
+                        'Texte': 'text',
+                        'Alt': 'alt',
+                        'Title': 'title',
+                        'Href': 'href',
+                        'Src': 'src',
+                        'Type': 'type',
+                        'Value': 'value',
+                        'Placeholder': 'placeholder',
+                        'Media Path': 'media_path',
+                        'Media Type': 'media_type',
+                        'XPath': 'xpath',
+                        'CSS Selector': 'css_selector',
+                        'Is Visible': 'is_visible',
+                        'Is Displayed': 'is_displayed',
+                        'Is Enabled': 'is_enabled',
+                        'Is Focusable': 'is_focusable',
+                        'Position': 'position',
+                        'Computed Style': 'computed_style',
+                        'Accessible Name': 'accessible_name',
+                    }
+                    
+                    column_key = column_mapping.get(column_name, 'tag')
+                    
+                    # Tri
+                    sorted_data = sorted(data_to_sort,
+                        key=lambda x: str(x.get(column_key, '')).lower() if not isinstance(x.get(column_key, ''), dict) else str(x.get(column_key, '')),
+                        reverse=reverse)
+                    
+                    # Préparer les données triées
+                    df = pd.DataFrame([self.get_dom_row_dict(element) for element in sorted_data])
+                    self.dom_df = df
+                    self.filtered_dom_data = sorted_data
+                    
+                    # Recharger le tableau
+                    self.create_dom_table(self.dom_df)
+        except Exception as e:
+            self.update_logs(f"Erreur dans sort_column: {e}")
 
 def main():
     """Fonction principale"""
