@@ -12,6 +12,7 @@ class AccessibilityCrawler:
         self.modules = []
         self.driver = None
         self.logger = logger if logger else setup_logger()
+        self.results = {}  # Stockage des résultats
 
     def _load_modules(self):
         if 'contrast' in self.config.get_enabled_modules():
@@ -30,8 +31,35 @@ class AccessibilityCrawler:
     def crawl(self):
         if self.driver is None:
             raise ValueError("Le driver n'est pas initialisé. Assurez-vous que crawler.driver est défini avant d'appeler crawl().")
+        
         for module in self.modules:
-            module.run()
+            try:
+                # Exécuter le module et récupérer les résultats
+                result = module.run()
+                
+                # Stocker les résultats selon le type de module
+                if isinstance(module, DOMAnalyzer):
+                    self.results['dom'] = result
+                elif isinstance(module, ContrastChecker):
+                    self.results['contrast'] = result
+                elif isinstance(module, ColorSimulator):
+                    self.results['daltonism'] = result
+                elif isinstance(module, TabNavigator):
+                    self.results['tab'] = result
+                elif isinstance(module, ScreenReader):
+                    self.results['screen'] = result
+                elif isinstance(module, ImageAnalyzer):
+                    self.results['image'] = result
+                    
+            except Exception as e:
+                self.logger.error(f"Erreur lors de l'exécution du module {type(module).__name__}: {str(e)}")
+                self.results[type(module).__name__.lower()] = {'error': str(e)}
+        
+        return self.results
+
+    def get_results(self):
+        """Retourne les résultats collectés"""
+        return self.results
 
     def generate_report(self):
         self.logger.info("Génération du rapport d'analyse...")

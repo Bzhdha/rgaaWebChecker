@@ -50,6 +50,7 @@ class RGAAWebCheckerGUI:
         self.results_data = {}
         self.current_images = []
         self.current_image_index = 0
+        self.dom_results = {}  # Résultats détaillés de l'analyse DOM
         
         # Configuration
         self.config = Config()
@@ -111,6 +112,7 @@ class RGAAWebCheckerGUI:
         
         # Onglets
         self.setup_results_tab()
+        self.setup_dom_tab()  # Nouvel onglet pour l'analyse DOM
         self.setup_images_tab()
         self.setup_logs_tab()
         
@@ -244,6 +246,94 @@ class RGAAWebCheckerGUI:
         ttk.Button(export_frame, text="Exporter CSV", command=self.export_results_csv).pack(side=tk.LEFT, padx=(0, 10))
         ttk.Button(export_frame, text="Exporter JSON", command=self.export_results_json).pack(side=tk.LEFT)
     
+    def setup_dom_tab(self):
+        """Configure l'onglet d'analyse DOM avec tableau interactif"""
+        dom_frame = ttk.Frame(self.notebook)
+        self.notebook.add(dom_frame, text="Analyse DOM")
+        
+        # Frame pour les contrôles de filtrage
+        controls_frame = ttk.LabelFrame(dom_frame, text="Filtres et recherche", padding="10")
+        controls_frame.pack(fill=tk.X, padx=10, pady=5)
+        
+        # Barre de recherche
+        search_frame = ttk.Frame(controls_frame)
+        search_frame.pack(fill=tk.X, pady=(0, 10))
+        
+        ttk.Label(search_frame, text="Recherche:").pack(side=tk.LEFT)
+        self.dom_search_var = tk.StringVar()
+        self.dom_search_entry = ttk.Entry(search_frame, textvariable=self.dom_search_var, width=40)
+        self.dom_search_entry.pack(side=tk.LEFT, padx=(10, 0))
+        self.dom_search_entry.bind('<KeyRelease>', self.filter_dom_data)
+        
+        # Filtres par type d'élément
+        filter_frame = ttk.Frame(controls_frame)
+        filter_frame.pack(fill=tk.X)
+        
+        ttk.Label(filter_frame, text="Filtrer par:").pack(side=tk.LEFT)
+        
+        # Filtre par tag
+        ttk.Label(filter_frame, text="Tag:").pack(side=tk.LEFT, padx=(10, 0))
+        self.tag_filter_var = tk.StringVar()
+        self.tag_filter_combo = ttk.Combobox(filter_frame, textvariable=self.tag_filter_var, 
+                                           values=["Tous", "div", "span", "a", "button", "input", "img", "p", "h1", "h2", "h3", "h4", "h5", "h6"],
+                                           state="readonly", width=10)
+        self.tag_filter_combo.pack(side=tk.LEFT, padx=(5, 0))
+        self.tag_filter_combo.bind('<<ComboboxSelected>>', self.filter_dom_data)
+        
+        # Filtre par visibilité
+        ttk.Label(filter_frame, text="Visibilité:").pack(side=tk.LEFT, padx=(10, 0))
+        self.visibility_filter_var = tk.StringVar(value="Tous")
+        self.visibility_filter_combo = ttk.Combobox(filter_frame, textvariable=self.visibility_filter_var,
+                                                  values=["Tous", "Visible", "Masqué"],
+                                                  state="readonly", width=10)
+        self.visibility_filter_combo.pack(side=tk.LEFT, padx=(5, 0))
+        self.visibility_filter_combo.bind('<<ComboboxSelected>>', self.filter_dom_data)
+        
+        # Bouton pour réinitialiser les filtres
+        ttk.Button(filter_frame, text="Réinitialiser", command=self.reset_dom_filters).pack(side=tk.RIGHT)
+        
+        # Frame pour les statistiques DOM
+        dom_stats_frame = ttk.LabelFrame(dom_frame, text="Statistiques DOM", padding="10")
+        dom_stats_frame.pack(fill=tk.X, padx=10, pady=5)
+        
+        self.dom_stats_text = tk.Text(dom_stats_frame, height=3, wrap=tk.WORD)
+        self.dom_stats_text.pack(fill=tk.X)
+        
+        # Frame pour le tableau des éléments DOM
+        dom_table_frame = ttk.LabelFrame(dom_frame, text="Éléments DOM analysés", padding="10")
+        dom_table_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
+        
+        # Colonnes pour le tableau DOM
+        dom_columns = ('Tag', 'ID', 'Classe', 'Rôle', 'Aria-label', 'Texte', 'Alt', 'Visible', 'Focusable', 'XPath')
+        self.dom_tree = ttk.Treeview(dom_table_frame, columns=dom_columns, show='headings', height=15)
+        
+        # Configuration des colonnes avec tri
+        for col in dom_columns:
+            self.dom_tree.heading(col, text=col, command=lambda c=col: self.sort_dom_tree(c))
+            self.dom_tree.column(col, width=120)
+        
+        # Scrollbars
+        dom_v_scrollbar = ttk.Scrollbar(dom_table_frame, orient=tk.VERTICAL, command=self.dom_tree.yview)
+        dom_h_scrollbar = ttk.Scrollbar(dom_table_frame, orient=tk.HORIZONTAL, command=self.dom_tree.xview)
+        self.dom_tree.configure(yscrollcommand=dom_v_scrollbar.set, xscrollcommand=dom_h_scrollbar.set)
+        
+        # Pack du tableau
+        self.dom_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        dom_v_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        dom_h_scrollbar.pack(side=tk.BOTTOM, fill=tk.X)
+        
+        # Boutons d'export pour DOM
+        dom_export_frame = ttk.Frame(dom_frame)
+        dom_export_frame.pack(fill=tk.X, padx=10, pady=5)
+        
+        ttk.Button(dom_export_frame, text="Exporter DOM CSV", command=self.export_dom_csv).pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Button(dom_export_frame, text="Exporter DOM JSON", command=self.export_dom_json).pack(side=tk.LEFT)
+        
+        # Variables pour le tri
+        self.dom_sort_column = None
+        self.dom_sort_reverse = False
+        self.dom_data = []  # Données brutes pour le filtrage
+    
     def setup_images_tab(self):
         """Configure l'onglet des images"""
         images_frame = ttk.Frame(self.notebook)
@@ -349,31 +439,130 @@ class RGAAWebCheckerGUI:
             service = Service(ChromeDriverManager().install())
             driver = webdriver.Chrome(service=service, options=chrome_options)
             
-            # Crawler
-            crawler = AccessibilityCrawler(self.config, self.logger)
-            crawler.set_driver(driver)
+            # Naviguer vers l'URL
+            driver.get(url)
+            self.update_logs(f"Navigation vers: {url}")
             
-            # Exécuter l'analyse
-            crawler.crawl()
-            # Après l'analyse, générer un rapport ou afficher un message
-            self.root.after(0, lambda: self.update_logs("Analyse terminée. Rapport généré dans les logs ou le dossier de sortie."))
-            # Optionnel : appeler self.process_results({}) pour vider/mettre à jour l'affichage
-            self.root.after(0, lambda: self.process_results({}))
+            # Attendre que la page soit chargée
+            from selenium.webdriver.support.ui import WebDriverWait
+            from selenium.webdriver.support import expected_conditions as EC
+            WebDriverWait(driver, 10).until(
+                lambda d: d.execute_script('return document.readyState') == 'complete'
+            )
+            
+            # Gérer la bannière de cookies si spécifiée
+            if self.cookie_banner_var.get().strip():
+                self.handle_cookie_banner(driver)
+            
+            # Exécuter les modules activés
+            results = {}
+            dom_results = None
+            
+            # Analyse DOM
+            if self.modules['dom']['enabled'].get():
+                self.update_logs("Démarrage de l'analyse DOM...")
+                from modules.dom_analyzer import DOMAnalyzer
+                dom_analyzer = DOMAnalyzer(driver, self.logger)
+                dom_results = dom_analyzer.run()
+                results['dom'] = dom_results
+                self.update_logs("Analyse DOM terminée")
+            
+            # Autres modules si activés
+            if self.modules['contrast']['enabled'].get():
+                self.update_logs("Démarrage de l'analyse des contrastes...")
+                from modules.contrast_checker import ContrastChecker
+                contrast_checker = ContrastChecker(driver, self.logger)
+                results['contrast'] = contrast_checker.run()
+                self.update_logs("Analyse des contrastes terminée")
+            
+            if self.modules['daltonism']['enabled'].get():
+                self.update_logs("Démarrage de la simulation daltonisme...")
+                from modules.color_simulator import ColorSimulator
+                color_simulator = ColorSimulator(driver, self.logger)
+                results['daltonism'] = color_simulator.run()
+                self.update_logs("Simulation daltonisme terminée")
+            
+            if self.modules['tab']['enabled'].get():
+                self.update_logs("Démarrage de l'analyse de navigation tabulation...")
+                from modules.tab_navigator import TabNavigator
+                tab_navigator = TabNavigator(driver, self.logger)
+                results['tab'] = tab_navigator.run()
+                self.update_logs("Analyse de navigation tabulation terminée")
+            
+            if self.modules['screen']['enabled'].get():
+                self.update_logs("Démarrage de l'analyse lecteur d'écran...")
+                from modules.screen_reader import ScreenReader
+                screen_reader = ScreenReader(driver, self.logger)
+                results['screen'] = screen_reader.run()
+                self.update_logs("Analyse lecteur d'écran terminée")
+            
+            if self.modules['image']['enabled'].get():
+                self.update_logs("Démarrage de l'analyse d'images...")
+                from modules.image_analyzer import ImageAnalyzer
+                image_analyzer = ImageAnalyzer(driver, self.logger, url, self.output_dir_var.get())
+                results['image'] = image_analyzer.run()
+                self.update_logs("Analyse d'images terminée")
+            
+            # Mettre à jour l'interface avec les résultats
+            self.root.after(0, lambda: self.process_results(results, dom_results))
             
         except ImportError as e:
-            # Erreur d'import de module
             error_msg = f"Module manquant: {str(e)}\n\nVérifiez que tous les modules sont installés:\npip install -r requirements.txt"
             self.root.after(0, lambda: self.handle_analysis_error(error_msg))
         except Exception as e:
-            # Capturer l'erreur dans une variable locale pour éviter le problème de scope
             error_msg = str(e)
             self.root.after(0, lambda: self.handle_analysis_error(error_msg))
         finally:
+            if 'driver' in locals():
+                driver.quit()
             self.root.after(0, self.analysis_finished)
     
-    def process_results(self, results):
+    def handle_cookie_banner(self, driver):
+        """Gère la bannière de cookies"""
+        try:
+            cookie_text = self.cookie_banner_var.get().strip()
+            if not cookie_text:
+                return
+            
+            # Chercher le bouton avec le texte spécifié
+            from selenium.webdriver.common.by import By
+            from selenium.webdriver.support.ui import WebDriverWait
+            from selenium.webdriver.support import expected_conditions as EC
+            
+            button_xpath = f"""
+                //button[
+                    contains(text(), '{cookie_text}') or
+                    contains(@aria-label, '{cookie_text}') or
+                    contains(@title, '{cookie_text}')
+                ]
+            """
+            
+            button = WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable((By.XPATH, button_xpath))
+            )
+            
+            self.update_logs(f"Bouton cookie trouvé: {cookie_text}")
+            button.click()
+            self.update_logs("Clic sur le bouton cookie effectué")
+            
+            # Attendre que la bannière disparaisse
+            import time
+            time.sleep(2)
+            
+        except Exception as e:
+            self.update_logs(f"Erreur lors de la gestion de la bannière cookie: {str(e)}")
+    
+    def process_results(self, results, dom_results=None):
         """Traite et affiche les résultats"""
         self.results_data = results
+        
+        # Traiter les résultats DOM
+        if dom_results:
+            self.dom_results = dom_results
+            self.display_dom_results(dom_results)
+        elif 'dom' in results:
+            self.dom_results = results['dom']
+            self.display_dom_results(results['dom'])
         
         # Statistiques
         stats = self.calculate_statistics(results)
@@ -399,10 +588,11 @@ class RGAAWebCheckerGUI:
             'modules_run': len([m for m in self.modules.values() if m['enabled'].get()])
         }
         
-        for module_results in results.values():
-            if isinstance(module_results, list):
-                stats['total_issues'] += len(module_results)
-                for issue in module_results:
+        for module_name, module_results in results.items():
+            if isinstance(module_results, dict) and 'issues' in module_results:
+                issues = module_results['issues']
+                stats['total_issues'] += len(issues)
+                for issue in issues:
                     severity = issue.get('severity', 'medium')
                     if severity in stats:
                         stats[severity] += 1
@@ -433,14 +623,289 @@ class RGAAWebCheckerGUI:
         
         # Ajouter les nouveaux résultats
         for module_name, module_results in results.items():
-            if isinstance(module_results, list):
-                for issue in module_results:
+            if isinstance(module_results, dict) and 'issues' in module_results:
+                issues = module_results['issues']
+                for issue in issues:
                     self.results_tree.insert('', tk.END, values=(
                         module_name,
                         issue.get('type', 'N/A'),
                         issue.get('message', 'N/A'),
                         issue.get('severity', 'medium')
                     ))
+    
+    def display_dom_results(self, dom_results):
+        """Affiche les résultats de l'analyse DOM"""
+        if not dom_results:
+            self.dom_stats_text.delete(1.0, tk.END)
+            self.dom_stats_text.insert(1.0, "Aucun résultat d'analyse DOM disponible")
+            self.update_logs("Aucun résultat DOM à afficher")
+            return
+        
+        # Vérifier la structure des résultats
+        if not isinstance(dom_results, dict):
+            self.dom_stats_text.delete(1.0, tk.END)
+            self.dom_stats_text.insert(1.0, f"Format de résultats DOM invalide: {type(dom_results)}")
+            self.update_logs(f"Format de résultats DOM invalide: {type(dom_results)}")
+            return
+        
+        # Afficher les statistiques
+        summary = dom_results.get('summary', {})
+        elements = dom_results.get('elements', [])
+        issues = dom_results.get('issues', [])
+        
+        stats_text = f"""
+        Éléments totaux: {summary.get('total_elements', 0)}
+        Éléments analysés: {summary.get('analyzed_elements', 0)}
+        Problèmes détectés: {summary.get('issues_found', 0)}
+        """
+        self.dom_stats_text.delete(1.0, tk.END)
+        self.dom_stats_text.insert(1.0, stats_text)
+        
+        # Logs pour le débogage
+        self.update_logs(f"Résultats DOM: {len(elements)} éléments, {len(issues)} problèmes")
+        
+        # Charger les données dans le tableau
+        if elements:
+            self.load_dom_data(elements)
+        else:
+            self.update_logs("Aucun élément DOM trouvé dans les résultats")
+            # Effacer le tableau
+            for item in self.dom_tree.get_children():
+                self.dom_tree.delete(item)
+    
+    def load_dom_data(self, elements):
+        """Charge les données DOM dans le tableau"""
+        # Effacer les données précédentes
+        for item in self.dom_tree.get_children():
+            self.dom_tree.delete(item)
+        
+        # Stocker les données brutes pour le filtrage
+        self.dom_data = elements
+        
+        self.update_logs(f"Chargement de {len(elements)} éléments DOM dans le tableau")
+        
+        # Ajouter les éléments au tableau
+        for i, element in enumerate(elements):
+            try:
+                # Extraire les données pour l'affichage
+                tag = element.get('tag', 'N/A')
+                element_id = element.get('id', '')
+                class_attr = element.get('class', '')
+                role = element.get('role', '')
+                aria_label = element.get('aria_label', '')
+                text = element.get('text', '')[:50] + '...' if len(element.get('text', '')) > 50 else element.get('text', '')
+                alt = element.get('alt', '')
+                visible = 'Oui' if element.get('is_visible', False) else 'Non'
+                focusable = 'Oui' if element.get('is_focusable', False) else 'Non'
+                xpath = element.get('xpath', '')[:30] + '...' if len(element.get('xpath', '')) > 30 else element.get('xpath', '')
+                
+                self.dom_tree.insert('', tk.END, values=(
+                    tag, element_id, class_attr, role, aria_label, text, alt, visible, focusable, xpath
+                ))
+                
+                # Log tous les 100 éléments pour éviter de surcharger
+                if (i + 1) % 100 == 0:
+                    self.update_logs(f"Éléments DOM chargés: {i + 1}/{len(elements)}")
+                    
+            except Exception as e:
+                self.update_logs(f"Erreur lors du chargement de l'élément {i}: {str(e)}")
+                continue
+        
+        self.update_logs(f"Chargement terminé: {len(elements)} éléments DOM affichés")
+        
+        # Mettre à jour les filtres
+        self.update_dom_filters()
+    
+    def update_dom_filters(self):
+        """Met à jour les options de filtrage basées sur les données disponibles"""
+        if not self.dom_data:
+            return
+        
+        # Mettre à jour les tags disponibles
+        tags = set()
+        for element in self.dom_data:
+            tag = element.get('tag', '').lower()
+            if tag:
+                tags.add(tag)
+        
+        tag_values = ["Tous"] + sorted(list(tags))
+        self.tag_filter_combo['values'] = tag_values
+    
+    def filter_dom_data(self, event=None):
+        """Filtre les données DOM selon les critères sélectionnés"""
+        if not self.dom_data:
+            return
+        
+        # Effacer le tableau
+        for item in self.dom_tree.get_children():
+            self.dom_tree.delete(item)
+        
+        # Appliquer les filtres
+        search_term = self.dom_search_var.get().lower()
+        tag_filter = self.tag_filter_var.get()
+        visibility_filter = self.visibility_filter_var.get()
+        
+        filtered_data = []
+        for element in self.dom_data:
+            # Filtre de recherche
+            if search_term:
+                searchable_text = f"{element.get('tag', '')} {element.get('id', '')} {element.get('class', '')} {element.get('text', '')} {element.get('alt', '')}".lower()
+                if search_term not in searchable_text:
+                    continue
+            
+            # Filtre par tag
+            if tag_filter and tag_filter != "Tous":
+                if element.get('tag', '').lower() != tag_filter.lower():
+                    continue
+            
+            # Filtre par visibilité
+            if visibility_filter and visibility_filter != "Tous":
+                is_visible = element.get('is_visible', False)
+                if visibility_filter == "Visible" and not is_visible:
+                    continue
+                if visibility_filter == "Masqué" and is_visible:
+                    continue
+            
+            filtered_data.append(element)
+        
+        # Afficher les données filtrées
+        for element in filtered_data:
+            tag = element.get('tag', 'N/A')
+            element_id = element.get('id', '')
+            class_attr = element.get('class', '')
+            role = element.get('role', '')
+            aria_label = element.get('aria_label', '')
+            text = element.get('text', '')[:50] + '...' if len(element.get('text', '')) > 50 else element.get('text', '')
+            alt = element.get('alt', '')
+            visible = 'Oui' if element.get('is_visible', False) else 'Non'
+            focusable = 'Oui' if element.get('is_focusable', False) else 'Non'
+            xpath = element.get('xpath', '')[:30] + '...' if len(element.get('xpath', '')) > 30 else element.get('xpath', '')
+            
+            self.dom_tree.insert('', tk.END, values=(
+                tag, element_id, class_attr, role, aria_label, text, alt, visible, focusable, xpath
+            ))
+    
+    def reset_dom_filters(self):
+        """Réinitialise tous les filtres DOM"""
+        self.dom_search_var.set('')
+        self.tag_filter_var.set('')
+        self.visibility_filter_var.set('Tous')
+        self.filter_dom_data()
+    
+    def sort_dom_tree(self, column):
+        """Trie le tableau DOM par colonne"""
+        if not self.dom_data:
+            return
+        
+        # Déterminer la direction de tri
+        if self.dom_sort_column == column:
+            self.dom_sort_reverse = not self.dom_sort_reverse
+        else:
+            self.dom_sort_reverse = False
+        
+        self.dom_sort_column = column
+        
+        # Trier les données
+        column_index = {
+            'Tag': 'tag',
+            'ID': 'id',
+            'Classe': 'class',
+            'Rôle': 'role',
+            'Aria-label': 'aria_label',
+            'Texte': 'text',
+            'Alt': 'alt',
+            'Visible': 'is_visible',
+            'Focusable': 'is_focusable',
+            'XPath': 'xpath'
+        }.get(column, 'tag')
+        
+        sorted_data = sorted(self.dom_data, 
+                           key=lambda x: str(x.get(column_index, '')).lower(),
+                           reverse=self.dom_sort_reverse)
+        
+        # Recharger le tableau avec les données triées
+        for item in self.dom_tree.get_children():
+            self.dom_tree.delete(item)
+        
+        for element in sorted_data:
+            tag = element.get('tag', 'N/A')
+            element_id = element.get('id', '')
+            class_attr = element.get('class', '')
+            role = element.get('role', '')
+            aria_label = element.get('aria_label', '')
+            text = element.get('text', '')[:50] + '...' if len(element.get('text', '')) > 50 else element.get('text', '')
+            alt = element.get('alt', '')
+            visible = 'Oui' if element.get('is_visible', False) else 'Non'
+            focusable = 'Oui' if element.get('is_focusable', False) else 'Non'
+            xpath = element.get('xpath', '')[:30] + '...' if len(element.get('xpath', '')) > 30 else element.get('xpath', '')
+            
+            self.dom_tree.insert('', tk.END, values=(
+                tag, element_id, class_attr, role, aria_label, text, alt, visible, focusable, xpath
+            ))
+    
+    def export_dom_csv(self):
+        """Exporte les résultats DOM en CSV"""
+        if not self.dom_results or 'elements' not in self.dom_results:
+            messagebox.showwarning("Avertissement", "Aucun résultat DOM à exporter")
+            return
+        
+        filename = filedialog.asksaveasfilename(
+            defaultextension=".csv",
+            filetypes=[("Fichiers CSV", "*.csv"), ("Tous les fichiers", "*.*")]
+        )
+        if filename:
+            with open(filename, 'w', newline='', encoding='utf-8') as csvfile:
+                writer = csv.writer(csvfile)
+                
+                # En-tête
+                writer.writerow(['Tag', 'ID', 'Classe', 'Rôle', 'Aria-label', 'Aria-describedby', 'Aria-hidden', 'Aria-expanded', 'Aria-controls', 'Aria-labelledby', 'Texte', 'Alt', 'Title', 'Href', 'Src', 'Type', 'Value', 'Placeholder', 'Media Path', 'Media Type', 'XPath', 'CSS Selector', 'Is Visible', 'Is Displayed', 'Is Enabled', 'Is Focusable', 'Position', 'Computed Style'])
+                
+                # Données
+                for element in self.dom_results['elements']:
+                    writer.writerow([
+                        element.get('tag', ''),
+                        element.get('id', ''),
+                        element.get('class', ''),
+                        element.get('role', ''),
+                        element.get('aria_label', ''),
+                        element.get('aria_describedby', ''),
+                        element.get('aria_hidden', ''),
+                        element.get('aria_expanded', ''),
+                        element.get('aria_controls', ''),
+                        element.get('aria_labelledby', ''),
+                        element.get('text', ''),
+                        element.get('alt', ''),
+                        element.get('title', ''),
+                        element.get('href', ''),
+                        element.get('src', ''),
+                        element.get('type', ''),
+                        element.get('value', ''),
+                        element.get('placeholder', ''),
+                        element.get('media_path', ''),
+                        element.get('media_type', ''),
+                        element.get('xpath', ''),
+                        element.get('css_selector', ''),
+                        element.get('is_visible', False),
+                        element.get('is_displayed', False),
+                        element.get('is_enabled', False),
+                        element.get('is_focusable', False),
+                        str(element.get('position', {})),
+                        str(element.get('computed_style', {}))
+                    ])
+    
+    def export_dom_json(self):
+        """Exporte les résultats DOM en JSON"""
+        if not self.dom_results:
+            messagebox.showwarning("Avertissement", "Aucun résultat DOM à exporter")
+            return
+        
+        filename = filedialog.asksaveasfilename(
+            defaultextension=".json",
+            filetypes=[("Fichiers JSON", "*.json"), ("Tous les fichiers", "*.*")]
+        )
+        if filename:
+            with open(filename, 'w', encoding='utf-8') as f:
+                json.dump(self.dom_results, f, indent=2, ensure_ascii=False)
     
     def load_images(self):
         """Charge les images capturées"""
