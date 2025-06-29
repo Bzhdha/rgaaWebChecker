@@ -60,8 +60,16 @@ python launch_gui.py
 - **Bannière cookies** : Texte du bouton à cliquer
 - **Répertoire de sortie** : Dossier pour sauvegarder les résultats
 - **Mode debug** : Affichage des logs détaillés
+- **Charger derniers résultats** : Bypass l'analyse et charge les fichiers existants
 
-#### 3. **Onglet Résultats**
+#### 3. **Boutons d'Action**
+- **Démarrer l'analyse** : Lance l'analyse complète
+- **Arrêter** : Interrompt l'analyse en cours
+- **Charger derniers résultats** : Charge les résultats sans refaire l'analyse
+- **Info fichiers** : Affiche les informations sur les fichiers disponibles
+- **Ouvrir dossier résultats** : Ouvre le dossier des résultats
+
+#### 4. **Onglet Résultats**
 - **Statistiques** : Vue d'ensemble des problèmes détectés
 - **Tableau détaillé** : Liste complète des résultats avec :
   - Module source
@@ -70,13 +78,22 @@ python launch_gui.py
   - Niveau de sévérité
 - **Export** : Sauvegarde en CSV ou JSON
 
-#### 4. **Onglet Images Capturées**
+#### 5. **Onglet Analyse DOM (Nouveau avec TKSheet)**
+- **Tableau interactif** : Affichage avancé avec TKSheet
+- **Tri par colonne** : Clic sur les en-têtes pour trier
+- **Filtrage avancé** : Recherche textuelle et filtres par type
+- **Édition en ligne** : Possibilité de modifier les données
+- **Copie XPath** : Double-clic sur la colonne XPath pour copier
+- **Export** : Sauvegarde en CSV ou JSON
+- **Navigation fluide** : Ascenseurs horizontaux et verticaux
+
+#### 6. **Onglet Images Capturées**
 - **Navigation** : Boutons précédent/suivant
 - **Affichage** : Visualisation des captures d'écran
 - **Zoom** : Défilement pour voir les détails
 - **Informations** : Nom et numéro de l'image
 
-#### 5. **Onglet Logs**
+#### 7. **Onglet Logs**
 - **Logs en temps réel** : Affichage des messages d'analyse
 - **Sauvegarde** : Export des logs en fichier texte
 - **Nettoyage** : Effacement des logs
@@ -123,7 +140,54 @@ python launch_gui.py
 pip install -r requirements.txt
 
 # Ou installation manuelle
-pip install tkinter pillow selenium webdriver-manager
+pip install tkinter pillow selenium webdriver-manager tksheet
+
+# Installation spécifique de TKSheet
+pip install tksheet==6.1.12
+```
+
+#### Installation de TKSheet (Nouveau)
+TKSheet est une bibliothèque avancée pour les tableaux dans Tkinter. Elle offre :
+- **Tri interactif** par colonne
+- **Édition en ligne** des cellules
+- **Filtrage avancé** des données
+- **Navigation fluide** avec ascenseurs
+- **Performance optimisée** pour de grandes quantités de données
+
+**Installation automatique (Ubuntu/Linux - PRIORITÉ) :**
+```bash
+# Rendre le script exécutable
+chmod +x install_tksheet.sh
+
+# Installation avec vérification complète
+./install_tksheet.sh
+```
+
+**Installation manuelle (Ubuntu/Linux) :**
+```bash
+# Après activation de l'environnement virtuel
+source venv/bin/activate
+pip install tksheet==7.5.12
+```
+
+**Installation Windows (SECONDAIRE) :**
+```powershell
+# Script PowerShell
+.\install_tksheet.ps1
+
+# Ou installation manuelle
+pip install tksheet==7.5.12
+```
+
+**Test de l'installation :**
+```bash
+# Ubuntu/Linux (PRIORITÉ)
+python3 test_tksheet.py
+# ou
+python3 test_tksheet_simple.py
+
+# Windows (SECONDAIRE)
+python test_tksheet.py
 ```
 
 #### Dépendances Système
@@ -329,292 +393,6 @@ Si vous avez Anaconda ou Miniconda installé :
 # Après avoir activé l'environnement virtuel
 .\install_with_conda.ps1
 ```
-
-#### Solution 3 : Installation de Chrome (si erreur "Chrome not found")
-```bash
-# Installation automatique de Chrome
-chmod +x install_chrome.sh
-./install_chrome.sh
-```
-
-Alternatives si Chrome ne peut pas être installé :
-```bash
-# Utiliser Chromium à la place
-chmod +x install_chromium.sh
-./install_chromium.sh
-
-# Ou utiliser Firefox
-sudo apt install firefox
-```
-
-#### Solution 4 : Installation manuelle des prérequis
-```bash
-# Mettre à jour les paquets
-sudo apt update
-
-# Installer les prérequis Python
-sudo apt install -y python3 python3-pip python3-venv python3-full
-
-# Installer les dépendances de compilation
-sudo apt install -y python3-dev build-essential libxml2-dev libxslt1-dev
-sudo apt install -y libjpeg-dev libpng-dev libfreetype6-dev liblcms2-dev
-```
-
-#### Solution 5 : Erreur DevToolsActivePort (WSL + Chromium)
-Si vous obtenez l'erreur "DevToolsActivePort file doesn't exist" sur WSL avec Chromium :
-
-```bash
-# Nettoyer le cache webdriver-manager
-chmod +x clean_webdriver_cache.sh
-./clean_webdriver_cache.sh
-```
-
-Ce script :
-- Nettoie le cache webdriver-manager corrompu
-- Vérifie les permissions du ChromeDriver
-- Teste la configuration Chromium
-- Crée des logs détaillés
-
-#### Solution 6 : Erreur "Exec format error" ChromeDriver
-Si vous obtenez l'erreur "Exec format error" avec le ChromeDriver :
-
-```bash
-# Correction spécifique du ChromeDriver
-chmod +x fix_chromedriver.sh
-./fix_chromedriver.sh
-```
-
-Ce script :
-- Nettoie complètement le cache webdriver-manager
-- Réinstalle webdriver-manager
-- Corrige les permissions du ChromeDriver
-- Teste le fonctionnement complet
-- Identifie et corrige les fichiers corrompus
-
-#### Solution 7 : Erreur de version ChromeDriver/Chromium
-Si vous obtenez l'erreur "This version of ChromeDriver only supports Chrome version X" :
-
-```bash
-# Correction des problèmes de version
-chmod +x fix_chromium_version.sh
-./fix_chromium_version.sh
-```
-
-Ce script :
-- Détecte automatiquement la version de Chromium
-- Télécharge le ChromeDriver compatible
-- Nettoie le cache webdriver-manager
-- Teste la compatibilité
-- Résout les incompatibilités de version
-
-#### Solution 8 : Test de diagnostic Chromium sur WSL
-```bash
-# Test complet de la configuration Chromium
-python test_chromium_wsl.py
-```
-
-Ce script de diagnostic :
-- Vérifie la détection WSL
-- Teste le binaire Chromium
-- Vérifie le ChromeDriver
-- Teste Selenium avec Chromium
-- Identifie les problèmes spécifiques à WSL
-
-#### Solution 9 : Utilisation de Firefox (alternative)
-Si Chrome/Chromium pose des problèmes persistants :
-```bash
-# Installer Firefox
-sudo apt install firefox
-
-# Utiliser Firefox avec geckodriver
-pip install webdriver-manager
-```
-
-Puis modifier le script pour utiliser Firefox au lieu de Chrome/Chromium.
-
-### Fichiers de logs
-
-Les scripts créent automatiquement des fichiers de logs pour faciliter le dépannage :
-
-- **`install.log`** : Logs du script d'activation (`activate_venv.sh`)
-- **`install_ubuntu.log`** : Logs du script d'installation Ubuntu (`install_ubuntu.sh`)
-- **`fix_ubuntu.log`** : Logs du script de dépannage Ubuntu (`fix_ubuntu.sh`)
-- **`clean_install.log`** : Logs du script de nettoyage (`clean_and_install.sh`)
-- **`chrome_install.log`** : Logs du script d'installation Chrome (`install_chrome.sh`)
-- **`chromium_install.log`** : Logs du script d'installation Chromium (`install_chromium.sh`)
-
-Ces fichiers contiennent :
-- Horodatage de chaque action
-- Sortie détaillée des commandes
-- Messages d'erreur complets
-- Statut de chaque étape d'installation
-
-En cas de problème, consultez ces fichiers pour identifier la cause exacte de l'erreur.
-
-## Architecture
-
-### Structure du Projet
-```
-rgaaWebChecker/
-├── core/
-│   ├── config.py      # Configuration de l'application
-│   └── crawler.py     # Moteur d'analyse d'accessibilité
-├── utils/
-│   └── log_utils.py   # Utilitaires de logging
-└── main.py           # Point d'entrée de l'application
-```
-
-### Composants Principaux
-
-#### 1. Configuration (`core/config.py`)
-- Gestion des paramètres de l'application
-- Configuration des règles d'accessibilité
-- Paramètres de navigation et d'analyse
-
-#### 2. Crawler (`core/crawler.py`)
-- Moteur principal d'analyse d'accessibilité
-- Navigation sur les pages web
-- Analyse des éléments selon les critères RGAA
-- Génération des rapports
-
-#### 3. Utilitaires (`utils/log_utils.py`)
-- Gestion des logs
-- Formatage des messages
-- Configuration des niveaux de log
-
-#### 4. Point d'Entrée (`main.py`)
-- Gestion des arguments en ligne de commande
-- Configuration du navigateur Chrome
-- Gestion des bannières de cookies
-- Orchestration de l'analyse
-
-### Fonctionnalités Principales
-
-1. **Analyse d'Accessibilité**
-   - Vérification des critères RGAA
-   - Navigation automatique
-   - Détection des problèmes d'accessibilité
-
-2. **Gestion des Bannières de Cookies**
-   - Détection automatique
-   - Interaction avec les bannières
-   - Gestion des popups
-
-3. **Génération de Rapports**
-   - Format détaillé
-   - Résultats par critère
-   - Recommandations d'amélioration
-
-4. **Options de Configuration**
-   - Mode debug
-   - Choix de l'encodage
-   - Personnalisation de l'analyse
-
-## Utilisation
-
-### Démarrage rapide (Windows avec PowerShell)
-
-1. **Configuration initiale** (une seule fois) :
-   ```powershell
-   Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-   ```
-
-2. **Activation de l'environnement** :
-   ```powershell
-   .\activate_venv.ps1
-   ```
-
-3. **Exécution de l'analyse** :
-   ```powershell
-   python main.py <url> [options]
-   ```
-
-4. **Désactivation de l'environnement** (optionnel) :
-   ```powershell
-   .\deactivate_venv.ps1
-   ```
-
-### Démarrage rapide (Ubuntu/Linux)
-
-1. **Installation complète** :
-   ```bash
-   chmod +x install_ubuntu.sh && ./install_ubuntu.sh
-   chmod +x install_chrome.sh && ./install_chrome.sh
-   # OU pour Chromium (plus léger)
-   chmod +x install_chromium.sh && ./install_chromium.sh
-   ```
-
-2. **Activation de l'environnement** :
-   ```bash
-   source venv/bin/activate
-   ```
-
-3. **Exécution de l'analyse** :
-   ```bash
-   python main.py <url> [options]
-   ```
-
-### Exécution
-```bash
-python main.py <url> [options]
-
-Options:
-  --debug              Afficher les logs détaillés
-  --encoding ENCODING  Encodage du rapport (utf-8 ou cp1252)
-  --cookie-banner TEXT Texte du bouton de la bannière de cookies
-  --modules            Liste des modules à activer (contrast, dom, daltonism, tab, screen, image)
-  --output-dir         Répertoire de sortie pour les images (défaut: site_images)
-  --browser            Navigateur à utiliser (chrome, chromium, ou auto pour détection automatique)
-```
-
-### Exemples d'utilisation
-
-```bash
-# Analyse simple d'une page
-python main.py https://example.com
-
-# Analyse avec gestion de bannière de cookies
-python main.py https://example.com --cookie-banner "Accepter tout"
-
-# Analyse en mode debug avec modules spécifiques
-python main.py https://example.com --debug --modules contrast dom image
-
-# Analyse avec encodage spécifique
-python main.py https://example.com --encoding cp1252
-
-# Analyse avec Chromium explicitement
-python main.py https://example.com --browser chromium
-
-# Analyse avec Chrome explicitement
-python main.py https://example.com --browser chrome
-```
-
-## Architecture
-
-### Dépannage Ubuntu/Linux
-
-Si vous rencontrez des erreurs sur Ubuntu/Linux, voici les solutions :
-
-#### Solution 1 : Script de dépannage automatique
-```bash
-# Après avoir activé l'environnement virtuel
-chmod +x fix_ubuntu.sh
-./fix_ubuntu.sh
-```
-
-#### Solution 2 : Nettoyage et réinstallation complète (recommandé pour les problèmes persistants)
-```bash
-# Script de nettoyage et réinstallation complète
-chmod +x clean_and_install.sh
-./clean_and_install.sh
-```
-
-Ce script :
-- Supprime complètement l'environnement virtuel existant
-- Installe automatiquement tous les prérequis système
-- Crée un nouvel environnement virtuel propre
-- Installe toutes les dépendances
-- Crée des logs détaillés dans `clean_install.log`
 
 #### Solution 3 : Installation de Chrome (si erreur "Chrome not found")
 ```bash

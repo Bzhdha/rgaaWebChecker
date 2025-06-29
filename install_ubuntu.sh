@@ -103,6 +103,9 @@ else
         "requests==2.31.0"
         "lxml==4.9.3"
         "pdfkit==1.0.0"
+        "tksheet==7.5.12"
+        "pandas"
+        "pandastable"
     )
     
     success=true

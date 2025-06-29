@@ -10,6 +10,9 @@ import csv
 from datetime import datetime
 import webbrowser
 from pathlib import Path
+from tksheet import Sheet
+import pandas as pd
+from pandastable import Table
 
 # Import des modules de l'application
 from core.config import Config
@@ -34,6 +37,7 @@ class RGAAWebCheckerGUI:
         self.cookie_banner_var = tk.StringVar()
         self.output_dir_var = tk.StringVar(value="site_images")
         self.debug_var = tk.BooleanVar()
+        self.quick_load_var = tk.BooleanVar()
         
         # Modules disponibles
         self.modules = {
@@ -184,6 +188,12 @@ class RGAAWebCheckerGUI:
                                  variable=self.debug_var)
         debug_cb.grid(row=1, column=4, sticky=tk.W, padx=(20, 0), pady=2)
         
+        # Mode chargement rapide
+        quick_load_cb = ttk.Checkbutton(options_frame, 
+                                      text="Charger derniers résultats", 
+                                      variable=self.quick_load_var)
+        quick_load_cb.grid(row=1, column=5, sticky=tk.W, padx=(20, 0), pady=2)
+        
         # Boutons d'action
         buttons_frame = ttk.Frame(config_frame)
         buttons_frame.grid(row=3, column=0, columnspan=2, pady=(15, 0))
@@ -199,6 +209,14 @@ class RGAAWebCheckerGUI:
                                      command=self.stop_analysis,
                                      state=tk.DISABLED)
         self.stop_button.pack(side=tk.LEFT, padx=(0, 10))
+        
+        ttk.Button(buttons_frame, 
+                  text="Charger derniers résultats", 
+                  command=self.load_last_results).pack(side=tk.LEFT, padx=(0, 10))
+        
+        ttk.Button(buttons_frame, 
+                  text="Info fichiers", 
+                  command=self.show_results_info).pack(side=tk.LEFT, padx=(0, 10))
         
         ttk.Button(buttons_frame, 
                   text="Ouvrir dossier résultats", 
@@ -247,7 +265,7 @@ class RGAAWebCheckerGUI:
         ttk.Button(export_frame, text="Exporter JSON", command=self.export_results_json).pack(side=tk.LEFT)
     
     def setup_dom_tab(self):
-        """Configure l'onglet d'analyse DOM avec tableau interactif"""
+        """Configure l'onglet d'analyse DOM avec tableau PandasTable"""
         dom_frame = ttk.Frame(self.notebook)
         self.notebook.add(dom_frame, text="Analyse DOM")
         
@@ -295,53 +313,28 @@ class RGAAWebCheckerGUI:
         # Frame pour les statistiques DOM
         dom_stats_frame = ttk.LabelFrame(dom_frame, text="Statistiques DOM", padding="10")
         dom_stats_frame.pack(fill=tk.X, padx=10, pady=5)
-        
         self.dom_stats_text = tk.Text(dom_stats_frame, height=3, wrap=tk.WORD)
         self.dom_stats_text.pack(fill=tk.X)
         
-        # Frame pour le tableau des éléments DOM
+        # Frame pour le tableau des éléments DOM avec PandasTable
         dom_table_frame = ttk.LabelFrame(dom_frame, text="Éléments DOM analysés", padding="10")
         dom_table_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
-
-        # --- Correction placement ascenseurs ---
-        # Frame conteneur pour le tableau et les scrollbars
-        table_container = ttk.Frame(dom_table_frame)
-        table_container.pack(fill=tk.BOTH, expand=True)
-        # Colonnes pour le tableau DOM (toutes les colonnes du JSON)
-        dom_columns = (
-            'Tag', 'ID', 'Classe', 'Rôle', 'Aria-label', 'Aria-describedby', 'Aria-hidden', 'Aria-expanded', 'Aria-controls', 'Aria-labelledby',
-            'Texte', 'Alt', 'Title', 'Href', 'Src', 'Type', 'Value', 'Placeholder',
-            'Media Path', 'Media Type', 'XPath', 'CSS Selector',
-            'Is Visible', 'Is Displayed', 'Is Enabled', 'Is Focusable',
-            'Position', 'Computed Style', 'Accessible Name'
-        )
-        self.dom_tree = ttk.Treeview(table_container, columns=dom_columns, show='headings', height=15)
-        # Configuration des colonnes avec tri
-        for col in dom_columns:
-            self.dom_tree.heading(col, text=col, command=lambda c=col: self.sort_dom_tree(c))
-            self.dom_tree.column(col, width=140)
-        # Scrollbars
-        dom_v_scrollbar = ttk.Scrollbar(table_container, orient=tk.VERTICAL, command=self.dom_tree.yview)
-        dom_h_scrollbar = ttk.Scrollbar(table_container, orient=tk.HORIZONTAL, command=self.dom_tree.xview)
-        self.dom_tree.configure(yscrollcommand=dom_v_scrollbar.set, xscrollcommand=dom_h_scrollbar.set)
-        # Placement dans le frame conteneur
-        self.dom_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        dom_v_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        dom_h_scrollbar.pack(side=tk.BOTTOM, fill=tk.X)
-        # Ajout du binding double-clic pour copier le xpath
-        self.dom_tree.bind('<Double-1>', self.copy_xpath_on_double_click)
+        
+        # Canvas pour PandasTable
+        self.dom_table_canvas = tk.Frame(dom_table_frame)
+        self.dom_table_canvas.pack(fill=tk.BOTH, expand=True)
+        self.dom_ptable = None
+        self.dom_df = pd.DataFrame()  # DataFrame source
         
         # Boutons d'export pour DOM
         dom_export_frame = ttk.Frame(dom_frame)
         dom_export_frame.pack(fill=tk.X, padx=10, pady=5)
-        
         ttk.Button(dom_export_frame, text="Exporter DOM CSV", command=self.export_dom_csv).pack(side=tk.LEFT, padx=(0, 10))
         ttk.Button(dom_export_frame, text="Exporter DOM JSON", command=self.export_dom_json).pack(side=tk.LEFT)
         
-        # Variables pour le tri
-        self.dom_sort_column = None
-        self.dom_sort_reverse = False
+        # Variables pour le tri et les données
         self.dom_data = []  # Données brutes pour le filtrage
+        self.filtered_dom_data = []  # Données filtrées affichées
     
     def setup_images_tab(self):
         """Configure l'onglet des images"""
@@ -401,6 +394,11 @@ class RGAAWebCheckerGUI:
             return
         
         if self.analysis_running:
+            return
+        
+        # Vérifier si le mode chargement rapide est activé
+        if self.quick_load_var.get():
+            self.load_last_results()
             return
         
         # Préparer l'interface
@@ -679,67 +677,25 @@ class RGAAWebCheckerGUI:
         else:
             self.update_logs("Aucun élément DOM trouvé dans les résultats")
             # Effacer le tableau
-            for item in self.dom_tree.get_children():
-                self.dom_tree.delete(item)
+            if self.dom_ptable:
+                self.dom_ptable.destroy()
+            self.dom_ptable = None
+            self.dom_df = pd.DataFrame()
     
-    def get_dom_row_values(self, element):
-        """Retourne le tuple de valeurs pour une ligne du tableau DOM, pour toutes les colonnes"""
-        tag = element.get('tag', 'N/A')
-        element_id = element.get('id', '')
-        class_attr = element.get('class', '')
-        role = element.get('role', '')
-        aria_label = element.get('aria_label', '')
-        aria_describedby = element.get('aria_describedby', '')
-        aria_hidden = element.get('aria_hidden', '')
-        aria_expanded = element.get('aria_expanded', '')
-        aria_controls = element.get('aria_controls', '')
-        aria_labelledby = element.get('aria_labelledby', '')
-        text = element.get('text', '')
-        alt = element.get('alt', '')
-        title = element.get('title', '')
-        href = element.get('href', '')
-        src = element.get('src', '')
-        type_ = element.get('type', '')
-        value = element.get('value', '')
-        placeholder = element.get('placeholder', '')
-        media_path = element.get('media_path', '')
-        media_type = element.get('media_type', '')
-        xpath = element.get('xpath', '')
-        css_selector = element.get('css_selector', '')
-        is_visible = element.get('is_visible', False)
-        is_displayed = element.get('is_displayed', False)
-        is_enabled = element.get('is_enabled', False)
-        is_focusable = element.get('is_focusable', False)
-        position = element.get('position', {})
-        pos_str = f"x={position.get('x','')}, y={position.get('y','')}, w={position.get('width','')}, h={position.get('height','')}" if position else ''
-        computed_style = element.get('computed_style', {})
-        style_str = ', '.join([f"{k}={v}" for k,v in computed_style.items()]) if computed_style else ''
-        accessible_name = element.get('accessible_name', {})
-        acc_name_str = f"name={accessible_name.get('name','')}, source={accessible_name.get('source','')}, priority={accessible_name.get('priority','')}" if accessible_name else ''
-        return (
-            tag, element_id, class_attr, role, aria_label, aria_describedby, aria_hidden, aria_expanded, aria_controls, aria_labelledby,
-            text, alt, title, href, src, type_, value, placeholder,
-            media_path, media_type, xpath, css_selector,
-            'Oui' if is_visible else 'Non', 'Oui' if is_displayed else 'Non', 'Oui' if is_enabled else 'Non', 'Oui' if is_focusable else 'Non',
-            pos_str, style_str, acc_name_str
-        )
-
     def load_dom_data(self, elements):
-        """Charge les données DOM dans le tableau"""
-        # Effacer les données précédentes
-        for item in self.dom_tree.get_children():
-            self.dom_tree.delete(item)
+        """Charge les données DOM dans le tableau PandasTable"""
+        # Conversion en DataFrame
+        df = pd.DataFrame([self.get_dom_row_dict(element) for element in elements])
+        self.dom_df = df
         self.dom_data = elements
+        self.filtered_dom_data = elements
         self.update_logs(f"Chargement de {len(elements)} éléments DOM dans le tableau")
-        for i, element in enumerate(elements):
-            try:
-                self.dom_tree.insert('', tk.END, values=self.get_dom_row_values(element))
-                if (i + 1) % 100 == 0:
-                    self.update_logs(f"Éléments DOM chargés: {i + 1}/{len(elements)}")
-            except Exception as e:
-                self.update_logs(f"Erreur lors du chargement de l'élément {i}: {str(e)}")
-                continue
-        self.update_logs(f"Chargement terminé: {len(elements)} éléments DOM affichés")
+        
+        # Affichage dans PandasTable
+        if self.dom_ptable:
+            self.dom_ptable.destroy()
+        self.dom_ptable = Table(self.dom_table_canvas, dataframe=self.dom_df, showtoolbar=True, showstatusbar=True)
+        self.dom_ptable.show()
         self.update_dom_filters()
     
     def update_dom_filters(self):
@@ -761,24 +717,31 @@ class RGAAWebCheckerGUI:
         """Filtre les données DOM selon les critères sélectionnés"""
         if not self.dom_data:
             return
+        
         # Effacer le tableau
-        for item in self.dom_tree.get_children():
-            self.dom_tree.delete(item)
+        if self.dom_ptable:
+            self.dom_ptable.destroy()
+        self.dom_ptable = None
+        self.dom_df = pd.DataFrame()
+        
         # Appliquer les filtres
         search_term = self.dom_search_var.get().lower()
         tag_filter = self.tag_filter_var.get()
         visibility_filter = self.visibility_filter_var.get()
         filtered_data = []
+        
         for element in self.dom_data:
             # Filtre de recherche
             if search_term:
                 searchable_text = f"{element.get('tag', '')} {element.get('id', '')} {element.get('class', '')} {element.get('text', '')} {element.get('alt', '')}".lower()
                 if search_term not in searchable_text:
                     continue
+            
             # Filtre par tag
             if tag_filter and tag_filter != "Tous":
                 if element.get('tag', '').lower() != tag_filter.lower():
                     continue
+            
             # Filtre par visibilité
             if visibility_filter and visibility_filter != "Tous":
                 is_visible = element.get('is_visible', False)
@@ -786,30 +749,42 @@ class RGAAWebCheckerGUI:
                     continue
                 if visibility_filter == "Masqué" and is_visible:
                     continue
+            
             filtered_data.append(element)
-        # Afficher les données filtrées
-        for element in filtered_data:
-            self.dom_tree.insert('', tk.END, values=self.get_dom_row_values(element))
+        
+        # Préparer les données filtrées
+        df = pd.DataFrame([self.get_dom_row_dict(element) for element in filtered_data])
+        self.dom_df = df
+        self.filtered_dom_data = filtered_data
+        
+        # Affichage dans PandasTable
+        if self.dom_ptable:
+            self.dom_ptable.destroy()
+        self.dom_ptable = Table(self.dom_table_canvas, dataframe=self.dom_df, showtoolbar=True, showstatusbar=True)
+        self.dom_ptable.show()
     
     def reset_dom_filters(self):
         """Réinitialise tous les filtres DOM"""
         self.dom_search_var.set('')
         self.tag_filter_var.set('')
         self.visibility_filter_var.set('Tous')
-        self.filter_dom_data()
+        # Recharger toutes les données
+        if self.dom_data:
+            if self.dom_ptable:
+                self.dom_ptable.destroy()
+            self.dom_ptable = None
+            self.dom_df = pd.DataFrame()
     
-    def sort_dom_tree(self, column):
+    def sort_dom_sheet(self, column):
         """Trie le tableau DOM par colonne"""
-        if not self.dom_data:
+        # Utiliser les données filtrées si elles existent, sinon les données complètes
+        data_to_sort = self.filtered_dom_data if self.filtered_dom_data else self.dom_data
+        
+        if not data_to_sort:
             return
-        # Déterminer la direction de tri
-        if self.dom_sort_column == column:
-            self.dom_sort_reverse = not self.dom_sort_reverse
-        else:
-            self.dom_sort_reverse = False
-        self.dom_sort_column = column
+        
         # Mapping colonne -> clé JSON
-        column_index = {
+        column_mapping = {
             'Tag': 'tag',
             'ID': 'id',
             'Classe': 'class',
@@ -839,16 +814,25 @@ class RGAAWebCheckerGUI:
             'Position': 'position',
             'Computed Style': 'computed_style',
             'Accessible Name': 'accessible_name',
-        }.get(column, 'tag')
+        }
+        
+        column_key = column_mapping.get(column, 'tag')
+        
         # Tri
-        sorted_data = sorted(self.dom_data,
-            key=lambda x: str(x.get(column_index, '')).lower() if not isinstance(x.get(column_index, ''), dict) else str(x.get(column_index, '')),
-            reverse=self.dom_sort_reverse)
-        # Recharger le tableau avec toutes les colonnes
-        for item in self.dom_tree.get_children():
-            self.dom_tree.delete(item)
-        for element in sorted_data:
-            self.dom_tree.insert('', tk.END, values=self.get_dom_row_values(element))
+        sorted_data = sorted(data_to_sort,
+            key=lambda x: str(x.get(column_key, '')).lower() if not isinstance(x.get(column_key, ''), dict) else str(x.get(column_key, '')),
+            reverse=False)
+        
+        # Préparer les données triées
+        df = pd.DataFrame([self.get_dom_row_dict(element) for element in sorted_data])
+        self.dom_df = df
+        self.filtered_dom_data = sorted_data
+        
+        # Recharger le tableau
+        if self.dom_ptable:
+            self.dom_ptable.destroy()
+        self.dom_ptable = Table(self.dom_table_canvas, dataframe=self.dom_df, showtoolbar=True, showstatusbar=True)
+        self.dom_ptable.show()
     
     def export_dom_csv(self):
         """Exporte les résultats DOM en CSV"""
@@ -1137,20 +1121,170 @@ class RGAAWebCheckerGUI:
         else:
             messagebox.showinfo("Information", "Le dossier de résultats n'existe pas encore")
     
-    def copy_xpath_on_double_click(self, event):
-        """Copie le xpath complet dans le presse-papier si double-clic sur la colonne XPath"""
-        item_id = self.dom_tree.identify_row(event.y)
-        col = self.dom_tree.identify_column(event.x)
-        if not item_id or not col:
-            return
-        col_index = int(col.replace('#','')) - 1
-        # Vérifier si c'est la colonne XPath
-        if self.dom_tree['columns'][col_index] == 'XPath':
-            xpath_value = self.dom_tree.item(item_id, 'values')[col_index]
-            self.root.clipboard_clear()
-            self.root.clipboard_append(xpath_value)
-            self.root.update()  # nécessaire pour le clipboard
-            messagebox.showinfo("Copié", "XPath copié dans le presse-papier !")
+    def get_dom_row_dict(self, element):
+        """Retourne un dict pour une ligne du tableau DOM (pour DataFrame)"""
+        return {
+            'Tag': element.get('tag', 'N/A'),
+            'ID': element.get('id', ''),
+            'Classe': element.get('class', ''),
+            'Rôle': element.get('role', ''),
+            'Aria-label': element.get('aria_label', ''),
+            'Aria-describedby': element.get('aria_describedby', ''),
+            'Aria-hidden': element.get('aria_hidden', ''),
+            'Aria-expanded': element.get('aria_expanded', ''),
+            'Aria-controls': element.get('aria_controls', ''),
+            'Aria-labelledby': element.get('aria_labelledby', ''),
+            'Texte': element.get('text', ''),
+            'Alt': element.get('alt', ''),
+            'Title': element.get('title', ''),
+            'Href': element.get('href', ''),
+            'Src': element.get('src', ''),
+            'Type': element.get('type', ''),
+            'Value': element.get('value', ''),
+            'Placeholder': element.get('placeholder', ''),
+            'Media Path': element.get('media_path', ''),
+            'Media Type': element.get('media_type', ''),
+            'XPath': element.get('xpath', ''),
+            'CSS Selector': element.get('css_selector', ''),
+            'Is Visible': 'Oui' if element.get('is_visible', False) else 'Non',
+            'Is Displayed': 'Oui' if element.get('is_displayed', False) else 'Non',
+            'Is Enabled': 'Oui' if element.get('is_enabled', False) else 'Non',
+            'Is Focusable': 'Oui' if element.get('is_focusable', False) else 'Non',
+            'Position': str(element.get('position', {})),
+            'Computed Style': str(element.get('computed_style', {})),
+            'Accessible Name': str(element.get('accessible_name', {})),
+        }
+
+    def load_last_results(self):
+        """Charge les derniers résultats sans refaire l'analyse"""
+        try:
+            self.update_logs("Chargement des derniers résultats...")
+            # Chercher les fichiers de résultats récents
+            results_files = self.find_latest_results()
+            if not results_files:
+                messagebox.showinfo("Information", "Aucun fichier de résultats trouvé.\nExécutez d'abord une analyse.")
+                return
+            # Charger les résultats DOM
+            dom_results = self.load_dom_results(results_files.get('dom_json'))
+            # Charger les autres résultats
+            other_results = self.load_other_results(results_files)
+            # Combiner les résultats
+            combined_results = {}
+            if dom_results:
+                combined_results['dom'] = dom_results
+            if other_results:
+                combined_results.update(other_results)
+            # Traiter et afficher les résultats
+            if combined_results:
+                self.process_results(combined_results, dom_results)
+                self.update_logs("Derniers résultats chargés avec succès")
+                messagebox.showinfo("Succès", "Derniers résultats chargés avec succès !")
+            else:
+                messagebox.showwarning("Avertissement", "Aucun résultat valide trouvé")
+        except Exception as e:
+            error_msg = f"Erreur lors du chargement des derniers résultats: {str(e)}"
+            self.update_logs(f"ERREUR: {error_msg}")
+            messagebox.showerror("Erreur", error_msg)
+
+    def find_latest_results(self):
+        """Trouve les fichiers de résultats les plus récents"""
+        results_files = {}
+        # Chercher le fichier DOM JSON le plus récent
+        dom_json_patterns = [
+            "rapport_analyse_dom.json",
+            "reports/rapport_analyse_dom.json",
+            "*.json"
+        ]
+        for pattern in dom_json_patterns:
+            if pattern.startswith("*"):
+                json_files = list(Path(".").glob(pattern))
+                json_files = [f for f in json_files if "dom" in f.name.lower() or "result" in f.name.lower()]
+            else:
+                json_files = list(Path(".").glob(pattern))
+            if json_files:
+                latest_file = max(json_files, key=lambda f: f.stat().st_mtime)
+                results_files['dom_json'] = latest_file
+                self.update_logs(f"Fichier DOM trouvé: {latest_file}")
+                break
+        # Chercher d'autres fichiers de résultats
+        csv_files = list(Path(".").glob("*.csv"))
+        if csv_files:
+            results_files['csv_files'] = csv_files
+        return results_files
+
+    def load_dom_results(self, dom_file_path):
+        """Charge les résultats DOM depuis un fichier JSON"""
+        if not dom_file_path or not dom_file_path.exists():
+            return None
+        try:
+            with open(dom_file_path, 'r', encoding='utf-8') as f:
+                dom_results = json.load(f)
+            self.update_logs(f"Résultats DOM chargés depuis: {dom_file_path}")
+            return dom_results
+        except Exception as e:
+            self.update_logs(f"Erreur lors du chargement DOM: {str(e)}")
+            return None
+
+    def load_other_results(self, results_files):
+        """Charge les autres types de résultats"""
+        other_results = {}
+        # Charger les résultats CSV si disponibles
+        if 'csv_files' in results_files:
+            for csv_file in results_files['csv_files']:
+                try:
+                    filename = csv_file.name.lower()
+                    if 'contrast' in filename:
+                        other_results['contrast'] = self.parse_csv_results(csv_file, 'contrast')
+                    elif 'image' in filename:
+                        other_results['image'] = self.parse_csv_results(csv_file, 'image')
+                    elif 'tab' in filename:
+                        other_results['tab'] = self.parse_csv_results(csv_file, 'tab')
+                    elif 'screen' in filename:
+                        other_results['screen'] = self.parse_csv_results(csv_file, 'screen')
+                    self.update_logs(f"Résultats chargés depuis: {csv_file}")
+                except Exception as e:
+                    self.update_logs(f"Erreur lors du chargement de {csv_file}: {str(e)}")
+        return other_results
+
+    def parse_csv_results(self, csv_file, module_type):
+        """Parse un fichier CSV pour extraire les résultats"""
+        try:
+            results = {'issues': []}
+            with open(csv_file, 'r', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    issue = {
+                        'type': row.get('Type', 'N/A'),
+                        'message': row.get('Message', 'N/A'),
+                        'severity': row.get('Sévérité', 'medium')
+                    }
+                    results['issues'].append(issue)
+            return results
+        except Exception as e:
+            self.update_logs(f"Erreur lors du parsing CSV {csv_file}: {str(e)}")
+            return {'issues': []}
+
+    def show_results_info(self):
+        """Affiche les informations sur les fichiers de résultats disponibles"""
+        try:
+            results_files = self.find_latest_results()
+            if not results_files:
+                messagebox.showinfo("Information", "Aucun fichier de résultats trouvé.")
+                return
+            info_text = "Fichiers de résultats disponibles:\n\n"
+            if 'dom_json' in results_files:
+                dom_file = results_files['dom_json']
+                mod_time = datetime.fromtimestamp(dom_file.stat().st_mtime)
+                info_text += f"📄 DOM JSON: {dom_file.name}\n"
+                info_text += f"   Modifié: {mod_time.strftime('%d/%m/%Y %H:%M:%S')}\n\n"
+            if 'csv_files' in results_files:
+                info_text += "📊 Fichiers CSV:\n"
+                for csv_file in results_files['csv_files']:
+                    mod_time = datetime.fromtimestamp(csv_file.stat().st_mtime)
+                    info_text += f"   • {csv_file.name} ({mod_time.strftime('%d/%m/%Y %H:%M:%S')})\n"
+            messagebox.showinfo("Fichiers de résultats", info_text)
+        except Exception as e:
+            messagebox.showerror("Erreur", f"Erreur lors de la lecture des fichiers: {str(e)}")
 
 def main():
     """Fonction principale"""

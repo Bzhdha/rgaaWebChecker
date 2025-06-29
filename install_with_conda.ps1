@@ -47,10 +47,11 @@ pip install markdown==3.5.2
 pip install beautifulsoup4==4.12.3
 pip install requests==2.31.0
 pip install pdfkit==1.0.0
+pip install tksheet==7.5.12
 
 # Vérification finale
 Write-Host "`nVérification de l'installation..." -ForegroundColor Yellow
-$packages = @("selenium", "webdriver-manager", "Pillow", "markdown", "beautifulsoup4", "requests", "lxml", "pdfkit")
+$packages = @("selenium", "webdriver-manager", "Pillow", "markdown", "beautifulsoup4", "requests", "lxml", "pdfkit", "tksheet")
 
 $allInstalled = $true
 foreach ($package in $packages) {

@@ -5,4 +5,7 @@ markdown==3.5.2
 pdfkit==1.0.0
 beautifulsoup4==4.12.3
 requests==2.31.0
-lxml==4.9.3 
+lxml==4.9.3
+tksheet==7.5.12
+pandas
+pandastable 
