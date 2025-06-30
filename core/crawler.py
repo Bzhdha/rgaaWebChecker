@@ -7,12 +7,13 @@ from modules.dom_analyzer import DOMAnalyzer
 from utils.log_utils import setup_logger
 
 class AccessibilityCrawler:
-    def __init__(self, config, logger=None):
+    def __init__(self, config, logger=None, tab_delay=0.0):
         self.config = config
         self.modules = []
         self.driver = None
         self.logger = logger if logger else setup_logger()
         self.results = {}  # Stockage des résultats
+        self.tab_delay = tab_delay  # Délai pour la navigation tabulaire
 
     def _load_modules(self):
         if 'contrast' in self.config.get_enabled_modules():
@@ -24,7 +25,7 @@ class AccessibilityCrawler:
         if 'daltonism' in self.config.get_enabled_modules():
             self.modules.append(ColorSimulator(self.driver, self.logger))
         if 'tab_navigation' in self.config.get_enabled_modules():
-            self.modules.append(TabNavigator(self.driver, self.logger))
+            self.modules.append(TabNavigator(self.driver, self.logger, self.tab_delay))
         if 'image_analyzer' in self.config.get_enabled_modules():
             self.modules.append(ImageAnalyzer(self.driver, self.logger, self.config.base_url, self.config.output_dir))
 

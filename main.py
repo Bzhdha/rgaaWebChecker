@@ -51,6 +51,10 @@ if __name__ == "__main__":
     parser.add_argument('--output-dir', default='site_images', help='Répertoire de sortie pour les images (défaut: site_images)')
     parser.add_argument('--browser', choices=['chrome', 'chromium', 'auto'], default='auto', 
                       help='Navigateur à utiliser (chrome, chromium, ou auto pour détection automatique)')
+    parser.add_argument('--tab-delay', type=float, default=0.0, 
+                      help='Délai en secondes entre les deux snapshots de navigation tabulaire (défaut: 0.0, désactivé)')
+    parser.add_argument('--enable-tab-delay', action='store_true', 
+                      help='Activer le délai de 0.5 seconde entre les snapshots de navigation tabulaire')
     args = parser.parse_args()
     
     url = args.url
@@ -519,8 +523,20 @@ if __name__ == "__main__":
             driver.quit()
             sys.exit(1)
             
+        # Déterminer le délai de tabulation
+        tab_delay = 0.0
+        if args.enable_tab_delay:
+            tab_delay = 0.5  # Délai par défaut de 0.5 seconde
+        elif args.tab_delay > 0:
+            tab_delay = args.tab_delay  # Délai personnalisé
+        
+        if tab_delay > 0:
+            log_with_step(logger, logging.INFO, "CONFIGURATION", f"Délai de tabulation activé: {tab_delay} seconde(s)")
+        else:
+            log_with_step(logger, logging.INFO, "CONFIGURATION", "Délai de tabulation désactivé")
+            
         log_with_step(logger, logging.INFO, "DRIVER", f"Page visitée: {url}")
-        crawler = AccessibilityCrawler(config, logger)
+        crawler = AccessibilityCrawler(config, logger, tab_delay)
         crawler.set_driver(driver)
         log_with_step(logger, logging.INFO, "DRIVER", "Driver assigné au crawler.")
         crawler.crawl()

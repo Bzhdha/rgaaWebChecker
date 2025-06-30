@@ -13,6 +13,7 @@ from pathlib import Path
 from tksheet import Sheet
 import pandas as pd
 from pandastable import Table
+import glob
 
 # Import des modules de l'application
 from core.config import Config
@@ -55,6 +56,7 @@ class RGAAWebCheckerGUI:
         self.current_images = []
         self.current_image_index = 0
         self.dom_results = {}  # Résultats détaillés de l'analyse DOM
+        self.tabulation_results = {}  # Résultats détaillés de l'analyse tabulaire
         
         # Configuration
         self.config = Config()
@@ -117,6 +119,7 @@ class RGAAWebCheckerGUI:
         # Onglets
         self.setup_results_tab()
         self.setup_dom_tab()  # Nouvel onglet pour l'analyse DOM
+        self.setup_tabulation_tab()  # Nouvel onglet pour l'analyse tabulaire
         self.setup_images_tab()
         self.setup_logs_tab()
         
@@ -336,6 +339,78 @@ class RGAAWebCheckerGUI:
         self.dom_data = []  # Données brutes pour le filtrage
         self.filtered_dom_data = []  # Données filtrées affichées
     
+    def setup_tabulation_tab(self):
+        """Configure l'onglet d'analyse tabulaire"""
+        tabulation_frame = ttk.Frame(self.notebook)
+        self.notebook.add(tabulation_frame, text="Analyse Tabulaire")
+        
+        # Frame pour les contrôles de filtrage
+        controls_frame = ttk.LabelFrame(tabulation_frame, text="Filtres et recherche", padding="10")
+        controls_frame.pack(fill=tk.X, padx=10, pady=5)
+        
+        # Barre de recherche
+        search_frame = ttk.Frame(controls_frame)
+        search_frame.pack(fill=tk.X, pady=(0, 10))
+        
+        ttk.Label(search_frame, text="Recherche:").pack(side=tk.LEFT)
+        self.tabulation_search_var = tk.StringVar()
+        self.tabulation_search_entry = ttk.Entry(search_frame, textvariable=self.tabulation_search_var, width=40)
+        self.tabulation_search_entry.pack(side=tk.LEFT, padx=(10, 0))
+        self.tabulation_search_entry.bind('<KeyRelease>', self.filter_tabulation_data)
+        
+        # Filtres par type d'élément
+        filter_frame = ttk.Frame(controls_frame)
+        filter_frame.pack(fill=tk.X)
+        
+        ttk.Label(filter_frame, text="Filtrer par:").pack(side=tk.LEFT)
+        
+        # Filtre par tag
+        ttk.Label(filter_frame, text="Tag:").pack(side=tk.LEFT, padx=(10, 0))
+        self.tabulation_tag_filter_var = tk.StringVar()
+        self.tabulation_tag_filter_combo = ttk.Combobox(filter_frame, textvariable=self.tabulation_tag_filter_var, 
+                                                      values=["Tous", "div", "span", "a", "button", "input", "img", "p", "h1", "h2", "h3", "h4", "h5", "h6"],
+                                                      state="readonly", width=10)
+        self.tabulation_tag_filter_combo.pack(side=tk.LEFT, padx=(5, 0))
+        self.tabulation_tag_filter_combo.bind('<<ComboboxSelected>>', self.filter_tabulation_data)
+        
+        # Filtre par visibilité
+        ttk.Label(filter_frame, text="Visibilité:").pack(side=tk.LEFT, padx=(10, 0))
+        self.tabulation_visibility_filter_var = tk.StringVar(value="Tous")
+        self.tabulation_visibility_filter_combo = ttk.Combobox(filter_frame, textvariable=self.tabulation_visibility_filter_var,
+                                                            values=["Tous", "Visible", "Masqué"],
+                                                            state="readonly", width=10)
+        self.tabulation_visibility_filter_combo.pack(side=tk.LEFT, padx=(5, 0))
+        self.tabulation_visibility_filter_combo.bind('<<ComboboxSelected>>', self.filter_tabulation_data)
+        
+        # Bouton pour réinitialiser les filtres
+        ttk.Button(filter_frame, text="Réinitialiser", command=self.reset_tabulation_filters).pack(side=tk.RIGHT)
+        
+        # Frame pour les statistiques tabulaire
+        tabulation_stats_frame = ttk.LabelFrame(tabulation_frame, text="Statistiques Tabulaire", padding="10")
+        tabulation_stats_frame.pack(fill=tk.X, padx=10, pady=5)
+        self.tabulation_stats_text = tk.Text(tabulation_stats_frame, height=3, wrap=tk.WORD)
+        self.tabulation_stats_text.pack(fill=tk.X)
+        
+        # Frame pour le tableau des éléments tabulaires avec PandasTable
+        tabulation_table_frame = ttk.LabelFrame(tabulation_frame, text="Éléments Tabulaires analysés", padding="10")
+        tabulation_table_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
+        
+        # Canvas pour PandasTable
+        self.tabulation_table_canvas = tk.Frame(tabulation_table_frame)
+        self.tabulation_table_canvas.pack(fill=tk.BOTH, expand=True)
+        self.tabulation_ptable = None
+        self.tabulation_df = pd.DataFrame()  # DataFrame source
+        
+        # Boutons d'export pour tabulation
+        tabulation_export_frame = ttk.Frame(tabulation_frame)
+        tabulation_export_frame.pack(fill=tk.X, padx=10, pady=5)
+        ttk.Button(tabulation_export_frame, text="Exporter Tabulation CSV", command=self.export_tabulation_csv).pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Button(tabulation_export_frame, text="Exporter Tabulation JSON", command=self.export_tabulation_json).pack(side=tk.LEFT)
+        
+        # Variables pour le tri et les données
+        self.tabulation_data = []  # Données brutes pour le filtrage
+        self.filtered_tabulation_data = []  # Données filtrées affichées
+    
     def setup_images_tab(self):
         """Configure l'onglet des images"""
         images_frame = ttk.Frame(self.notebook)
@@ -443,7 +518,16 @@ class RGAAWebCheckerGUI:
             chrome_options.add_argument('--window-size=1920,1080')
             
             # Driver
-            service = Service(ChromeDriverManager().install())
+            import glob
+            driver_dir = os.path.dirname(ChromeDriverManager().install())
+            chromedriver_path = None
+            for f in glob.glob(os.path.join(driver_dir, "chromedriver*")):
+                if os.path.basename(f) == 'chromedriver' and os.path.isfile(f) and os.access(f, os.X_OK):
+                    chromedriver_path = f
+                    break
+            if not chromedriver_path:
+                raise FileNotFoundError(f"Aucun binaire chromedriver exécutable trouvé dans {driver_dir}")
+            service = Service(chromedriver_path)
             driver = webdriver.Chrome(service=service, options=chrome_options)
             
             # Naviguer vers l'URL
@@ -492,7 +576,7 @@ class RGAAWebCheckerGUI:
             if self.modules['tab']['enabled'].get():
                 self.update_logs("Démarrage de l'analyse de navigation tabulation...")
                 from modules.tab_navigator import TabNavigator
-                tab_navigator = TabNavigator(driver, self.logger)
+                tab_navigator = TabNavigator(driver, self.logger, tab_delay=0.0)
                 results['tab'] = tab_navigator.run()
                 self.update_logs("Analyse de navigation tabulation terminée")
             
@@ -570,6 +654,11 @@ class RGAAWebCheckerGUI:
         elif 'dom' in results:
             self.dom_results = results['dom']
             self.display_dom_results(results['dom'])
+        
+        # Traiter les résultats de tabulation
+        if 'tab' in results:
+            self.tabulation_results = results['tab']
+            self.display_tabulation_results(results['tab'])
         
         # Statistiques
         stats = self.calculate_statistics(results)
@@ -965,6 +1054,26 @@ class RGAAWebCheckerGUI:
         self.stats_text.delete(1.0, tk.END)
         for item in self.results_tree.get_children():
             self.results_tree.delete(item)
+        
+        # Effacer les résultats DOM
+        self.dom_results = {}
+        self.dom_data = []
+        self.filtered_dom_data = []
+        if self.dom_ptable:
+            self.dom_ptable.destroy()
+        self.dom_ptable = None
+        self.dom_df = pd.DataFrame()
+        self.dom_stats_text.delete(1.0, tk.END)
+        
+        # Effacer les résultats de tabulation
+        self.tabulation_results = {}
+        self.tabulation_data = []
+        self.filtered_tabulation_data = []
+        if self.tabulation_ptable:
+            self.tabulation_ptable.destroy()
+        self.tabulation_ptable = None
+        self.tabulation_df = pd.DataFrame()
+        self.tabulation_stats_text.delete(1.0, tk.END)
     
     def clear_logs(self):
         """Efface les logs"""
@@ -1098,12 +1207,16 @@ class RGAAWebCheckerGUI:
                 return
             # Charger les résultats DOM
             dom_results = self.load_dom_results(results_files.get('dom_json'))
+            # Charger les résultats de tabulation
+            tabulation_results = self.load_tabulation_results(results_files.get('tabulation_json'))
             # Charger les autres résultats
             other_results = self.load_other_results(results_files)
             # Combiner les résultats
             combined_results = {}
             if dom_results:
                 combined_results['dom'] = dom_results
+            if tabulation_results:
+                combined_results['tab'] = tabulation_results
             if other_results:
                 combined_results.update(other_results)
             # Traiter et afficher les résultats
@@ -1138,6 +1251,25 @@ class RGAAWebCheckerGUI:
                 results_files['dom_json'] = latest_file
                 self.update_logs(f"Fichier DOM trouvé: {latest_file}")
                 break
+        
+        # Chercher le fichier de tabulation JSON le plus récent
+        tabulation_json_patterns = [
+            "rapport_analyse_tab.json",
+            "reports/rapport_analyse_tab.json",
+            "*.json"
+        ]
+        for pattern in tabulation_json_patterns:
+            if pattern.startswith("*"):
+                json_files = list(Path(".").glob(pattern))
+                json_files = [f for f in json_files if "tab" in f.name.lower() and "dom" not in f.name.lower()]
+            else:
+                json_files = list(Path(".").glob(pattern))
+            if json_files:
+                latest_file = max(json_files, key=lambda f: f.stat().st_mtime)
+                results_files['tabulation_json'] = latest_file
+                self.update_logs(f"Fichier tabulation trouvé: {latest_file}")
+                break
+        
         # Chercher d'autres fichiers de résultats
         csv_files = list(Path(".").glob("*.csv"))
         if csv_files:
@@ -1155,6 +1287,19 @@ class RGAAWebCheckerGUI:
             return dom_results
         except Exception as e:
             self.update_logs(f"Erreur lors du chargement DOM: {str(e)}")
+            return None
+
+    def load_tabulation_results(self, tabulation_file_path):
+        """Charge les résultats de tabulation depuis un fichier JSON"""
+        if not tabulation_file_path or not tabulation_file_path.exists():
+            return None
+        try:
+            with open(tabulation_file_path, 'r', encoding='utf-8') as f:
+                tabulation_results = json.load(f)
+            self.update_logs(f"Résultats tabulation chargés depuis: {tabulation_file_path}")
+            return tabulation_results
+        except Exception as e:
+            self.update_logs(f"Erreur lors du chargement tabulation: {str(e)}")
             return None
 
     def load_other_results(self, results_files):
@@ -1208,6 +1353,11 @@ class RGAAWebCheckerGUI:
                 dom_file = results_files['dom_json']
                 mod_time = datetime.fromtimestamp(dom_file.stat().st_mtime)
                 info_text += f"📄 DOM JSON: {dom_file.name}\n"
+                info_text += f"   Modifié: {mod_time.strftime('%d/%m/%Y %H:%M:%S')}\n\n"
+            if 'tabulation_json' in results_files:
+                tabulation_file = results_files['tabulation_json']
+                mod_time = datetime.fromtimestamp(tabulation_file.stat().st_mtime)
+                info_text += f"📄 Tabulation JSON: {tabulation_file.name}\n"
                 info_text += f"   Modifié: {mod_time.strftime('%d/%m/%Y %H:%M:%S')}\n\n"
             if 'csv_files' in results_files:
                 info_text += "📊 Fichiers CSV:\n"
@@ -1389,6 +1539,295 @@ class RGAAWebCheckerGUI:
                     self.create_dom_table(self.dom_df)
         except Exception as e:
             self.update_logs(f"Erreur dans sort_column: {e}")
+
+    def display_tabulation_results(self, tabulation_results):
+        """Affiche les résultats de l'analyse tabulaire"""
+        if not tabulation_results:
+            self.tabulation_stats_text.delete(1.0, tk.END)
+            self.tabulation_stats_text.insert(1.0, "Aucun résultat d'analyse tabulaire disponible")
+            self.update_logs("Aucun résultat tabulaire à afficher")
+            return
+        
+        # Vérifier la structure des résultats
+        if not isinstance(tabulation_results, list):
+            self.tabulation_stats_text.delete(1.0, tk.END)
+            self.tabulation_stats_text.insert(1.0, f"Format de résultats tabulaire invalide: {type(tabulation_results)}")
+            self.update_logs(f"Format de résultats tabulaire invalide: {type(tabulation_results)}")
+            return
+        
+        # Afficher les statistiques
+        total_elements = len(tabulation_results)
+        elements_with_accessible_names = len([r for r in tabulation_results if r.get('accessible_name', {}).get('name')])
+        elements_with_aria = len([r for r in tabulation_results if r.get('aria_attributes')])
+        visible_elements = len([r for r in tabulation_results if r.get('is_visible', False)])
+        
+        stats_text = f"""
+        Éléments totaux: {total_elements}
+        Éléments avec nom accessible: {elements_with_accessible_names}
+        Éléments avec attributs ARIA: {elements_with_aria}
+        Éléments visibles: {visible_elements}
+        """
+        self.tabulation_stats_text.delete(1.0, tk.END)
+        self.tabulation_stats_text.insert(1.0, stats_text)
+        
+        # Logs pour le débogage
+        self.update_logs(f"Résultats tabulaire: {total_elements} éléments")
+        
+        # Charger les données dans le tableau
+        if tabulation_results:
+            self.load_tabulation_data(tabulation_results)
+        else:
+            self.update_logs("Aucun élément tabulaire trouvé dans les résultats")
+            # Effacer le tableau
+            if self.tabulation_ptable:
+                self.tabulation_ptable.destroy()
+            self.tabulation_ptable = None
+            self.tabulation_df = pd.DataFrame()
+    
+    def load_tabulation_data(self, elements):
+        """Charge les données tabulaires dans le tableau PandasTable"""
+        # Conversion en DataFrame
+        df = pd.DataFrame([self.get_tabulation_row_dict(element) for element in elements])
+        self.tabulation_df = df
+        self.tabulation_data = elements
+        self.filtered_tabulation_data = elements
+        self.update_logs(f"Chargement de {len(elements)} éléments tabulaires dans le tableau")
+        
+        # Affichage dans PandasTable
+        self.create_tabulation_table(self.tabulation_df)
+        self.update_tabulation_filters()
+    
+    def update_tabulation_filters(self):
+        """Met à jour les options de filtrage basées sur les données disponibles"""
+        if not self.tabulation_data:
+            return
+        
+        # Mettre à jour les tags disponibles
+        tags = set()
+        for element in self.tabulation_data:
+            tag = element.get('tag', '').lower()
+            if tag:
+                tags.add(tag)
+        
+        tag_values = ["Tous"] + sorted(list(tags))
+        self.tabulation_tag_filter_combo['values'] = tag_values
+    
+    def filter_tabulation_data(self, event=None):
+        """Filtre les données tabulaires selon les critères sélectionnés"""
+        if not self.tabulation_data:
+            return
+        
+        # Effacer le tableau
+        if self.tabulation_ptable:
+            self.tabulation_ptable.destroy()
+        self.tabulation_ptable = None
+        self.tabulation_df = pd.DataFrame()
+        
+        # Appliquer les filtres
+        search_term = self.tabulation_search_var.get().lower()
+        tag_filter = self.tabulation_tag_filter_var.get()
+        visibility_filter = self.tabulation_visibility_filter_var.get()
+        filtered_data = []
+        
+        for element in self.tabulation_data:
+            # Filtre de recherche
+            if search_term:
+                searchable_text = f"{element.get('tag', '')} {element.get('text', '')} {element.get('xpath', '')} {element.get('accessible_name', {}).get('name', '')}".lower()
+                if search_term not in searchable_text:
+                    continue
+            
+            # Filtre par tag
+            if tag_filter and tag_filter != "Tous":
+                if element.get('tag', '').lower() != tag_filter.lower():
+                    continue
+            
+            # Filtre par visibilité
+            if visibility_filter and visibility_filter != "Tous":
+                is_visible = element.get('is_visible', False)
+                if visibility_filter == "Visible" and not is_visible:
+                    continue
+                if visibility_filter == "Masqué" and is_visible:
+                    continue
+            
+            filtered_data.append(element)
+        
+        # Préparer les données filtrées
+        df = pd.DataFrame([self.get_tabulation_row_dict(element) for element in filtered_data])
+        self.tabulation_df = df
+        self.filtered_tabulation_data = filtered_data
+        
+        # Affichage dans PandasTable
+        self.create_tabulation_table(self.tabulation_df)
+    
+    def reset_tabulation_filters(self):
+        """Réinitialise tous les filtres tabulaires"""
+        self.tabulation_search_var.set('')
+        self.tabulation_tag_filter_var.set('')
+        self.tabulation_visibility_filter_var.set('Tous')
+        # Recharger toutes les données
+        if self.tabulation_data:
+            self.load_tabulation_data(self.tabulation_data)
+    
+    def export_tabulation_csv(self):
+        """Exporte les données tabulaires en CSV"""
+        if self.tabulation_df.empty:
+            messagebox.showwarning("Export", "Aucune donnée tabulaire à exporter")
+            return
+        
+        filename = filedialog.asksaveasfilename(
+            defaultextension=".csv",
+            filetypes=[("CSV files", "*.csv"), ("All files", "*.*")],
+            title="Exporter les données tabulaires en CSV"
+        )
+        
+        if filename:
+            try:
+                self.tabulation_df.to_csv(filename, index=False, encoding='utf-8')
+                messagebox.showinfo("Export", f"Données tabulaires exportées vers {filename}")
+                self.update_logs(f"Export CSV tabulaire: {filename}")
+            except Exception as e:
+                messagebox.showerror("Erreur", f"Erreur lors de l'export: {str(e)}")
+                self.update_logs(f"Erreur export CSV tabulaire: {str(e)}")
+    
+    def export_tabulation_json(self):
+        """Exporte les données tabulaires en JSON"""
+        if not self.tabulation_data:
+            messagebox.showwarning("Export", "Aucune donnée tabulaire à exporter")
+            return
+        
+        filename = filedialog.asksaveasfilename(
+            defaultextension=".json",
+            filetypes=[("JSON files", "*.json"), ("All files", "*.*")],
+            title="Exporter les données tabulaires en JSON"
+        )
+        
+        if filename:
+            try:
+                with open(filename, 'w', encoding='utf-8') as f:
+                    json.dump(self.tabulation_data, f, indent=2, ensure_ascii=False)
+                messagebox.showinfo("Export", f"Données tabulaires exportées vers {filename}")
+                self.update_logs(f"Export JSON tabulaire: {filename}")
+            except Exception as e:
+                messagebox.showerror("Erreur", f"Erreur lors de l'export: {str(e)}")
+                self.update_logs(f"Erreur export JSON tabulaire: {str(e)}")
+    
+    def get_tabulation_row_dict(self, element):
+        """Convertit un élément tabulaire en dictionnaire pour le DataFrame"""
+        return {
+            'Index': element.get('tab_index', ''),
+            'Tag': element.get('tag', ''),
+            'Texte': element.get('text', '')[:50] + '...' if len(element.get('text', '')) > 50 else element.get('text', ''),
+            'XPath': element.get('xpath', ''),
+            'Nom Accessible': element.get('accessible_name', {}).get('name', ''),
+            'Source Nom': element.get('accessible_name', {}).get('source', ''),
+            'Rôle ARIA': element.get('aria_attributes', {}).get('role', ''),
+            'ID': element.get('basic_attributes', {}).get('id', ''),
+            'Classe': element.get('basic_attributes', {}).get('class', ''),
+            'Visible': 'Oui' if element.get('is_visible', False) else 'Non',
+            'Activé': 'Oui' if element.get('is_enabled', False) else 'Non',
+            'Position X': element.get('position', {}).get('x', 0),
+            'Position Y': element.get('position', {}).get('y', 0),
+            'Largeur': element.get('position', {}).get('width', 0),
+            'Hauteur': element.get('position', {}).get('height', 0),
+            'Capture 1': element.get('screenshots', {}).get('immediate', ''),
+            'Capture 2': element.get('screenshots', {}).get('delayed', '')
+        }
+    
+    def create_tabulation_table(self, dataframe):
+        """Crée le tableau PandasTable pour les données tabulaires"""
+        try:
+            # Nettoyer le canvas
+            for widget in self.tabulation_table_canvas.winfo_children():
+                widget.destroy()
+            
+            if dataframe.empty:
+                # Afficher un message si pas de données
+                no_data_label = ttk.Label(self.tabulation_table_canvas, 
+                                        text="Aucune donnée tabulaire disponible",
+                                        font=('Segoe UI', 12))
+                no_data_label.pack(expand=True)
+                return
+            
+            # Créer le tableau PandasTable
+            from pandastable import Table
+            self.tabulation_ptable = Table(self.tabulation_table_canvas, dataframe=dataframe, showtoolbar=False, showstatusbar=False)
+            self.tabulation_ptable.show()
+            
+            # Appliquer le patch pour éviter le bug atdivider
+            self.patch_atdivider_bug()
+            
+            # Configurer les événements de tri
+            self.setup_tabulation_sorting_events()
+            
+            self.update_logs(f"Tableau tabulaire créé avec {len(dataframe)} lignes")
+            
+        except Exception as e:
+            self.update_logs(f"Erreur lors de la création du tableau tabulaire: {str(e)}")
+            # Afficher un message d'erreur
+            error_label = ttk.Label(self.tabulation_table_canvas, 
+                                  text=f"Erreur lors de la création du tableau: {str(e)}",
+                                  font=('Segoe UI', 10),
+                                  foreground='red')
+            error_label.pack(expand=True)
+    
+    def setup_tabulation_sorting_events(self):
+        """Configure les événements de tri pour le tableau tabulaire"""
+        if not self.tabulation_ptable:
+            return
+        
+        # Lier les événements de clic sur les en-têtes
+        self.tabulation_ptable.bind('<Button-1>', self.handle_tabulation_header_click)
+    
+    def handle_tabulation_header_click(self, event):
+        """Gère les clics sur les en-têtes du tableau tabulaire"""
+        if not self.tabulation_ptable:
+            return
+        
+        # Obtenir la position du clic
+        x = event.x
+        column_index = self.get_tabulation_column_from_x_position(x)
+        
+        if column_index is not None:
+            # Trier la colonne
+            self.sort_tabulation_column(column_index)
+    
+    def get_tabulation_column_from_x_position(self, x):
+        """Détermine la colonne à partir de la position X du clic"""
+        if not self.tabulation_ptable or self.tabulation_df.empty:
+            return None
+        
+        # Calculer la largeur approximative des colonnes
+        total_width = self.tabulation_table_canvas.winfo_width()
+        num_columns = len(self.tabulation_df.columns)
+        column_width = total_width / num_columns
+        
+        # Déterminer la colonne
+        column_index = int(x / column_width)
+        
+        if 0 <= column_index < num_columns:
+            return column_index
+        
+        return None
+    
+    def sort_tabulation_column(self, column_index, reverse=False):
+        """Trie une colonne du tableau tabulaire"""
+        if not self.tabulation_ptable or self.tabulation_df.empty:
+            return
+        
+        try:
+            # Obtenir le nom de la colonne
+            column_name = self.tabulation_df.columns[column_index]
+            
+            # Trier le DataFrame
+            self.tabulation_df = self.tabulation_df.sort_values(by=column_name, ascending=not reverse)
+            
+            # Mettre à jour le tableau
+            self.create_tabulation_table(self.tabulation_df)
+            
+            self.update_logs(f"Tri de la colonne tabulaire '{column_name}' {'décroissant' if reverse else 'croissant'}")
+            
+        except Exception as e:
+            self.update_logs(f"Erreur lors du tri tabulaire: {str(e)}")
 
 def main():
     """Fonction principale"""

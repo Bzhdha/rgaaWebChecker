@@ -1,4 +1,3 @@
-
 import unittest
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -33,7 +32,7 @@ class TestAccessibilityCrawlerModules(unittest.TestCase):
         simulator.run()
 
     def test_tab_navigator(self):
-        navigator = TabNavigator(self.driver, self.logger)
+        navigator = TabNavigator(self.driver, self.logger, tab_delay=0.0)
         elements = navigator.run()
         self.assertIsInstance(elements, list)
         self.assertGreater(len(elements), 0)
