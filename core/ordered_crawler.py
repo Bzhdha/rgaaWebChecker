@@ -17,6 +17,7 @@ class OrderedAccessibilityCrawler:
         self.logger = setup_logger()
         self.shared_data = SharedData()
         self.use_hierarchy = use_hierarchy
+        self.css_marker = None
         
         # Définir l'ordre d'exécution optimal
         self.execution_order = {
@@ -39,13 +40,15 @@ class OrderedAccessibilityCrawler:
         # Phase 1: ScreenReader (collecte des données ARIA)
         if 'screen_reader' in enabled_modules:
             if self.use_hierarchy:
-                screen_reader = HierarchicalScreenReader(self.driver, self.logger)
+                screen_reader = HierarchicalScreenReader(self.driver, self.logger, enable_css_marking=self.css_marker is not None)
                 self.logger.info("✓ HierarchicalScreenReader chargé (Phase 1 - Collecte des données ARIA avec algorithme hiérarchique)")
             else:
-                screen_reader = EnhancedScreenReader(self.driver, self.logger)
+                screen_reader = EnhancedScreenReader(self.driver, self.logger, enable_css_marking=self.css_marker is not None)
                 self.logger.info("✓ EnhancedScreenReader chargé (Phase 1 - Collecte des données ARIA)")
             
             screen_reader.shared_data = self.shared_data
+            if self.css_marker:
+                screen_reader.css_marker = self.css_marker
             self.modules_by_priority[1] = [screen_reader]
         
         # Phase 2: TabNavigator (utilise les données ARIA)
@@ -91,7 +94,9 @@ class OrderedAccessibilityCrawler:
         # Phase 4: DOM Analyzer (en dernier)
         if 'dom' in enabled_modules:
             from modules.dom_analyzer import DOMAnalyzer
-            dom_analyzer = DOMAnalyzer(self.driver, self.logger)
+            dom_analyzer = DOMAnalyzer(self.driver, self.logger, enable_css_marking=self.css_marker is not None)
+            if self.css_marker:
+                dom_analyzer.css_marker = self.css_marker
             self.modules_by_priority[4] = [dom_analyzer]
             self.logger.info("✓ DOMAnalyzer chargé (Phase 4)")
 
@@ -220,3 +225,9 @@ class OrderedAccessibilityCrawler:
             module_names = [m.__class__.__name__ for m in modules]
             summary.append(f"Phase {phase}: {', '.join(module_names)}")
         return summary
+    
+    def set_css_marker(self, css_marker):
+        """Définit le CSSMarker pour le crawler"""
+        self.css_marker = css_marker
+        if self.css_marker:
+            self.logger.info("🎨 CSSMarker configuré pour le crawler")

@@ -8,13 +8,15 @@ from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import math
 import os
+from modules.css_marker import CSSMarker
 
 class EnhancedScreenReader:
-    def __init__(self, driver, logger):
+    def __init__(self, driver, logger, enable_css_marking=False):
         self.driver = driver
         self.logger = logger
         self.page_url = None
         self.csv_lines = []  # Pour stocker les lignes CSV
+        self.css_marker = CSSMarker(driver, logger) if enable_css_marking else None
         self.non_conformites = {
             "images": [],
             "liens": [],

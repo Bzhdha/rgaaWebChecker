@@ -16,6 +16,8 @@ import random
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 from modules.image_analyzer import ImageAnalyzer
+from modules.dom_analyzer import DOMAnalyzer
+from modules.css_marker import CSSMarker
 import subprocess
 import logging
 

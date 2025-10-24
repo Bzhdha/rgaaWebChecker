@@ -7,12 +7,14 @@ import csv
 import json
 from utils.log_utils import log_with_step
 import logging
+from modules.css_marker import CSSMarker
 
 class DOMAnalyzer:
-    def __init__(self, driver, logger):
+    def __init__(self, driver, logger, enable_css_marking=True):
         self.driver = driver
         self.logger = logger
         self.issues = []
+        self.css_marker = CSSMarker(driver, logger) if enable_css_marking else None
 
     def run(self):
         log_with_step(self.logger, logging.INFO, "DOM", "\nAnalyse des éléments d'accessibilité...")
@@ -214,6 +216,10 @@ class DOMAnalyzer:
                 if src:
                     element_info['media_path'] = src
                     element_info['media_type'] = tag_name
+            
+            # Marquer l'élément avec CSS si activé
+            if self.css_marker:
+                self._mark_element_with_css(element, element_info)
             
             return element_info
         except StaleElementReferenceException:
@@ -727,4 +733,104 @@ class DOMAnalyzer:
             log_with_step(self.logger, logging.INFO, "DOM", f"Rapport JSON généré avec succès : {filename}")
             
         except Exception as e:
-            log_with_step(self.logger, logging.WARNING, "DOM", f"Erreur lors de la génération du rapport JSON : {str(e)}") 
+            log_with_step(self.logger, logging.WARNING, "DOM", f"Erreur lors de la génération du rapport JSON : {str(e)}")
+    
+    def _mark_element_with_css(self, element, element_info):
+        """Marque un élément avec les classes CSS appropriées"""
+        try:
+            # Déterminer le type d'élément
+            tag_name = element_info['tag'].lower()
+            element_type = "analyzed"
+            
+            if tag_name in ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']:
+                element_type = "heading"
+            elif tag_name == 'img':
+                element_type = "image"
+            elif tag_name == 'a':
+                element_type = "link"
+            elif tag_name == 'button' or (tag_name == 'input' and element_info.get('type') in ['button', 'submit', 'reset']):
+                element_type = "button"
+            elif tag_name in ['form', 'input', 'textarea', 'select']:
+                element_type = "form"
+            elif element_info.get('role') in ['banner', 'navigation', 'main', 'complementary', 'contentinfo', 'search', 'form']:
+                element_type = "landmark"
+            elif element_info.get('role') or any(attr.startswith('aria-') for attr in element_info.keys()):
+                element_type = "aria"
+            
+            # Déterminer les problèmes d'accessibilité
+            issues = []
+            if not element_info.get('is_visible', False):
+                issues.append("Élément non visible")
+            if not element_info.get('is_enabled', False):
+                issues.append("Élément désactivé")
+            if tag_name == 'img' and not element_info.get('alt'):
+                issues.append("Image sans attribut alt")
+            if tag_name == 'a' and not element_info.get('text') and not element_info.get('aria_label'):
+                issues.append("Lien sans texte visible")
+            
+            # Déterminer le statut de conformité
+            compliant = len(issues) == 0
+            
+            # Créer les informations pour le tooltip
+            tooltip_info = self._create_tooltip_info(element_info, issues, compliant)
+            
+            # Marquer l'élément
+            self.css_marker.mark_element(
+                element=element,
+                element_type=element_type,
+                issues=issues,
+                compliant=compliant,
+                info=tooltip_info
+            )
+            
+        except Exception as e:
+            log_with_step(self.logger, logging.WARNING, "CSS", f"Erreur lors du marquage CSS : {str(e)}")
+    
+    def _create_tooltip_info(self, element_info, issues, compliant):
+        """Crée les informations pour le tooltip"""
+        try:
+            info_html = "<div style='text-align: left; font-size: 12px;'>"
+            
+            # Informations de base
+            info_html += f"<strong>Élément:</strong> {element_info['tag']}<br>"
+            
+            if element_info.get('id'):
+                info_html += f"<strong>ID:</strong> {element_info['id']}<br>"
+            
+            if element_info.get('class'):
+                info_html += f"<strong>Classes:</strong> {element_info['class']}<br>"
+            
+            # Rôle ARIA
+            if element_info.get('role'):
+                info_html += f"<strong>Rôle:</strong> {element_info['role']}<br>"
+            
+            # Nom accessible
+            accessible_name = element_info.get('accessible_name', {})
+            if accessible_name.get('name'):
+                info_html += f"<strong>Nom accessible:</strong> {accessible_name['name']}<br>"
+            
+            # Statut de visibilité
+            if element_info.get('is_visible'):
+                info_html += "<strong>Visibilité:</strong> ✅ Visible<br>"
+            else:
+                info_html += "<strong>Visibilité:</strong> ❌ Non visible<br>"
+            
+            # Problèmes détectés
+            if issues:
+                info_html += "<strong>Problèmes:</strong><ul style='margin: 4px 0; padding-left: 16px;'>"
+                for issue in issues:
+                    info_html += f"<li style='margin: 2px 0;'>{issue}</li>"
+                info_html += "</ul>"
+            
+            # Statut de conformité
+            if compliant:
+                info_html += "<strong>Statut:</strong> ✅ Conforme"
+            else:
+                info_html += "<strong>Statut:</strong> ❌ Non conforme"
+            
+            info_html += "</div>"
+            return info_html
+            
+        except Exception as e:
+            log_with_step(self.logger, logging.WARNING, "CSS", f"Erreur lors de la création du tooltip : {str(e)}")
+            return f"<div>Erreur: {str(e)}</div>" 

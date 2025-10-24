@@ -10,13 +10,15 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from utils.log_utils import log_with_step
 import logging
+from modules.css_marker import CSSMarker
 
 class ScreenReader:
-    def __init__(self, driver, logger):
+    def __init__(self, driver, logger, enable_css_marking=True):
         self.driver = driver
         self.logger = logger
         self.page_url = None
         self.csv_lines = []  # Pour stocker les lignes CSV
+        self.css_marker = CSSMarker(driver, logger) if enable_css_marking else None
         self.non_conformites = {
             "images": [],
             "liens": [],

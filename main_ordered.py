@@ -23,6 +23,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 from modules.dom_analyzer import DOMAnalyzer
 from modules.image_analyzer import ImageAnalyzer
+from modules.css_marker import CSSMarker
 
 def parse_module_flags(module_list):
     """
@@ -85,6 +86,8 @@ if __name__ == "__main__":
     parser.add_argument('--export-csv', action='store_true', help='Exporter les données collectées en CSV')
     parser.add_argument('--csv-filename', help='Nom du fichier CSV pour l\'export (optionnel)')
     parser.add_argument('--use-hierarchy', action='store_true', help='Utiliser l\'algorithme hiérarchique optimisé pour l\'analyse des liens (expérimental)')
+    parser.add_argument('--css-marker', action='store_true', help='Activer le marquage CSS des éléments analysés')
+    parser.add_argument('--css-marker-delay', type=int, default=5, help='Délai en secondes pour observer les marquages CSS (défaut: 5)')
     args = parser.parse_args()
     
     url = args.url
@@ -228,6 +231,12 @@ if __name__ == "__main__":
         logger.info("Driver assigné au crawler ordonné.")
         crawler.logger = logger
         
+        # Initialiser le CSSMarker si activé
+        css_marker = None
+        if args.css_marker:
+            css_marker = CSSMarker(driver, logger)
+            logger.info("🎨 CSSMarker activé - Les éléments analysés seront marqués visuellement")
+        
         # Afficher l'algorithme utilisé
         if args.use_hierarchy:
             logger.info("🚀 Mode hiérarchique activé - Algorithme optimisé pour l'analyse des liens")
@@ -239,6 +248,10 @@ if __name__ == "__main__":
         logger.info("\n📋 Plan d'exécution:")
         for summary_line in execution_summary:
             logger.info(f"   {summary_line}")
+        
+        # Passer le CSSMarker au crawler si activé
+        if css_marker:
+            crawler.set_css_marker(css_marker)
         
         # Exécuter l'analyse avec ordre optimisé
         crawler.crawl(export_csv=args.export_csv, csv_filename=args.csv_filename)
@@ -252,8 +265,26 @@ if __name__ == "__main__":
         # Analyse DOM supplémentaire si activée
         if 'dom' in enabled_modules:
             logger.info("\n🔍 Analyse DOM supplémentaire...")
-            dom_analyzer = DOMAnalyzer(driver, logger)
+            dom_analyzer = DOMAnalyzer(driver, logger, enable_css_marking=args.css_marker)
             dom_results = dom_analyzer.run()
+        
+        # Afficher les marquages CSS si activé
+        if css_marker:
+            marked_info = css_marker.get_marked_elements_info()
+            logger.info(f"\n🎨 Marquage CSS:")
+            logger.info(f"   - Éléments marqués: {marked_info['total_marked']}")
+            logger.info(f"   - CSS injecté: {marked_info['css_injected']}")
+            
+            if marked_info['total_marked'] > 0:
+                logger.info(f"\n⏳ Observation des marquages CSS pendant {args.css_marker_delay} secondes...")
+                logger.info("   - Éléments conformes: bordure verte avec badge ✅")
+                logger.info("   - Éléments non conformes: bordure rouge avec badge ⚠️")
+                logger.info("   - Survol des éléments pour voir les tooltips informatifs")
+                time.sleep(args.css_marker_delay)
+                
+                # Optionnel: nettoyer les marquages après observation
+                # css_marker.clear_all_markings()
+                # logger.info("🧹 Marquages CSS supprimés")
             
     except Exception as e:
         logger.error(f"Erreur lors de l'analyse: {str(e)}")
