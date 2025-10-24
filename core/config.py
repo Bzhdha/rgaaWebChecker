@@ -6,6 +6,7 @@ class Config:
     MODULE_TAB = 8         # 2^3
     MODULE_SCREEN = 16     # 2^4
     MODULE_IMAGE = 32      # 2^5
+    MODULE_NAVIGATION = 64 # 2^6
 
     def __init__(self):
         self.driver_path = None
@@ -13,6 +14,7 @@ class Config:
         self.report_format = 'markdown'
         self.base_url = None
         self.output_dir = 'site_images'
+        self.max_screenshots = 50  # Limite par défaut pour les screenshots
 
     def set_driver_path(self, path):
         self.driver_path = path
@@ -28,6 +30,12 @@ class Config:
 
     def set_output_dir(self, dir):
         self.output_dir = dir
+
+    def set_max_screenshots(self, max_screenshots):
+        self.max_screenshots = max_screenshots
+
+    def get_max_screenshots(self):
+        return self.max_screenshots
 
     def set_modules(self, module_flags):
         """
@@ -48,6 +56,8 @@ class Config:
             self.enabled_modules.append('screen_reader')
         if module_flags & self.MODULE_IMAGE:
             self.enabled_modules.append('image_analyzer')
+        if module_flags & self.MODULE_NAVIGATION:
+            self.enabled_modules.append('navigation')
 
     @staticmethod
     def get_module_names():
@@ -60,5 +70,6 @@ class Config:
             'daltonism': Config.MODULE_DALTONISM,
             'tab': Config.MODULE_TAB,
             'screen': Config.MODULE_SCREEN,
-            'image': Config.MODULE_IMAGE
+            'image': Config.MODULE_IMAGE,
+            'navigation': Config.MODULE_NAVIGATION
         }

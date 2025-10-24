@@ -46,11 +46,9 @@ class ScreenReader:
 
     def _get_element_info(self, element):
         """Récupère toutes les informations d'accessibilité d'un élément (optimisé)"""
-        # Récupération groupée des attributs via JS en une seule fois
+        # Script JavaScript allégé - récupère seulement les attributs essentiels
         attrs = self.driver.execute_script('''
             var el = arguments[0];
-            var rect = el.getBoundingClientRect();
-            var style = window.getComputedStyle(el);
             return {
                 tag: el.tagName,
                 role: el.getAttribute('role'),
@@ -61,52 +59,26 @@ class ScreenReader:
                 ariaExpanded: el.getAttribute('aria-expanded'),
                 ariaControls: el.getAttribute('aria-controls'),
                 ariaLive: el.getAttribute('aria-live'),
-                ariaAtomic: el.getAttribute('aria-atomic'),
-                ariaRelevant: el.getAttribute('aria-relevant'),
-                ariaBusy: el.getAttribute('aria-busy'),
-                ariaCurrent: el.getAttribute('aria-current'),
-                ariaPosinset: el.getAttribute('aria-posinset'),
-                ariaSetsize: el.getAttribute('aria-setsize'),
-                ariaLevel: el.getAttribute('aria-level'),
-                ariaSort: el.getAttribute('aria-sort'),
-                ariaValuemin: el.getAttribute('aria-valuemin'),
-                ariaValuemax: el.getAttribute('aria-valuemax'),
-                ariaValuenow: el.getAttribute('aria-valuenow'),
-                ariaValuetext: el.getAttribute('aria-valuetext'),
-                ariaHaspopup: el.getAttribute('aria-haspopup'),
-                ariaInvalid: el.getAttribute('aria-invalid'),
                 ariaRequired: el.getAttribute('aria-required'),
-                ariaReadonly: el.getAttribute('aria-readonly'),
                 ariaDisabled: el.getAttribute('aria-disabled'),
                 ariaSelected: el.getAttribute('aria-selected'),
                 ariaChecked: el.getAttribute('aria-checked'),
                 ariaPressed: el.getAttribute('aria-pressed'),
-                ariaMultiline: el.getAttribute('aria-multiline'),
-                ariaMultiselectable: el.getAttribute('aria-multiselectable'),
-                ariaOrientation: el.getAttribute('aria-orientation'),
-                ariaPlaceholder: el.getAttribute('aria-placeholder'),
-                ariaRoledescription: el.getAttribute('aria-roledescription'),
-                ariaKeyshortcuts: el.getAttribute('aria-keyshortcuts'),
-                ariaDetails: el.getAttribute('aria-details'),
-                ariaErrormessage: el.getAttribute('aria-errormessage'),
-                ariaFlowto: el.getAttribute('aria-flowto'),
-                ariaOwns: el.getAttribute('aria-owns'),
                 tabindex: el.getAttribute('tabindex'),
                 title: el.getAttribute('title'),
                 alt: el.getAttribute('alt'),
                 id: el.getAttribute('id'),
                 className: el.getAttribute('class'),
-                outerHTML: el.outerHTML,
-                text: el.textContent,
-                isVisible: !(style.display === 'none' || style.visibility === 'hidden' || rect.width === 0 || rect.height === 0),
+                text: el.textContent ? el.textContent.trim() : '',
+                isVisible: el.offsetWidth > 0 && el.offsetHeight > 0,
                 isEnabled: !el.disabled,
-                isFocusable: el.tabIndex >= 0 || el.tagName === 'A' || el.tagName === 'BUTTON' || el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA',
+                isFocusable: el.tabIndex >= 0 || ['A', 'BUTTON', 'INPUT', 'SELECT', 'TEXTAREA'].includes(el.tagName),
                 mediaPath: el.getAttribute('src') || el.getAttribute('data') || '',
                 mediaType: el.tagName.toLowerCase()
             };
         ''', element)
 
-        # Construction du dictionnaire d'informations en une seule fois
+        # Construction du dictionnaire d'informations optimisé
         info = {
             "Type": attrs['tag'],
             "Rôle": attrs['role'] or "non défini",
@@ -117,45 +89,20 @@ class ScreenReader:
             "Aria-expanded": attrs['ariaExpanded'] or "non défini",
             "Aria-controls": attrs['ariaControls'] or "non défini",
             "Aria-live": attrs['ariaLive'] or "non défini",
-            "Aria-atomic": attrs['ariaAtomic'] or "non défini",
-            "Aria-relevant": attrs['ariaRelevant'] or "non défini",
-            "Aria-busy": attrs['ariaBusy'] or "non défini",
-            "Aria-current": attrs['ariaCurrent'] or "non défini",
-            "Aria-posinset": attrs['ariaPosinset'] or "non défini",
-            "Aria-setsize": attrs['ariaSetsize'] or "non défini",
-            "Aria-level": attrs['ariaLevel'] or "non défini",
-            "Aria-sort": attrs['ariaSort'] or "non défini",
-            "Aria-valuemin": attrs['ariaValuemin'] or "non défini",
-            "Aria-valuemax": attrs['ariaValuemax'] or "non défini",
-            "Aria-valuenow": attrs['ariaValuenow'] or "non défini",
-            "Aria-valuetext": attrs['ariaValuetext'] or "non défini",
-            "Aria-haspopup": attrs['ariaHaspopup'] or "non défini",
-            "Aria-invalid": attrs['ariaInvalid'] or "non défini",
             "Aria-required": attrs['ariaRequired'] or "non défini",
-            "Aria-readonly": attrs['ariaReadonly'] or "non défini",
             "Aria-disabled": attrs['ariaDisabled'] or "non défini",
             "Aria-selected": attrs['ariaSelected'] or "non défini",
             "Aria-checked": attrs['ariaChecked'] or "non défini",
             "Aria-pressed": attrs['ariaPressed'] or "non défini",
-            "Aria-multiline": attrs['ariaMultiline'] or "non défini",
-            "Aria-multiselectable": attrs['ariaMultiselectable'] or "non défini",
-            "Aria-orientation": attrs['ariaOrientation'] or "non défini",
-            "Aria-placeholder": attrs['ariaPlaceholder'] or "non défini",
-            "Aria-roledescription": attrs['ariaRoledescription'] or "non défini",
-            "Aria-keyshortcuts": attrs['ariaKeyshortcuts'] or "non défini",
-            "Aria-details": attrs['ariaDetails'] or "non défini",
-            "Aria-errormessage": attrs['ariaErrormessage'] or "non défini",
-            "Aria-flowto": attrs['ariaFlowto'] or "non défini",
-            "Aria-owns": attrs['ariaOwns'] or "non défini",
             "Tabindex": attrs['tabindex'] or "non défini",
             "Title": attrs['title'] or "non défini",
             "Alt": attrs['alt'] or "non défini",
-            "Text": attrs['text'].strip() if attrs['text'] else "non défini",
+            "Text": attrs['text'] or "non défini",
             "Visible": "Oui" if attrs['isVisible'] else "Non",
             "Focusable": "Oui" if attrs['isFocusable'] else "Non",
             "Id": attrs['id'] or "non défini",
             "Sélecteur": self._get_simple_selector(element),
-            "Extrait HTML": (attrs['outerHTML'] or '')[:200] + '...',
+            "Extrait HTML": self._get_html_snippet(element),
             "MediaPath": attrs['mediaPath'] or "non défini",
             "MediaType": attrs['mediaType'] or "non défini"
         }
@@ -167,6 +114,29 @@ class ScreenReader:
         if classes:
             return f"{tag}.{'.'.join(classes.split())}"
         return tag
+
+    def _get_html_snippet(self, element):
+        """Génère un extrait HTML léger sans outerHTML coûteux"""
+        try:
+            tag = element.tag_name
+            id_attr = element.get_attribute('id')
+            class_attr = element.get_attribute('class')
+            text = element.text[:50] if element.text else ''
+            
+            # Construire un extrait simple
+            snippet = f"<{tag.lower()}"
+            if id_attr:
+                snippet += f' id="{id_attr}"'
+            if class_attr:
+                snippet += f' class="{class_attr[:30]}"'
+            if text:
+                snippet += f">{text[:30]}...</{tag.lower()}>"
+            else:
+                snippet += " />"
+            
+            return snippet
+        except:
+            return f"<{element.tag_name.lower()} />"
 
     def _get_xpath(self, element):
         """Génère le X-path de l'élément avec mise en cache"""
@@ -274,8 +244,70 @@ class ScreenReader:
         value = value.replace(';', ',')
         return value
 
+    def _analyze_links_optimized(self, links):
+        """Analyse optimisée des liens - évite le double traitement et les XPath coûteux"""
+        results = []
+        
+        # Traitement par lots pour réduire les appels JavaScript
+        batch_size = 20
+        for i in range(0, len(links), batch_size):
+            batch = links[i:i + batch_size]
+            
+            # Récupération groupée des attributs pour tout le lot
+            batch_attrs = self.driver.execute_script('''
+                var links = arguments[0];
+                var results = [];
+                for (var i = 0; i < links.length; i++) {
+                    var el = links[i];
+                    results.push({
+                        text: el.textContent ? el.textContent.trim() : '',
+                        ariaLabel: el.getAttribute('aria-label'),
+                        href: el.getAttribute('href'),
+                        class: el.getAttribute('class'),
+                        id: el.getAttribute('id'),
+                        tag: el.tagName
+                    });
+                }
+                return results;
+            ''', batch)
+            
+            # Traitement des résultats du lot
+            for j, attrs in enumerate(batch_attrs):
+                try:
+                    text = attrs['text']
+                    aria_label = attrs['ariaLabel']
+                    href = attrs['href']
+                    class_name = attrs['class']
+                    element_id = attrs['id']
+                    
+                    # Vérifications de non-conformité simplifiées
+                    if not text or len(text.strip()) < 3:
+                        # Utiliser un sélecteur simple au lieu de XPath coûteux
+                        selector = f"a#{element_id}" if element_id else f"a.{class_name.split()[0]}" if class_name else "a"
+                        results.append({
+                            "type": "Lien sans texte explicite",
+                            "element": selector,
+                            "xpath": "N/A (optimisé)",
+                            "recommandation": "Ajouter un texte descriptif au lien ou un aria-label"
+                        })
+                    
+                    if class_name and "btn--hide-txt" in class_name:
+                        selector = f"a#{element_id}" if element_id else f"a.{class_name.split()[0]}" if class_name else "a"
+                        results.append({
+                            "type": "Lien avec texte masqué",
+                            "element": selector,
+                            "xpath": "N/A (optimisé)",
+                            "recommandation": "S'assurer que le texte est accessible aux lecteurs d'écran via aria-label"
+                        })
+                        
+                except Exception as e:
+                    self.logger.debug(f"Erreur lors de l'analyse du lien : {str(e)}")
+                    continue
+                    
+        return results
+
     def _analyze_links_batch(self, links):
-        """Analyse un lot de liens de manière optimisée"""
+        """Analyse un lot de liens de manière optimisée (méthode legacy - conservée pour compatibilité)"""
         results = []
         for link in links:
             try:
@@ -722,5 +754,178 @@ class ScreenReader:
             
             log_with_step(self.logger, logging.INFO, "LECTEUR_ECRAN", f"Rapport généré : {report_path}")
             
+        import time
+        start_time = time.time()
+        
+        # Réinitialiser le cache des XPath au début de chaque analyse
+        self._xpath_cache.clear()
+        
+        # Afficher l'URL de la page analysée en haut de l'analyse
+        try:
+            url = self.driver.current_url
+            self.logger.info(f"\n**URL analysée** : {url}\n")
+        except Exception:
+            pass
+
+        # En-tête CSV
+        csv_header = [
+            "Type", "Sélecteur", "Extrait HTML", "Rôle", "Aria-label", "Text", "Alt", "Title", "Visible", "Focusable", "Id", "X-path principal", "X-path secondaire 1", "X-path secondaire 2"
+        ]
+        self.csv_lines.append(';'.join(csv_header))
+        
+        # Log des sections en Markdown
+        self.logger.info("## Analyse des éléments d'accessibilité")
+        self.logger.info("Cette section analyse les éléments clés pour l'accessibilité selon les critères RGAA :")
+        self.logger.info("- Titres : Structure hiérarchique du contenu")
+        self.logger.info("- Images : Alternatives textuelles et rôles")
+        self.logger.info("- Liens : Textes explicites et attributs ARIA")
+        self.logger.info("- Boutons : Rôles et états")
+        self.logger.info("- Formulaires : Labels et attributs d'accessibilité")
+        self.logger.info("- Landmarks : Structure sémantique de la page")
+        self.logger.info("- Attributs ARIA : Rôles et propriétés d'accessibilité\n")
+
+        # Récupération du DOM en une seule fois
+        try:
+            # ⏱️ ÉTAPE 1: Récupération des éléments DOM
+            step1_start = time.time()
+            all_elements = self.driver.find_elements(By.XPATH, "//*")
+            total_elements = len(all_elements)
+            step1_time = time.time() - step1_start
+            self.logger.info(f"⏱️ ÉTAPE 1 - Récupération DOM: {step1_time:.2f}s ({total_elements} éléments)")
+            
+            # ⏱️ ÉTAPE 2: Classification des éléments
+            step2_start = time.time()
+            self.logger.info("Phase 1 : Classification des éléments par type...")
+            
+            # Créer des dictionnaires pour stocker les éléments par type
+            elements_by_type = {
+                "headings": [],
+                "images": [],
+                "links": [],
+                "buttons": [],
+                "forms": [],
+                "landmarks": [],
+                "aria_roles": []
+            }
+
+            # Classer les éléments par type
+            for i, element in enumerate(all_elements, 1):
+                if i % 10 == 0:  # Mise à jour plus fréquente de la barre de progression
+                    self._print_progress(i, total_elements, prefix="Classification :", suffix=f"{i}/{total_elements}")
+                
+                tag_name = element.tag_name.lower()
+                
+                if tag_name.startswith('h') and tag_name[1:].isdigit():
+                    elements_by_type["headings"].append(element)
+                elif tag_name == 'img':
+                    elements_by_type["images"].append(element)
+                elif tag_name == 'a':
+                    elements_by_type["links"].append(element)
+                elif tag_name == 'button':
+                    elements_by_type["buttons"].append(element)
+                elif tag_name == 'form':
+                    elements_by_type["forms"].append(element)
+                elif tag_name in ['header', 'nav', 'main', 'aside', 'footer']:
+                    elements_by_type["landmarks"].append(element)
+                
+                # Vérifier les rôles ARIA
+                role = element.get_attribute('role')
+                if role:
+                    elements_by_type["aria_roles"].append(element)
+
+            step2_time = time.time() - step2_start
+            print()  # Nouvelle ligne après la barre de progression
+            self.logger.info(f"⏱️ ÉTAPE 2 - Classification: {step2_time:.2f}s")
+            self.logger.info(f"📊 Résultats classification:")
+            for category, elements in elements_by_type.items():
+                self.logger.info(f"   - {category}: {len(elements)} éléments")
+            
+            # ⏱️ ÉTAPE 3: Analyse détaillée par catégorie
+            step3_start = time.time()
+            self.logger.info("\nPhase 2 : Analyse détaillée des éléments par catégorie...")
+            
+            # Analyser les éléments par catégorie
+            categories = [
+                ("headings", "Titres", "Structure hiérarchique du contenu"),
+                ("images", "Images", "Alternatives textuelles et rôles"),
+                ("links", "Liens", "Textes explicites et attributs ARIA"),
+                ("buttons", "Boutons", "Rôles et états"),
+                ("forms", "Formulaires", "Labels et attributs d'accessibilité"),
+                ("landmarks", "Landmarks", "Structure sémantique de la page"),
+                ("aria_roles", "Éléments avec rôles ARIA", "Rôles et propriétés d'accessibilité")
+            ]
+
+            total_processed = 0
+            category_times = {}
+            
+            for category_key, category_name, category_desc in categories:
+                elements = elements_by_type[category_key]
+                if elements:
+                    category_start = time.time()
+                    self.logger.info(f"\n### {category_name} ({len(elements)} éléments)")
+                    self.logger.info(f"Description : {category_desc}")
+                    
+                    if category_key == "links":
+                        # Analyse optimisée des liens - traitement unique
+                        self.logger.info("Analyse optimisée des liens en cours...")
+                        results = self._analyze_links_optimized(elements)
+                        self.non_conformites["liens"].extend(results)
+                        
+                        # Traitement direct sans ThreadPoolExecutor pour éviter la surcharge
+                        for i, element in enumerate(elements, 1):
+                            self._print_progress(i, len(elements), prefix=f"Analyse {category_name}:", suffix=f"{i}/{len(elements)}")
+                            self._print_element_table(element, category_name)
+                            total_processed += 1
+                    else:
+                        # Analyse normale pour les autres catégories
+                        for i, element in enumerate(elements, 1):
+                            self._print_progress(i, len(elements), prefix=f"Analyse {category_name}:", suffix=f"{i}/{len(elements)}")
+                            self._print_element_table(element, category_name)
+                            total_processed += 1
+                    
+                    category_time = time.time() - category_start
+                    category_times[category_name] = category_time
+                    self.logger.info(f"⏱️ {category_name}: {category_time:.2f}s ({len(elements)} éléments)")
+                    print()  # Nouvelle ligne après la barre de progression
+            
+            step3_time = time.time() - step3_start
+            self.logger.info(f"⏱️ ÉTAPE 3 - Analyse détaillée: {step3_time:.2f}s")
+            self.logger.info(f"📊 Temps par catégorie:")
+            for category, time_taken in category_times.items():
+                self.logger.info(f"   - {category}: {time_taken:.2f}s")
+
+            # ⏱️ ÉTAPE 4: Vérification des identifiants uniques
+            step4_start = time.time()
+            self.logger.info("\nPhase 3 : Vérification des identifiants uniques...")
+            self._check_duplicate_ids()
+            step4_time = time.time() - step4_start
+            self.logger.info(f"⏱️ ÉTAPE 4 - Vérification IDs: {step4_time:.2f}s")
+
         except Exception as e:
             log_with_step(self.logger, logging.ERROR, "LECTEUR_ECRAN", f"Erreur lors de la génération du rapport : {str(e)}") 
+            self.logger.error(f"Erreur lors de l'analyse du DOM : {str(e)}")
+
+        # ⏱️ ÉTAPE 5: Génération des rapports
+        step5_start = time.time()
+        self.logger.info("\n⏱️ ÉTAPE 5 - Génération des rapports...")
+        
+        # Créer le répertoire reports s'il n'existe pas
+        os.makedirs('reports', exist_ok=True)
+        
+        # Écrire le fichier CSV dans le répertoire reports
+        with open('reports/accessibility_analysis.csv', 'w', encoding='utf-8-sig') as f:
+            f.write('\n'.join(self.csv_lines))
+
+        # Générer le rapport après l'analyse
+        self.generate_report()
+        step5_time = time.time() - step5_start
+        self.logger.info(f"⏱️ ÉTAPE 5 - Génération rapports: {step5_time:.2f}s")
+        
+        # 📊 RÉSUMÉ GLOBAL DES PERFORMANCES
+        total_time = time.time() - start_time
+        self.logger.info(f"\n🚀 RÉSUMÉ DES PERFORMANCES:")
+        self.logger.info(f"⏱️ Temps total d'analyse: {total_time:.2f}s")
+        self.logger.info(f"📊 Éléments traités: {total_processed}")
+        if total_processed > 0:
+            self.logger.info(f"⚡ Vitesse moyenne: {total_processed/total_time:.1f} éléments/seconde")
+        self.logger.info("\nProgression : Rapport généré avec succès.") 

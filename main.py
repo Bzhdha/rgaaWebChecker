@@ -46,15 +46,13 @@ if __name__ == "__main__":
     parser.add_argument('--debug', action='store_true', help='Afficher les logs sur la console')
     parser.add_argument('--encoding', choices=['cp1252', 'utf-8'], default='utf-8', help="Encodage du rapport (utf-8 par défaut, ou cp1252)")
     parser.add_argument('--cookie-banner', help='Texte du bouton de la bannière de cookies à cliquer (ex: "Accepter tout")')
-    parser.add_argument('--modules', nargs='+', choices=['contrast', 'dom', 'daltonism', 'tab', 'screen', 'image'], 
-                      help='Liste des modules à activer (contrast=1, dom=2, daltonism=4, tab=8, screen=16, image=32)')
+    parser.add_argument('--cookies', nargs='*', help='Cookies de consentement à définir au format "nom=valeur" (ex: "consent=accepted" "analytics=true")')
+    parser.add_argument('--modules', nargs='+', choices=['contrast', 'dom', 'daltonism', 'tab', 'screen', 'image', 'navigation'], 
+                      help='Liste des modules à activer (contrast=1, dom=2, daltonism=4, tab=8, screen=16, image=32, navigation=64)')
     parser.add_argument('--output-dir', default='site_images', help='Répertoire de sortie pour les images (défaut: site_images)')
-    parser.add_argument('--browser', choices=['chrome', 'chromium', 'auto'], default='auto', 
-                      help='Navigateur à utiliser (chrome, chromium, ou auto pour détection automatique)')
-    parser.add_argument('--tab-delay', type=float, default=0.0, 
-                      help='Délai en secondes entre les deux snapshots de navigation tabulaire (défaut: 0.0, désactivé)')
-    parser.add_argument('--enable-tab-delay', action='store_true', 
-                      help='Activer le délai de 0.5 seconde entre les snapshots de navigation tabulaire')
+    parser.add_argument('--max-screenshots', type=int, default=50, help='Limite maximale de screenshots pour la navigation au clavier (défaut: 50)')
+    parser.add_argument('--export-csv', action='store_true', help='Exporter les données collectées en CSV')
+    parser.add_argument('--csv-filename', help='Nom du fichier CSV pour l\'export (optionnel)')
     args = parser.parse_args()
     
     url = args.url
@@ -62,6 +60,7 @@ if __name__ == "__main__":
     config = Config()
     config.set_base_url(url)
     config.set_output_dir(args.output_dir)
+    config.set_max_screenshots(args.max_screenshots)
     
     # Configuration des modules
     if args.modules:
@@ -69,7 +68,7 @@ if __name__ == "__main__":
         config.set_modules(module_flags)
     else:
         # Par défaut, activer tous les modules
-        config.set_modules(63)  # 1 + 2 + 4 + 8 + 16 + 32
+        config.set_modules(127)  # 1 + 2 + 4 + 8 + 16 + 32 + 64
     
     chrome_options = Options()
     # Ajout des en-têtes pour simuler un navigateur réel
@@ -77,6 +76,8 @@ if __name__ == "__main__":
     chrome_options.add_argument('--disable-blink-features=AutomationControlled')
     chrome_options.add_argument('--disable-gpu')
     chrome_options.add_argument('--window-size=1920,1080')
+    chrome_options.add_argument('--window-position=0,0')  # Forcer la position de la fenêtre sur l'écran principal
+    chrome_options.add_argument('--force-device-scale-factor=1')  # Éviter les problèmes de zoom
     
     # Masquer l'automatisation
     chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
@@ -92,262 +93,60 @@ if __name__ == "__main__":
         'profile.default_content_setting_values.cookies': 1
     })
     
-    # Vérifier si Chrome est installé
-    chrome_installed = False
-    chromium_installed = False
-    chrome_paths = [
-        'google-chrome',
-        'google-chrome-stable',
-        'google-chrome-beta',
-        'google-chrome-dev',
-        '/usr/bin/google-chrome',
-        '/usr/bin/google-chrome-stable'
-    ]
-    
-    chromium_paths = [
-        'chromium-browser',
-        'chromium',
-        '/usr/bin/chromium-browser',
-        '/usr/bin/chromium'
-    ]
-    
-    # Vérifier Chrome
-    for chrome_path in chrome_paths:
-        try:
-            result = subprocess.run([chrome_path, '--version'], 
-                                  capture_output=True, text=True, timeout=5)
-            if result.returncode == 0:
-                chrome_installed = True
-                log_with_step(logger, logging.INFO, "NAVIGATEUR", f"Chrome trouvé: {result.stdout.strip()}")
-                break
-        except (subprocess.TimeoutExpired, FileNotFoundError, subprocess.SubprocessError):
-            continue
-    
-    # Vérifier Chromium
-    for chromium_path in chromium_paths:
-        try:
-            result = subprocess.run([chromium_path, '--version'], 
-                                  capture_output=True, text=True, timeout=5)
-            if result.returncode == 0:
-                chromium_installed = True
-                log_with_step(logger, logging.INFO, "NAVIGATEUR", f"Chromium trouvé: {result.stdout.strip()}")
-                break
-        except (subprocess.TimeoutExpired, FileNotFoundError, subprocess.SubprocessError):
-            continue
-    
-    # Déterminer quel navigateur utiliser selon l'option --browser
-    use_chrome = False
-    use_chromium = False
-    
-    if args.browser == 'chrome':
-        if chrome_installed:
-            use_chrome = True
-            log_with_step(logger, logging.INFO, "NAVIGATEUR", "Utilisation de Chrome (choix explicite)")
-        else:
-            log_with_step(logger, logging.ERROR, "NAVIGATEUR", "Chrome demandé mais non installé")
-            log_with_step(logger, logging.ERROR, "NAVIGATEUR", "Installer Chrome : chmod +x install_chrome.sh && ./install_chrome.sh")
-            sys.exit(1)
-    elif args.browser == 'chromium':
-        if chromium_installed:
-            use_chromium = True
-            log_with_step(logger, logging.INFO, "NAVIGATEUR", "Utilisation de Chromium (choix explicite)")
-        else:
-            log_with_step(logger, logging.ERROR, "NAVIGATEUR", "Chromium demandé mais non installé")
-            log_with_step(logger, logging.ERROR, "NAVIGATEUR", "Installer Chromium : chmod +x install_chromium.sh && ./install_chromium.sh")
-            sys.exit(1)
-    else:  # auto
-        # Priorité : Chrome puis Chromium
-        if chrome_installed:
-            use_chrome = True
-            log_with_step(logger, logging.INFO, "NAVIGATEUR", "Utilisation de Chrome (détection automatique)")
-        elif chromium_installed:
-            use_chromium = True
-            log_with_step(logger, logging.INFO, "NAVIGATEUR", "Utilisation de Chromium (détection automatique)")
-    
-    if not use_chrome and not use_chromium:
-        log_with_step(logger, logging.ERROR, "NAVIGATEUR", "Aucun navigateur compatible (Chrome ou Chromium) n'est installé sur ce système.")
-        log_with_step(logger, logging.ERROR, "NAVIGATEUR", "Solutions :")
-        log_with_step(logger, logging.ERROR, "NAVIGATEUR", "1. Installer Chrome : chmod +x install_chrome.sh && ./install_chrome.sh")
-        log_with_step(logger, logging.ERROR, "NAVIGATEUR", "2. Installer Chromium : chmod +x install_chromium.sh && ./install_chromium.sh")
-        log_with_step(logger, logging.ERROR, "NAVIGATEUR", "3. Utiliser Firefox : sudo apt install firefox")
-        log_with_step(logger, logging.ERROR, "NAVIGATEUR", "4. Utiliser le mode headless avec un navigateur portable")
-        
-        # Proposer d'installer un navigateur automatiquement
-        try:
-            print("\nQuel navigateur voulez-vous installer ?")
-            print("1. Chrome (recommandé)")
-            print("2. Chromium (plus léger)")
-            print("3. Aucun (quitter)")
-            
-            response = input("Votre choix (1-3): ").strip()
-            
-            if response == "1":
-                log_with_step(logger, logging.INFO, "INSTALLATION", "Installation automatique de Chrome...")
-                install_script = "./install_chrome.sh"
-                if os.path.exists(install_script):
-                    subprocess.run(["chmod", "+x", install_script])
-                    result = subprocess.run([install_script], check=True)
-                    if result.returncode == 0:
-                        log_with_step(logger, logging.INFO, "INSTALLATION", "Chrome installé avec succès, redémarrage du script...")
-                        # Redémarrer le script
-                        os.execv(sys.executable, ['python'] + sys.argv)
-                    else:
-                        log_with_step(logger, logging.ERROR, "INSTALLATION", "Échec de l'installation automatique de Chrome")
-                        sys.exit(1)
-                else:
-                    log_with_step(logger, logging.ERROR, "INSTALLATION", "Script d'installation Chrome non trouvé")
-                    sys.exit(1)
-            elif response == "2":
-                log_with_step(logger, logging.INFO, "INSTALLATION", "Installation automatique de Chromium...")
-                install_script = "./install_chromium.sh"
-                if os.path.exists(install_script):
-                    subprocess.run(["chmod", "+x", install_script])
-                    result = subprocess.run([install_script], check=True)
-                    if result.returncode == 0:
-                        log_with_step(logger, logging.INFO, "INSTALLATION", "Chromium installé avec succès, redémarrage du script...")
-                        # Redémarrer le script
-                        os.execv(sys.executable, ['python'] + sys.argv)
-                    else:
-                        log_with_step(logger, logging.ERROR, "INSTALLATION", "Échec de l'installation automatique de Chromium")
-                        sys.exit(1)
-                else:
-                    log_with_step(logger, logging.ERROR, "INSTALLATION", "Script d'installation Chromium non trouvé")
-                    sys.exit(1)
-            else:
-                log_with_step(logger, logging.ERROR, "INSTALLATION", "Aucun navigateur sélectionné, arrêt du script")
-                sys.exit(1)
-        except KeyboardInterrupt:
-            log_with_step(logger, logging.ERROR, "INSTALLATION", "Installation annulée par l'utilisateur")
-            sys.exit(1)
-    
-    # Configuration pour WSL (mode headless si nécessaire)
-    if os.path.exists('/proc/version') and 'microsoft' in open('/proc/version').read().lower():
-        log_with_step(logger, logging.INFO, "WSL", "WSL détecté, configuration pour mode headless")
-        chrome_options.add_argument('--headless=new')  # Nouvelle version headless
-        chrome_options.add_argument('--no-sandbox')
-        chrome_options.add_argument('--disable-dev-shm-usage')
-        chrome_options.add_argument('--disable-gpu')
-        # Options spécifiques pour éviter l'erreur DevToolsActivePort
-        chrome_options.add_argument('--remote-debugging-port=0')  # Port 0 = port aléatoire
-        chrome_options.add_argument('--disable-web-security')
-        chrome_options.add_argument('--disable-setuid-sandbox')
-        chrome_options.add_argument('--silent')
-        chrome_options.add_argument('--log-level=3')
-        chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
-        # Options supplémentaires pour WSL
-        chrome_options.add_argument('--disable-background-timer-throttling')
-        chrome_options.add_argument('--disable-backgrounding-occluded-windows')
-        chrome_options.add_argument('--disable-renderer-backgrounding')
-        chrome_options.add_argument('--disable-features=TranslateUI')
-        chrome_options.add_argument('--disable-ipc-flooding-protection')
-        chrome_options.add_argument('--no-first-run')
-        chrome_options.add_argument('--disable-default-apps')
-        chrome_options.add_argument('--disable-sync')
-        chrome_options.add_argument('--disable-translate')
+    driver_dir = os.path.dirname(ChromeDriverManager().install())
+    chromedriver_path = None
+    for f in glob.glob(os.path.join(driver_dir, "chromedriver*")):
+        if os.access(f, os.X_OK) and not f.endswith('.txt') and not f.endswith('.chromedriver'):
+            chromedriver_path = f
+            break
+    if not chromedriver_path:
+        raise FileNotFoundError("Aucun binaire chromedriver exécutable trouvé dans " + driver_dir)
+    service = Service(chromedriver_path)
+    driver = webdriver.Chrome(service=service, options=chrome_options)
+    logger.info("Driver initialisé avec succès.")
     
     try:
-        # Essayer d'abord Chrome, puis Chromium
-        if use_chrome:
-            log_with_step(logger, logging.INFO, "DRIVER", "Utilisation de Chrome")
-            driver_dir = os.path.dirname(ChromeDriverManager().install())
-        elif use_chromium:
-            log_with_step(logger, logging.INFO, "DRIVER", "Utilisation de Chromium")
-            # Pour Chromium, forcer une version compatible
-            try:
-                # Essayer d'abord de télécharger une version compatible
-                driver_dir = os.path.dirname(ChromeDriverManager(version="137.0.7151.119").install())
-                log_with_step(logger, logging.INFO, "DRIVER", "ChromeDriver version 137 téléchargé pour Chromium")
-            except Exception as e:
-                log_with_step(logger, logging.WARNING, "DRIVER", f"Impossible de télécharger la version spécifique: {e}")
-                # Fallback vers la version automatique
-                driver_dir = os.path.dirname(ChromeDriverManager().install())
-                log_with_step(logger, logging.INFO, "DRIVER", "Utilisation de la version automatique du ChromeDriver")
-        else:
-            raise Exception("Aucun navigateur compatible trouvé")
-        
-        chromedriver_path = None
-        for f in glob.glob(os.path.join(driver_dir, "chromedriver*")):
-            if not f.endswith('.txt') and not f.endswith('.chromedriver') and not 'THIRD_PARTY' in f:
-                chromedriver_path = f
-                break
-        
-        if not chromedriver_path:
-            raise FileNotFoundError("Aucun binaire chromedriver trouvé dans " + driver_dir)
-        
-        # Rendre le ChromeDriver exécutable
-        log_with_step(logger, logging.INFO, "DRIVER", f"ChromeDriver trouvé: {chromedriver_path}")
-        try:
-            # Vérifier si le fichier est déjà exécutable
-            if not os.access(chromedriver_path, os.X_OK):
-                log_with_step(logger, logging.INFO, "DRIVER", "Rendre le ChromeDriver exécutable...")
-                os.chmod(chromedriver_path, 0o755)
-                log_with_step(logger, logging.INFO, "DRIVER", "Permissions du ChromeDriver mises à jour")
-            else:
-                log_with_step(logger, logging.INFO, "DRIVER", "ChromeDriver déjà exécutable")
-        except Exception as e:
-            log_with_step(logger, logging.WARNING, "DRIVER", f"Impossible de modifier les permissions du ChromeDriver: {e}")
-            # Essayer de continuer quand même
-        
-        # Vérifier que le ChromeDriver est maintenant exécutable
-        if not os.access(chromedriver_path, os.X_OK):
-            raise FileNotFoundError(f"ChromeDriver non exécutable: {chromedriver_path}")
-        
-        service = Service(chromedriver_path)
-        
-        # Utiliser Chrome ou Chromium selon ce qui est disponible
-        if use_chrome:
-            driver = webdriver.Chrome(service=service, options=chrome_options)
-        else:
-            # Pour Chromium, spécifier le binaire et ajouter des options supplémentaires
-            # Chercher le bon chemin de Chromium
-            chromium_binary = None
-            chromium_paths = [
-                "/usr/bin/chromium-browser",
-                "/usr/bin/chromium",
-                "/snap/bin/chromium",
-                "/usr/bin/google-chrome-stable"
-            ]
+        # Définir les cookies de consentement avant la navigation si spécifiés
+        if args.cookies:
+            logger.info("Définition des cookies de consentement...")
+            # Aller d'abord sur le domaine pour pouvoir définir les cookies
+            from urllib.parse import urlparse
+            parsed_url = urlparse(url)
+            domain_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
+            driver.get(domain_url)
             
-            for path in chromium_paths:
-                if os.path.exists(path) and os.access(path, os.X_OK):
-                    chromium_binary = path
-                    log_with_step(logger, logging.INFO, "DRIVER", f"Binaire Chromium trouvé: {chromium_binary}")
-                    break
+            # Définir chaque cookie
+            for cookie_str in args.cookies:
+                if '=' in cookie_str:
+                    cookie_name, cookie_value = cookie_str.split('=', 1)
+                    try:
+                        # Définir le cookie pour le domaine
+                        driver.add_cookie({
+                            'name': cookie_name.strip(),
+                            'value': cookie_value.strip(),
+                            'domain': parsed_url.netloc
+                        })
+                        logger.info(f"Cookie défini: {cookie_name.strip()} = {cookie_value.strip()}")
+                    except Exception as e:
+                        logger.warning(f"Impossible de définir le cookie {cookie_name}: {e}")
+                else:
+                    logger.warning(f"Format de cookie invalide: {cookie_str} (attendu: nom=valeur)")
             
-            if chromium_binary:
-                chrome_options.binary_location = chromium_binary
-                # Options supplémentaires pour Chromium
-                chrome_options.add_argument('--disable-dev-shm-usage')
-                chrome_options.add_argument('--no-sandbox')
-                chrome_options.add_argument('--disable-setuid-sandbox')
-                chrome_options.add_argument('--disable-web-security')
-                chrome_options.add_argument('--allow-running-insecure-content')
-                chrome_options.add_argument('--disable-features=VizDisplayCompositor')
-                chrome_options.add_argument('--disable-background-timer-throttling')
-                chrome_options.add_argument('--disable-backgrounding-occluded-windows')
-                chrome_options.add_argument('--disable-renderer-backgrounding')
-                chrome_options.add_argument('--disable-features=TranslateUI')
-                chrome_options.add_argument('--disable-ipc-flooding-protection')
-                
-                driver = webdriver.Chrome(service=service, options=chrome_options)
-            else:
-                raise Exception("Binaire Chromium non trouvé")
+            logger.info("Cookies de consentement définis avec succès")
         
-        log_with_step(logger, logging.INFO, "DRIVER", "Driver initialisé avec succès.")
-    except Exception as e:
-        log_with_step(logger, logging.ERROR, "DRIVER", f"Erreur lors de l'initialisation du driver: {e}")
-        log_with_step(logger, logging.ERROR, "DRIVER", "Solutions alternatives :")
-        log_with_step(logger, logging.ERROR, "DRIVER", "1. Vérifier que Chrome/Chromium est installé")
-        log_with_step(logger, logging.ERROR, "DRIVER", "2. Réinstaller Chrome : ./install_chrome.sh")
-        log_with_step(logger, logging.ERROR, "DRIVER", "3. Réinstaller Chromium : ./install_chromium.sh")
-        log_with_step(logger, logging.ERROR, "DRIVER", "4. Utiliser un autre navigateur (Firefox)")
-        log_with_step(logger, logging.ERROR, "DRIVER", "5. Nettoyer le cache webdriver-manager : rm -rf ~/.wdm")
-        sys.exit(1)
-    
-    try:
+        # Maintenant naviguer vers l'URL cible
         driver.get(url)
+        
+        # Forcer la fenêtre à rester sur l'écran principal
+        try:
+            driver.set_window_position(0, 0)
+            driver.set_window_size(1920, 1080)
+            logger.info("Position de la fenêtre forcée sur l'écran principal")
+        except Exception as e:
+            logger.warning(f"Impossible de forcer la position de la fenêtre: {e}")
+        
         # Attendre que la page soit chargée
-        time.sleep(5)
+        time.sleep(10)
         
         # Analyser le focus initial sans l'afficher
         focused_element = driver.switch_to.active_element
@@ -358,7 +157,9 @@ if __name__ == "__main__":
                 buttons_in_focus = focused_element.find_elements("tag name", "button")
                 for btn in buttons_in_focus:
                     if args.cookie_banner.lower() in btn.text.lower():
-                        log_with_step(logger, logging.INFO, "DRIVER", f"Bouton '{args.cookie_banner}' trouvé via élément focus.")
+                        logger.info(f"Bouton '{args.cookie_banner}' trouvé via élément focus.")
+                        # Attendre un délai pour s'assurer que le bouton est bien interactif
+                        time.sleep(1)
                         btn.click()
                         time.sleep(2)
                         driver.refresh()  # recharge la page après clic
@@ -437,6 +238,8 @@ if __name__ == "__main__":
                     log_with_step(logger, logging.WARNING, "DRIVER", "Le bouton n'est pas interactif")
                     raise Exception("Le bouton n'est pas interactif")
                 
+                # Attendre un délai pour s'assurer que le bouton est bien interactif
+                time.sleep(1)
                 continue_button.click()
                 log_with_step(logger, logging.INFO, "DRIVER", f"Clic sur le bouton '{args.cookie_banner}'.")
 
@@ -540,8 +343,12 @@ if __name__ == "__main__":
         crawler.set_driver(driver)
         log_with_step(logger, logging.INFO, "DRIVER", "Driver assigné au crawler.")
         crawler.crawl()
-        crawler.generate_report()
+        crawler.generate_report(export_csv=args.export_csv, csv_filename=args.csv_filename)
 
+        # Initialiser l'analyseur DOM
+        dom_analyzer = DOMAnalyzer(driver, logger)
+        dom_results = dom_analyzer.run()
+        
         # Si l'analyse des images est activée
         if 'image' in args.modules:
             image_analyzer = ImageAnalyzer(driver, logger, args.url, args.output_dir)
