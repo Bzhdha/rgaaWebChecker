@@ -244,6 +244,463 @@ class ScreenReader:
         value = value.replace(';', ',')
         return value
 
+    def _analyze_links_integrated(self, links):
+        """Analyse intégrée des liens - combine analyse des non-conformités et génération CSV en une seule passe"""
+        # Traitement par lots pour réduire les appels JavaScript
+        batch_size = 20
+        total_links = len(links)
+        
+        for batch_start in range(0, total_links, batch_size):
+            batch_end = min(batch_start + batch_size, total_links)
+            batch = links[batch_start:batch_end]
+            
+            # Récupération groupée des attributs pour tout le lot
+            batch_attrs = self.driver.execute_script('''
+                var links = arguments[0];
+                var results = [];
+                for (var i = 0; i < links.length; i++) {
+                    var el = links[i];
+                    var rect = el.getBoundingClientRect();
+                    var style = window.getComputedStyle(el);
+                    results.push({
+                        tag: el.tagName,
+                        role: el.getAttribute('role'),
+                        ariaLabel: el.getAttribute('aria-label'),
+                        ariaDescribedby: el.getAttribute('aria-describedby'),
+                        ariaLabelledby: el.getAttribute('aria-labelledby'),
+                        ariaHidden: el.getAttribute('aria-hidden'),
+                        ariaExpanded: el.getAttribute('aria-expanded'),
+                        ariaControls: el.getAttribute('aria-controls'),
+                        ariaLive: el.getAttribute('aria-live'),
+                        ariaRequired: el.getAttribute('aria-required'),
+                        ariaDisabled: el.getAttribute('aria-disabled'),
+                        ariaSelected: el.getAttribute('aria-selected'),
+                        ariaChecked: el.getAttribute('aria-checked'),
+                        ariaPressed: el.getAttribute('aria-pressed'),
+                        tabindex: el.getAttribute('tabindex'),
+                        title: el.getAttribute('title'),
+                        alt: el.getAttribute('alt'),
+                        id: el.getAttribute('id'),
+                        className: el.getAttribute('class'),
+                        text: el.textContent ? el.textContent.trim() : '',
+                        href: el.getAttribute('href'),
+                        isVisible: !(style.display === 'none' || style.visibility === 'hidden' || rect.width === 0 || rect.height === 0),
+                        isEnabled: !el.disabled,
+                        isFocusable: el.tabIndex >= 0 || el.tagName === 'A' || el.tagName === 'BUTTON' || el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA',
+                        mediaPath: el.getAttribute('src') || el.getAttribute('data') || '',
+                        mediaType: el.tagName.toLowerCase(),
+                        outerHTML: el.outerHTML
+                    });
+                }
+                return results;
+            ''', batch)
+            
+            # Traitement des résultats du lot
+            for j, attrs in enumerate(batch_attrs):
+                try:
+                    # Construction du dictionnaire d'informations
+                    info = {
+                        "Type": attrs['tag'],
+                        "Rôle": attrs['role'] or "non défini",
+                        "Aria-label": attrs['ariaLabel'] or "non défini",
+                        "Aria-describedby": attrs['ariaDescribedby'] or "non défini",
+                        "Aria-labelledby": attrs['ariaLabelledby'] or "non défini",
+                        "Aria-hidden": attrs['ariaHidden'] or "non défini",
+                        "Aria-expanded": attrs['ariaExpanded'] or "non défini",
+                        "Aria-controls": attrs['ariaControls'] or "non défini",
+                        "Aria-live": attrs['ariaLive'] or "non défini",
+                        "Aria-atomic": attrs['ariaAtomic'] or "non défini",
+                        "Aria-relevant": attrs['ariaRelevant'] or "non défini",
+                        "Aria-busy": attrs['ariaBusy'] or "non défini",
+                        "Aria-current": attrs['ariaCurrent'] or "non défini",
+                        "Aria-posinset": attrs['ariaPosinset'] or "non défini",
+                        "Aria-setsize": attrs['ariaSetsize'] or "non défini",
+                        "Aria-level": attrs['ariaLevel'] or "non défini",
+                        "Aria-sort": attrs['ariaSort'] or "non défini",
+                        "Aria-valuemin": attrs['ariaValuemin'] or "non défini",
+                        "Aria-valuemax": attrs['ariaValuemax'] or "non défini",
+                        "Aria-valuenow": attrs['ariaValuenow'] or "non défini",
+                        "Aria-valuetext": attrs['ariaValuetext'] or "non défini",
+                        "Aria-haspopup": attrs['ariaHaspopup'] or "non défini",
+                        "Aria-invalid": attrs['ariaInvalid'] or "non défini",
+                        "Aria-required": attrs['ariaRequired'] or "non défini",
+                        "Aria-readonly": attrs['ariaReadonly'] or "non défini",
+                        "Aria-disabled": attrs['ariaDisabled'] or "non défini",
+                        "Aria-selected": attrs['ariaSelected'] or "non défini",
+                        "Aria-checked": attrs['ariaChecked'] or "non défini",
+                        "Aria-pressed": attrs['ariaPressed'] or "non défini",
+                        "Aria-multiline": attrs['ariaMultiline'] or "non défini",
+                        "Aria-multiselectable": attrs['ariaMultiselectable'] or "non défini",
+                        "Aria-orientation": attrs['ariaOrientation'] or "non défini",
+                        "Aria-placeholder": attrs['ariaPlaceholder'] or "non défini",
+                        "Aria-roledescription": attrs['ariaRoledescription'] or "non défini",
+                        "Aria-keyshortcuts": attrs['ariaKeyshortcuts'] or "non défini",
+                        "Aria-details": attrs['ariaDetails'] or "non défini",
+                        "Aria-errormessage": attrs['ariaErrormessage'] or "non défini",
+                        "Aria-flowto": attrs['ariaFlowto'] or "non défini",
+                        "Aria-owns": attrs['ariaOwns'] or "non défini",
+                        "Tabindex": attrs['tabindex'] or "non défini",
+                        "Title": attrs['title'] or "non défini",
+                        "Alt": attrs['alt'] or "non défini",
+                        "Text": attrs['text'] or "non défini",
+                        "Visible": "Oui" if attrs['isVisible'] else "Non",
+                        "Focusable": "Oui" if attrs['isFocusable'] else "Non",
+                        "Id": attrs['id'] or "non défini",
+                        "Sélecteur": self._get_simple_selector_from_attrs(attrs),
+                        "Extrait HTML": (attrs['outerHTML'] or '')[:200] + '...',
+                        "MediaPath": attrs['mediaPath'] or "non défini",
+                        "MediaType": attrs['mediaType'] or "non défini"
+                    }
+                    
+                    # Génération de XPath simplifiés (éviter les appels coûteux)
+                    main_xpath = f"//a[@id='{attrs['id']}']" if attrs['id'] else f"//a[contains(@class, '{attrs['className'].split()[0]}')]" if attrs['className'] else "//a"
+                    secondary_xpath1 = f"//a[contains(text(), '{attrs['text'][:30]}')]" if attrs['text'] and len(attrs['text']) < 50 else ""
+                    secondary_xpath2 = f"//a[@href='{attrs['href']}']" if attrs['href'] else ""
+                    
+                    info["main_xpath"] = main_xpath
+                    info["secondary_xpath1"] = secondary_xpath1
+                    info["secondary_xpath2"] = secondary_xpath2
+                    
+                    # Construction de la ligne CSV avec toutes les données ARIA
+                    row = [
+                        self._clean_csv_field(info["Type"]),
+                        self._clean_csv_field(info["Sélecteur"]),
+                        self._clean_csv_field(info["Extrait HTML"]),
+                        self._clean_csv_field(info["Rôle"]),
+                        self._clean_csv_field(info["Aria-label"]),
+                        self._clean_csv_field(info["Text"]),
+                        self._clean_csv_field(info["Alt"]),
+                        self._clean_csv_field(info["Title"]),
+                        self._clean_csv_field(info["Visible"]),
+                        self._clean_csv_field(info["Focusable"]),
+                        self._clean_csv_field(info["Id"]),
+                        # Nouvelles colonnes ARIA pour les outils de narration
+                        self._clean_csv_field(info["Aria-describedby"]),
+                        self._clean_csv_field(info["Aria-labelledby"]),
+                        self._clean_csv_field(info["Aria-hidden"]),
+                        self._clean_csv_field(info["Aria-expanded"]),
+                        self._clean_csv_field(info["Aria-controls"]),
+                        self._clean_csv_field(info["Aria-live"]),
+                        self._clean_csv_field(info["Aria-atomic"]),
+                        self._clean_csv_field(info["Aria-relevant"]),
+                        self._clean_csv_field(info["Aria-busy"]),
+                        self._clean_csv_field(info["Aria-current"]),
+                        self._clean_csv_field(info["Aria-posinset"]),
+                        self._clean_csv_field(info["Aria-setsize"]),
+                        self._clean_csv_field(info["Aria-level"]),
+                        self._clean_csv_field(info["Aria-sort"]),
+                        self._clean_csv_field(info["Aria-valuemin"]),
+                        self._clean_csv_field(info["Aria-valuemax"]),
+                        self._clean_csv_field(info["Aria-valuenow"]),
+                        self._clean_csv_field(info["Aria-valuetext"]),
+                        self._clean_csv_field(info["Aria-haspopup"]),
+                        self._clean_csv_field(info["Aria-invalid"]),
+                        self._clean_csv_field(info["Aria-required"]),
+                        self._clean_csv_field(info["Aria-readonly"]),
+                        self._clean_csv_field(info["Aria-disabled"]),
+                        self._clean_csv_field(info["Aria-selected"]),
+                        self._clean_csv_field(info["Aria-checked"]),
+                        self._clean_csv_field(info["Aria-pressed"]),
+                        self._clean_csv_field(info["Aria-multiline"]),
+                        self._clean_csv_field(info["Aria-multiselectable"]),
+                        self._clean_csv_field(info["Aria-orientation"]),
+                        self._clean_csv_field(info["Aria-placeholder"]),
+                        self._clean_csv_field(info["Aria-roledescription"]),
+                        self._clean_csv_field(info["Aria-keyshortcuts"]),
+                        self._clean_csv_field(info["Aria-details"]),
+                        self._clean_csv_field(info["Aria-errormessage"]),
+                        self._clean_csv_field(info["Aria-flowto"]),
+                        self._clean_csv_field(info["Aria-owns"]),
+                        self._clean_csv_field(info["Tabindex"]),
+                        self._clean_csv_field(info["main_xpath"]),
+                        self._clean_csv_field(info["secondary_xpath1"]),
+                        self._clean_csv_field(info["secondary_xpath2"])
+                    ]
+                    self.csv_lines.append(';'.join(row))
+                    
+                    # Analyse des non-conformités
+                    self._analyze_non_conformites(info, "Lien", batch[j])
+                    
+                    # Stocker les attributs ARIA pour affichage après la progression
+                    aria_attrs = {k: v for k, v in info.items() if k.startswith("Aria-") and v != "non défini"}
+                    if aria_attrs:
+                        if not hasattr(self, '_aria_attrs_to_log'):
+                            self._aria_attrs_to_log = []
+                        self._aria_attrs_to_log.append(("Lien", aria_attrs))
+                    
+                    # Affichage de la progression
+                    current_index = batch_start + j + 1
+                    self._print_progress(current_index, total_links, prefix=f"Analyse Liens:", suffix=f"{current_index}/{total_links}")
+                        
+                except Exception as e:
+                    self.logger.debug(f"Erreur lors de l'analyse du lien : {str(e)}")
+                    continue
+        
+        print()  # Nouvelle ligne après la barre de progression
+
+    def _get_simple_selector_from_attrs(self, attrs):
+        """Génère un sélecteur simple à partir des attributs récupérés"""
+        tag = attrs['tag'].lower()
+        classes = attrs['className']
+        if classes:
+            return f"{tag}.{'.'.join(classes.split())}"
+        return tag
+
+    def _analyze_elements_integrated(self, elements, category_name):
+        """Analyse intégrée pour toutes les catégories - combine analyse des non-conformités et génération CSV en une seule passe"""
+        # Traitement par lots pour réduire les appels JavaScript
+        batch_size = 20
+        total_elements = len(elements)
+        
+        for batch_start in range(0, total_elements, batch_size):
+            batch_end = min(batch_start + batch_size, total_elements)
+            batch = elements[batch_start:batch_end]
+            
+            # Récupération groupée des attributs pour tout le lot
+            batch_attrs = self.driver.execute_script('''
+                var elements = arguments[0];
+                var results = [];
+                for (var i = 0; i < elements.length; i++) {
+                    var el = elements[i];
+                    var rect = el.getBoundingClientRect();
+                    var style = window.getComputedStyle(el);
+                    results.push({
+                        tag: el.tagName,
+                        role: el.getAttribute('role'),
+                        ariaLabel: el.getAttribute('aria-label'),
+                        ariaDescribedby: el.getAttribute('aria-describedby'),
+                        ariaLabelledby: el.getAttribute('aria-labelledby'),
+                        ariaHidden: el.getAttribute('aria-hidden'),
+                        ariaExpanded: el.getAttribute('aria-expanded'),
+                        ariaControls: el.getAttribute('aria-controls'),
+                        ariaLive: el.getAttribute('aria-live'),
+                        ariaAtomic: el.getAttribute('aria-atomic'),
+                        ariaRelevant: el.getAttribute('aria-relevant'),
+                        ariaBusy: el.getAttribute('aria-busy'),
+                        ariaCurrent: el.getAttribute('aria-current'),
+                        ariaPosinset: el.getAttribute('aria-posinset'),
+                        ariaSetsize: el.getAttribute('aria-setsize'),
+                        ariaLevel: el.getAttribute('aria-level'),
+                        ariaSort: el.getAttribute('aria-sort'),
+                        ariaValuemin: el.getAttribute('aria-valuemin'),
+                        ariaValuemax: el.getAttribute('aria-valuemax'),
+                        ariaValuenow: el.getAttribute('aria-valuenow'),
+                        ariaValuetext: el.getAttribute('aria-valuetext'),
+                        ariaHaspopup: el.getAttribute('aria-haspopup'),
+                        ariaInvalid: el.getAttribute('aria-invalid'),
+                        ariaRequired: el.getAttribute('aria-required'),
+                        ariaReadonly: el.getAttribute('aria-readonly'),
+                        ariaDisabled: el.getAttribute('aria-disabled'),
+                        ariaSelected: el.getAttribute('aria-selected'),
+                        ariaChecked: el.getAttribute('aria-checked'),
+                        ariaPressed: el.getAttribute('aria-pressed'),
+                        ariaMultiline: el.getAttribute('aria-multiline'),
+                        ariaMultiselectable: el.getAttribute('aria-multiselectable'),
+                        ariaOrientation: el.getAttribute('aria-orientation'),
+                        ariaPlaceholder: el.getAttribute('aria-placeholder'),
+                        ariaRoledescription: el.getAttribute('aria-roledescription'),
+                        ariaKeyshortcuts: el.getAttribute('aria-keyshortcuts'),
+                        ariaDetails: el.getAttribute('aria-details'),
+                        ariaErrormessage: el.getAttribute('aria-errormessage'),
+                        ariaFlowto: el.getAttribute('aria-flowto'),
+                        ariaOwns: el.getAttribute('aria-owns'),
+                        tabindex: el.getAttribute('tabindex'),
+                        title: el.getAttribute('title'),
+                        alt: el.getAttribute('alt'),
+                        id: el.getAttribute('id'),
+                        className: el.getAttribute('class'),
+                        text: el.textContent ? el.textContent.trim() : '',
+                        href: el.getAttribute('href'),
+                        src: el.getAttribute('src'),
+                        isVisible: !(style.display === 'none' || style.visibility === 'hidden' || rect.width === 0 || rect.height === 0),
+                        isEnabled: !el.disabled,
+                        isFocusable: el.tabIndex >= 0 || ['A', 'BUTTON', 'INPUT', 'SELECT', 'TEXTAREA'].includes(el.tagName),
+                        mediaPath: el.getAttribute('src') || el.getAttribute('data') || '',
+                        mediaType: el.tagName.toLowerCase(),
+                        outerHTML: el.outerHTML
+                    });
+                }
+                return results;
+            ''', batch)
+            
+            # Traitement des résultats du lot
+            for j, attrs in enumerate(batch_attrs):
+                try:
+                    # Construction du dictionnaire d'informations
+                    info = {
+                        "Type": attrs['tag'],
+                        "Rôle": attrs['role'] or "non défini",
+                        "Aria-label": attrs['ariaLabel'] or "non défini",
+                        "Aria-describedby": attrs['ariaDescribedby'] or "non défini",
+                        "Aria-labelledby": attrs['ariaLabelledby'] or "non défini",
+                        "Aria-hidden": attrs['ariaHidden'] or "non défini",
+                        "Aria-expanded": attrs['ariaExpanded'] or "non défini",
+                        "Aria-controls": attrs['ariaControls'] or "non défini",
+                        "Aria-live": attrs['ariaLive'] or "non défini",
+                        "Aria-atomic": attrs['ariaAtomic'] or "non défini",
+                        "Aria-relevant": attrs['ariaRelevant'] or "non défini",
+                        "Aria-busy": attrs['ariaBusy'] or "non défini",
+                        "Aria-current": attrs['ariaCurrent'] or "non défini",
+                        "Aria-posinset": attrs['ariaPosinset'] or "non défini",
+                        "Aria-setsize": attrs['ariaSetsize'] or "non défini",
+                        "Aria-level": attrs['ariaLevel'] or "non défini",
+                        "Aria-sort": attrs['ariaSort'] or "non défini",
+                        "Aria-valuemin": attrs['ariaValuemin'] or "non défini",
+                        "Aria-valuemax": attrs['ariaValuemax'] or "non défini",
+                        "Aria-valuenow": attrs['ariaValuenow'] or "non défini",
+                        "Aria-valuetext": attrs['ariaValuetext'] or "non défini",
+                        "Aria-haspopup": attrs['ariaHaspopup'] or "non défini",
+                        "Aria-invalid": attrs['ariaInvalid'] or "non défini",
+                        "Aria-required": attrs['ariaRequired'] or "non défini",
+                        "Aria-readonly": attrs['ariaReadonly'] or "non défini",
+                        "Aria-disabled": attrs['ariaDisabled'] or "non défini",
+                        "Aria-selected": attrs['ariaSelected'] or "non défini",
+                        "Aria-checked": attrs['ariaChecked'] or "non défini",
+                        "Aria-pressed": attrs['ariaPressed'] or "non défini",
+                        "Aria-multiline": attrs['ariaMultiline'] or "non défini",
+                        "Aria-multiselectable": attrs['ariaMultiselectable'] or "non défini",
+                        "Aria-orientation": attrs['ariaOrientation'] or "non défini",
+                        "Aria-placeholder": attrs['ariaPlaceholder'] or "non défini",
+                        "Aria-roledescription": attrs['ariaRoledescription'] or "non défini",
+                        "Aria-keyshortcuts": attrs['ariaKeyshortcuts'] or "non défini",
+                        "Aria-details": attrs['ariaDetails'] or "non défini",
+                        "Aria-errormessage": attrs['ariaErrormessage'] or "non défini",
+                        "Aria-flowto": attrs['ariaFlowto'] or "non défini",
+                        "Aria-owns": attrs['ariaOwns'] or "non défini",
+                        "Tabindex": attrs['tabindex'] or "non défini",
+                        "Title": attrs['title'] or "non défini",
+                        "Alt": attrs['alt'] or "non défini",
+                        "Text": attrs['text'] or "non défini",
+                        "Visible": "Oui" if attrs['isVisible'] else "Non",
+                        "Focusable": "Oui" if attrs['isFocusable'] else "Non",
+                        "Id": attrs['id'] or "non défini",
+                        "Sélecteur": self._get_simple_selector_from_attrs(attrs),
+                        "Extrait HTML": (attrs['outerHTML'] or '')[:200] + '...',
+                        "MediaPath": attrs['mediaPath'] or "non défini",
+                        "MediaType": attrs['mediaType'] or "non défini"
+                    }
+                    
+                    # Génération de XPath simplifiés (éviter les appels coûteux)
+                    main_xpath = self._generate_simple_xpath(attrs)
+                    secondary_xpath1 = self._generate_secondary_xpath1(attrs)
+                    secondary_xpath2 = self._generate_secondary_xpath2(attrs)
+                    
+                    info["main_xpath"] = main_xpath
+                    info["secondary_xpath1"] = secondary_xpath1
+                    info["secondary_xpath2"] = secondary_xpath2
+                    
+                    # Construction de la ligne CSV avec toutes les données ARIA
+                    row = [
+                        self._clean_csv_field(info["Type"]),
+                        self._clean_csv_field(info["Sélecteur"]),
+                        self._clean_csv_field(info["Extrait HTML"]),
+                        self._clean_csv_field(info["Rôle"]),
+                        self._clean_csv_field(info["Aria-label"]),
+                        self._clean_csv_field(info["Text"]),
+                        self._clean_csv_field(info["Alt"]),
+                        self._clean_csv_field(info["Title"]),
+                        self._clean_csv_field(info["Visible"]),
+                        self._clean_csv_field(info["Focusable"]),
+                        self._clean_csv_field(info["Id"]),
+                        # Nouvelles colonnes ARIA pour les outils de narration
+                        self._clean_csv_field(info["Aria-describedby"]),
+                        self._clean_csv_field(info["Aria-labelledby"]),
+                        self._clean_csv_field(info["Aria-hidden"]),
+                        self._clean_csv_field(info["Aria-expanded"]),
+                        self._clean_csv_field(info["Aria-controls"]),
+                        self._clean_csv_field(info["Aria-live"]),
+                        self._clean_csv_field(info["Aria-atomic"]),
+                        self._clean_csv_field(info["Aria-relevant"]),
+                        self._clean_csv_field(info["Aria-busy"]),
+                        self._clean_csv_field(info["Aria-current"]),
+                        self._clean_csv_field(info["Aria-posinset"]),
+                        self._clean_csv_field(info["Aria-setsize"]),
+                        self._clean_csv_field(info["Aria-level"]),
+                        self._clean_csv_field(info["Aria-sort"]),
+                        self._clean_csv_field(info["Aria-valuemin"]),
+                        self._clean_csv_field(info["Aria-valuemax"]),
+                        self._clean_csv_field(info["Aria-valuenow"]),
+                        self._clean_csv_field(info["Aria-valuetext"]),
+                        self._clean_csv_field(info["Aria-haspopup"]),
+                        self._clean_csv_field(info["Aria-invalid"]),
+                        self._clean_csv_field(info["Aria-required"]),
+                        self._clean_csv_field(info["Aria-readonly"]),
+                        self._clean_csv_field(info["Aria-disabled"]),
+                        self._clean_csv_field(info["Aria-selected"]),
+                        self._clean_csv_field(info["Aria-checked"]),
+                        self._clean_csv_field(info["Aria-pressed"]),
+                        self._clean_csv_field(info["Aria-multiline"]),
+                        self._clean_csv_field(info["Aria-multiselectable"]),
+                        self._clean_csv_field(info["Aria-orientation"]),
+                        self._clean_csv_field(info["Aria-placeholder"]),
+                        self._clean_csv_field(info["Aria-roledescription"]),
+                        self._clean_csv_field(info["Aria-keyshortcuts"]),
+                        self._clean_csv_field(info["Aria-details"]),
+                        self._clean_csv_field(info["Aria-errormessage"]),
+                        self._clean_csv_field(info["Aria-flowto"]),
+                        self._clean_csv_field(info["Aria-owns"]),
+                        self._clean_csv_field(info["Tabindex"]),
+                        self._clean_csv_field(info["main_xpath"]),
+                        self._clean_csv_field(info["secondary_xpath1"]),
+                        self._clean_csv_field(info["secondary_xpath2"])
+                    ]
+                    self.csv_lines.append(';'.join(row))
+                    
+                    # Analyse des non-conformités
+                    self._analyze_non_conformites(info, category_name, batch[j])
+                    
+                    # Stocker les attributs ARIA pour affichage après la progression
+                    aria_attrs = {k: v for k, v in info.items() if k.startswith("Aria-") and v != "non défini"}
+                    if aria_attrs:
+                        if not hasattr(self, '_aria_attrs_to_log'):
+                            self._aria_attrs_to_log = []
+                        self._aria_attrs_to_log.append((category_name, aria_attrs))
+                    
+                    # Affichage de la progression
+                    current_index = batch_start + j + 1
+                    self._print_progress(current_index, total_elements, prefix=f"Analyse {category_name}:", suffix=f"{current_index}/{total_elements}")
+                        
+                except Exception as e:
+                    self.logger.debug(f"Erreur lors de l'analyse de l'élément {category_name}: {str(e)}")
+                    continue
+        
+        print()  # Nouvelle ligne après la barre de progression
+
+    def _generate_simple_xpath(self, attrs):
+        """Génère un XPath simple basé sur les attributs"""
+        tag = attrs['tag'].lower()
+        element_id = attrs['id']
+        class_name = attrs['className']
+        
+        if element_id:
+            return f"//{tag}[@id='{element_id}']"
+        elif class_name:
+            first_class = class_name.split()[0]
+            return f"//{tag}[contains(@class, '{first_class}')]"
+        else:
+            return f"//{tag}"
+
+    def _generate_secondary_xpath1(self, attrs):
+        """Génère un XPath secondaire basé sur le texte"""
+        tag = attrs['tag'].lower()
+        text = attrs['text']
+        
+        if text and len(text) < 50:
+            return f"//{tag}[contains(text(), '{text[:30]}')]"
+        return ""
+
+    def _generate_secondary_xpath2(self, attrs):
+        """Génère un XPath secondaire basé sur les attributs spécifiques"""
+        tag = attrs['tag'].lower()
+        href = attrs['href']
+        src = attrs['src']
+        
+        if href:
+            return f"//{tag}[@href='{href}']"
+        elif src:
+            return f"//{tag}[@src='{src}']"
+        return ""
+
     def _analyze_links_optimized(self, links):
         """Analyse optimisée des liens - évite le double traitement et les XPath coûteux"""
         results = []
@@ -466,7 +923,7 @@ class ScreenReader:
             info["secondary_xpath1"] = secondary_xpaths[0] if len(secondary_xpaths) > 0 else ''
             info["secondary_xpath2"] = secondary_xpaths[1] if len(secondary_xpaths) > 1 else ''
             
-            # Construction de la ligne CSV avec nettoyage des champs
+            # Construction de la ligne CSV avec toutes les données ARIA
             row = [
                 self._clean_csv_field(info["Type"]),
                 self._clean_csv_field(info["Sélecteur"]),
@@ -479,6 +936,44 @@ class ScreenReader:
                 self._clean_csv_field(info["Visible"]),
                 self._clean_csv_field(info["Focusable"]),
                 self._clean_csv_field(info["Id"]),
+                # Nouvelles colonnes ARIA pour les outils de narration
+                self._clean_csv_field(info["Aria-describedby"]),
+                self._clean_csv_field(info["Aria-labelledby"]),
+                self._clean_csv_field(info["Aria-hidden"]),
+                self._clean_csv_field(info["Aria-expanded"]),
+                self._clean_csv_field(info["Aria-controls"]),
+                self._clean_csv_field(info["Aria-live"]),
+                self._clean_csv_field(info["Aria-atomic"]),
+                self._clean_csv_field(info["Aria-relevant"]),
+                self._clean_csv_field(info["Aria-busy"]),
+                self._clean_csv_field(info["Aria-current"]),
+                self._clean_csv_field(info["Aria-posinset"]),
+                self._clean_csv_field(info["Aria-setsize"]),
+                self._clean_csv_field(info["Aria-level"]),
+                self._clean_csv_field(info["Aria-sort"]),
+                self._clean_csv_field(info["Aria-valuemin"]),
+                self._clean_csv_field(info["Aria-valuemax"]),
+                self._clean_csv_field(info["Aria-valuenow"]),
+                self._clean_csv_field(info["Aria-valuetext"]),
+                self._clean_csv_field(info["Aria-haspopup"]),
+                self._clean_csv_field(info["Aria-invalid"]),
+                self._clean_csv_field(info["Aria-required"]),
+                self._clean_csv_field(info["Aria-readonly"]),
+                self._clean_csv_field(info["Aria-disabled"]),
+                self._clean_csv_field(info["Aria-selected"]),
+                self._clean_csv_field(info["Aria-checked"]),
+                self._clean_csv_field(info["Aria-pressed"]),
+                self._clean_csv_field(info["Aria-multiline"]),
+                self._clean_csv_field(info["Aria-multiselectable"]),
+                self._clean_csv_field(info["Aria-orientation"]),
+                self._clean_csv_field(info["Aria-placeholder"]),
+                self._clean_csv_field(info["Aria-roledescription"]),
+                self._clean_csv_field(info["Aria-keyshortcuts"]),
+                self._clean_csv_field(info["Aria-details"]),
+                self._clean_csv_field(info["Aria-errormessage"]),
+                self._clean_csv_field(info["Aria-flowto"]),
+                self._clean_csv_field(info["Aria-owns"]),
+                self._clean_csv_field(info["Tabindex"]),
                 self._clean_csv_field(info["main_xpath"]),
                 self._clean_csv_field(info["secondary_xpath1"]),
                 self._clean_csv_field(info["secondary_xpath2"])
@@ -488,12 +983,13 @@ class ScreenReader:
             # Analyse des non-conformités
             self._analyze_non_conformites(info, element_type, element)
             
-            # Log des attributs ARIA en Markdown (uniquement si des attributs sont définis)
+            # Stocker les attributs ARIA pour affichage après la progression
             aria_attrs = {k: v for k, v in info.items() if k.startswith("Aria-") and v != "non défini"}
             if aria_attrs:
-                self.logger.info("### Attributs ARIA définis")
-                for attr, value in aria_attrs.items():
-                    self.logger.debug(f"✓ {attr}: {value}")
+                # Stocker pour affichage après la barre de progression
+                if not hasattr(self, '_aria_attrs_to_log'):
+                    self._aria_attrs_to_log = []
+                self._aria_attrs_to_log.append((element_type, aria_attrs))
             
         except Exception as e:
             self.logger.error(f"Erreur lors de l'analyse de l'élément {element_type}: {str(e)}")
@@ -640,9 +1136,19 @@ class ScreenReader:
         percent = f"{100 * (current / float(total)):.1f}"
         filled_length = int(length * current // total)
         bar = fill * filled_length + '-' * (length - filled_length)
-        print(f'\r{prefix} |{bar}| {percent}% {suffix}', end='\r')
+        print(f'\r{prefix} |{bar}| {percent}% {suffix}', end='', flush=True)
         if current == total:
-            print()
+            print()  # Nouvelle ligne seulement à la fin
+
+    def _log_aria_attributes(self):
+        """Affiche les attributs ARIA stockés pendant l'analyse"""
+        if hasattr(self, '_aria_attrs_to_log') and self._aria_attrs_to_log:
+            self.logger.info("### Attributs ARIA définis")
+            for element_type, aria_attrs in self._aria_attrs_to_log:
+                for attr, value in aria_attrs.items():
+                    self.logger.debug(f"✓ {attr}: {value}")
+            # Nettoyer la liste après affichage
+            self._aria_attrs_to_log = []
 
     def run(self):
         log_with_step(self.logger, logging.INFO, "LECTEUR_ECRAN", "\nSimulation de lecteur d'écran...")
@@ -754,6 +1260,9 @@ class ScreenReader:
             
             log_with_step(self.logger, logging.INFO, "LECTEUR_ECRAN", f"Rapport généré : {report_path}")
             
+        except Exception as e:
+            log_with_step(self.logger, logging.WARNING, "LECTEUR_ECRAN", f"Erreur lors de la génération du rapport : {str(e)}")
+            
         import time
         start_time = time.time()
         
@@ -769,7 +1278,10 @@ class ScreenReader:
 
         # En-tête CSV
         csv_header = [
-            "Type", "Sélecteur", "Extrait HTML", "Rôle", "Aria-label", "Text", "Alt", "Title", "Visible", "Focusable", "Id", "X-path principal", "X-path secondaire 1", "X-path secondaire 2"
+            "Type", "Sélecteur", "Extrait HTML", "Rôle", "Aria-label", "Text", "Alt", "Title", "Visible", "Focusable", "Id",
+            # Nouvelles colonnes ARIA pour les outils de narration
+            "Aria-describedby", "Aria-labelledby", "Aria-hidden", "Aria-expanded", "Aria-controls", "Aria-live", "Aria-atomic", "Aria-relevant", "Aria-busy", "Aria-current", "Aria-posinset", "Aria-setsize", "Aria-level", "Aria-sort", "Aria-valuemin", "Aria-valuemax", "Aria-valuenow", "Aria-valuetext", "Aria-haspopup", "Aria-invalid", "Aria-required", "Aria-readonly", "Aria-disabled", "Aria-selected", "Aria-checked", "Aria-pressed", "Aria-multiline", "Aria-multiselectable", "Aria-orientation", "Aria-placeholder", "Aria-roledescription", "Aria-keyshortcuts", "Aria-details", "Aria-errormessage", "Aria-flowto", "Aria-owns", "Tabindex",
+            "X-path principal", "X-path secondaire 1", "X-path secondaire 2"
         ]
         self.csv_lines.append(';'.join(csv_header))
         
@@ -808,30 +1320,51 @@ class ScreenReader:
                 "aria_roles": []
             }
 
-            # Classer les éléments par type
-            for i, element in enumerate(all_elements, 1):
-                if i % 10 == 0:  # Mise à jour plus fréquente de la barre de progression
-                    self._print_progress(i, total_elements, prefix="Classification :", suffix=f"{i}/{total_elements}")
+            # Classification optimisée par lots
+            batch_size = 50  # Traiter par lots de 50 éléments
+            for batch_start in range(0, total_elements, batch_size):
+                batch_end = min(batch_start + batch_size, total_elements)
+                batch = all_elements[batch_start:batch_end]
                 
-                tag_name = element.tag_name.lower()
+                # Récupération groupée des informations de classification
+                batch_info = self.driver.execute_script('''
+                    var elements = arguments[0];
+                    var results = [];
+                    for (var i = 0; i < elements.length; i++) {
+                        var el = elements[i];
+                        results.push({
+                            tagName: el.tagName.toLowerCase(),
+                            role: el.getAttribute('role')
+                        });
+                    }
+                    return results;
+                ''', batch)
                 
-                if tag_name.startswith('h') and tag_name[1:].isdigit():
-                    elements_by_type["headings"].append(element)
-                elif tag_name == 'img':
-                    elements_by_type["images"].append(element)
-                elif tag_name == 'a':
-                    elements_by_type["links"].append(element)
-                elif tag_name == 'button':
-                    elements_by_type["buttons"].append(element)
-                elif tag_name == 'form':
-                    elements_by_type["forms"].append(element)
-                elif tag_name in ['header', 'nav', 'main', 'aside', 'footer']:
-                    elements_by_type["landmarks"].append(element)
-                
-                # Vérifier les rôles ARIA
-                role = element.get_attribute('role')
-                if role:
-                    elements_by_type["aria_roles"].append(element)
+                # Classification des éléments du lot
+                for j, info in enumerate(batch_info):
+                    current_index = batch_start + j + 1
+                    if current_index % 10 == 0:  # Mise à jour plus fréquente de la barre de progression
+                        self._print_progress(current_index, total_elements, prefix="Classification :", suffix=f"{current_index}/{total_elements}")
+                    
+                    tag_name = info['tagName']
+                    role = info['role']
+                    
+                    if tag_name.startswith('h') and tag_name[1:].isdigit():
+                        elements_by_type["headings"].append(batch[j])
+                    elif tag_name == 'img':
+                        elements_by_type["images"].append(batch[j])
+                    elif tag_name == 'a':
+                        elements_by_type["links"].append(batch[j])
+                    elif tag_name == 'button':
+                        elements_by_type["buttons"].append(batch[j])
+                    elif tag_name == 'form':
+                        elements_by_type["forms"].append(batch[j])
+                    elif tag_name in ['header', 'nav', 'main', 'aside', 'footer']:
+                        elements_by_type["landmarks"].append(batch[j])
+                    
+                    # Vérifier les rôles ARIA
+                    if role:
+                        elements_by_type["aria_roles"].append(batch[j])
 
             step2_time = time.time() - step2_start
             print()  # Nouvelle ligne après la barre de progression
@@ -865,28 +1398,22 @@ class ScreenReader:
                     self.logger.info(f"\n### {category_name} ({len(elements)} éléments)")
                     self.logger.info(f"Description : {category_desc}")
                     
-                    if category_key == "links":
-                        # Analyse optimisée des liens - traitement unique
-                        self.logger.info("Analyse optimisée des liens en cours...")
-                        results = self._analyze_links_optimized(elements)
-                        self.non_conformites["liens"].extend(results)
-                        
-                        # Traitement direct sans ThreadPoolExecutor pour éviter la surcharge
-                        for i, element in enumerate(elements, 1):
-                            self._print_progress(i, len(elements), prefix=f"Analyse {category_name}:", suffix=f"{i}/{len(elements)}")
-                            self._print_element_table(element, category_name)
-                            total_processed += 1
-                    else:
-                        # Analyse normale pour les autres catégories
-                        for i, element in enumerate(elements, 1):
-                            self._print_progress(i, len(elements), prefix=f"Analyse {category_name}:", suffix=f"{i}/{len(elements)}")
-                            self._print_element_table(element, category_name)
-                            total_processed += 1
+                    # Analyse optimisée pour toutes les catégories
+                    self.logger.info(f"Analyse optimisée des {category_name.lower()} en cours...")
+                    self._analyze_elements_integrated(elements, category_name)
+                    total_processed += len(elements)
                     
                     category_time = time.time() - category_start
                     category_times[category_name] = category_time
-                    self.logger.info(f"⏱️ {category_name}: {category_time:.2f}s ({len(elements)} éléments)")
+                    
+                    # Calculer la vitesse d'analyse
+                    speed = len(elements) / category_time if category_time > 0 else 0
+                    
+                    self.logger.info(f"⏱️ {category_name}: {category_time:.2f}s ({len(elements)} éléments) - Vitesse: {speed:.1f} éléments/s")
                     print()  # Nouvelle ligne après la barre de progression
+                    
+                    # Afficher les attributs ARIA après la progression
+                    self._log_aria_attributes()
             
             step3_time = time.time() - step3_start
             self.logger.info(f"⏱️ ÉTAPE 3 - Analyse détaillée: {step3_time:.2f}s")
