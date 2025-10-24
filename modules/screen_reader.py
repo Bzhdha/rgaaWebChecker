@@ -9,6 +9,7 @@ import math
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from utils.log_utils import log_with_step
+from utils.css_selector_generator import CSSSelectorGenerator
 import logging
 
 class ScreenReader:
@@ -17,6 +18,7 @@ class ScreenReader:
         self.logger = logger
         self.page_url = None
         self.csv_lines = []  # Pour stocker les lignes CSV
+        self.css_generator = CSSSelectorGenerator()  # Générateur de sélecteurs CSS
         self.non_conformites = {
             "images": [],
             "liens": [],
@@ -361,6 +363,12 @@ class ScreenReader:
                     info["secondary_xpath1"] = secondary_xpath1
                     info["secondary_xpath2"] = secondary_xpath2
                     
+                    # Génération de sélecteurs CSS alternatifs
+                    css_selectors = self.css_generator.generate_css_selectors_from_attrs(attrs)
+                    info["main_css"] = css_selectors["main_css"]
+                    info["secondary_css1"] = css_selectors["secondary_css1"]
+                    info["secondary_css2"] = css_selectors["secondary_css2"]
+                    
                     # Construction de la ligne CSV avec toutes les données ARIA
                     row = [
                         self._clean_csv_field(info["Type"]),
@@ -414,7 +422,11 @@ class ScreenReader:
                         self._clean_csv_field(info["Tabindex"]),
                         self._clean_csv_field(info["main_xpath"]),
                         self._clean_csv_field(info["secondary_xpath1"]),
-                        self._clean_csv_field(info["secondary_xpath2"])
+                        self._clean_csv_field(info["secondary_xpath2"]),
+                        # Sélecteurs CSS alternatifs
+                        self._clean_csv_field(info["main_css"]),
+                        self._clean_csv_field(info["secondary_css1"]),
+                        self._clean_csv_field(info["secondary_css2"])
                     ]
                     self.csv_lines.append(';'.join(row))
                     
@@ -589,6 +601,12 @@ class ScreenReader:
                     info["secondary_xpath1"] = secondary_xpath1
                     info["secondary_xpath2"] = secondary_xpath2
                     
+                    # Génération de sélecteurs CSS alternatifs
+                    css_selectors = self.css_generator.generate_css_selectors_from_attrs(attrs)
+                    info["main_css"] = css_selectors["main_css"]
+                    info["secondary_css1"] = css_selectors["secondary_css1"]
+                    info["secondary_css2"] = css_selectors["secondary_css2"]
+                    
                     # Construction de la ligne CSV avec toutes les données ARIA
                     row = [
                         self._clean_csv_field(info["Type"]),
@@ -642,7 +660,11 @@ class ScreenReader:
                         self._clean_csv_field(info["Tabindex"]),
                         self._clean_csv_field(info["main_xpath"]),
                         self._clean_csv_field(info["secondary_xpath1"]),
-                        self._clean_csv_field(info["secondary_xpath2"])
+                        self._clean_csv_field(info["secondary_xpath2"]),
+                        # Sélecteurs CSS alternatifs
+                        self._clean_csv_field(info["main_css"]),
+                        self._clean_csv_field(info["secondary_css1"]),
+                        self._clean_csv_field(info["secondary_css2"])
                     ]
                     self.csv_lines.append(';'.join(row))
                     
@@ -923,6 +945,12 @@ class ScreenReader:
             info["secondary_xpath1"] = secondary_xpaths[0] if len(secondary_xpaths) > 0 else ''
             info["secondary_xpath2"] = secondary_xpaths[1] if len(secondary_xpaths) > 1 else ''
             
+            # Génération de sélecteurs CSS alternatifs
+            css_selectors = self.css_generator.generate_css_selectors(element)
+            info["main_css"] = css_selectors["main_css"]
+            info["secondary_css1"] = css_selectors["secondary_css1"]
+            info["secondary_css2"] = css_selectors["secondary_css2"]
+            
             # Construction de la ligne CSV avec toutes les données ARIA
             row = [
                 self._clean_csv_field(info["Type"]),
@@ -976,7 +1004,11 @@ class ScreenReader:
                 self._clean_csv_field(info["Tabindex"]),
                 self._clean_csv_field(info["main_xpath"]),
                 self._clean_csv_field(info["secondary_xpath1"]),
-                self._clean_csv_field(info["secondary_xpath2"])
+                self._clean_csv_field(info["secondary_xpath2"]),
+                # Sélecteurs CSS alternatifs
+                self._clean_csv_field(info["main_css"]),
+                self._clean_csv_field(info["secondary_css1"]),
+                self._clean_csv_field(info["secondary_css2"])
             ]
             self.csv_lines.append(';'.join(row))
             
