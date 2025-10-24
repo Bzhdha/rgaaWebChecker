@@ -49,6 +49,12 @@ class OrderedAccessibilityCrawler:
             screen_reader.shared_data = self.shared_data
             if self.css_marker:
                 screen_reader.css_marker = self.css_marker
+                if self.use_hierarchy:
+                    self.logger.info("🎨 CSSMarker configuré pour HierarchicalScreenReader")
+                else:
+                    self.logger.info("🎨 CSSMarker configuré pour EnhancedScreenReader")
+                self.logger.debug(f"CSSMarker instance: {self.css_marker}")
+                self.logger.debug(f"ScreenReader CSSMarker: {screen_reader.css_marker}")
             self.modules_by_priority[1] = [screen_reader]
         
         # Phase 2: TabNavigator (utilise les données ARIA)

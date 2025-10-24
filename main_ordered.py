@@ -87,7 +87,7 @@ if __name__ == "__main__":
     parser.add_argument('--csv-filename', help='Nom du fichier CSV pour l\'export (optionnel)')
     parser.add_argument('--use-hierarchy', action='store_true', help='Utiliser l\'algorithme hiérarchique optimisé pour l\'analyse des liens (expérimental)')
     parser.add_argument('--css-marker', action='store_true', help='Activer le marquage CSS des éléments analysés')
-    parser.add_argument('--css-marker-delay', type=int, default=5, help='Délai en secondes pour observer les marquages CSS (défaut: 5)')
+    parser.add_argument('--css-marker-delay', type=int, default=20, help='Délai en secondes pour observer les marquages CSS (défaut: 5)')
     args = parser.parse_args()
     
     url = args.url

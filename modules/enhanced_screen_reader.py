@@ -564,8 +564,114 @@ class EnhancedScreenReader:
         value = value.replace(';', ',')
         return value
 
+    def _mark_element_with_css(self, element, info, element_type):
+        """Marque un élément avec les classes CSS appropriées"""
+        try:
+            self.logger.debug(f"🎨 Marquage CSS de l'élément {info.get('Type', 'unknown')}")
+            # Déterminer le type d'élément pour le CSS
+            tag_name = info.get("Type", "").lower()
+            element_type_css = "analyzed"
+            
+            if tag_name in ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']:
+                element_type_css = "heading"
+            elif tag_name == 'img':
+                element_type_css = "image"
+            elif tag_name == 'a':
+                element_type_css = "link"
+            elif tag_name == 'button' or (tag_name == 'input' and info.get("Type") in ['button', 'submit', 'reset']):
+                element_type_css = "button"
+            elif tag_name in ['form', 'input', 'textarea', 'select']:
+                element_type_css = "form"
+            elif info.get("Rôle") in ['banner', 'navigation', 'main', 'complementary', 'contentinfo', 'search', 'form']:
+                element_type_css = "landmark"
+            elif info.get("Rôle") or any(key.startswith("Aria-") for key in info.keys()):
+                element_type_css = "aria"
+            
+            # Déterminer les problèmes d'accessibilité
+            issues = []
+            if info.get("Visible") == "Non":
+                issues.append("Élément non visible")
+            if info.get("Focusable") == "Non" and tag_name in ['a', 'button', 'input', 'select', 'textarea']:
+                issues.append("Élément non focusable")
+            if tag_name == 'img' and info.get("Alt") == "non défini":
+                issues.append("Image sans attribut alt")
+            if tag_name == 'a' and not info.get("Text") and not info.get("Aria-label"):
+                issues.append("Lien sans texte visible")
+            
+            # Déterminer le statut de conformité
+            compliant = len(issues) == 0
+            
+            # Créer les informations pour le tooltip
+            tooltip_info = self._create_tooltip_info(info, issues, compliant)
+            
+            # Marquer l'élément
+            self.css_marker.mark_element(
+                element=element,
+                element_type=element_type_css,
+                issues=issues,
+                compliant=compliant,
+                info=tooltip_info
+            )
+            
+        except Exception as e:
+            self.logger.warning(f"Erreur lors du marquage CSS : {str(e)}")
+    
+    def _create_tooltip_info(self, info, issues, compliant):
+        """Crée les informations pour le tooltip"""
+        try:
+            info_html = "<div style='text-align: left; font-size: 12px;'>"
+            
+            # Informations de base
+            info_html += f"<strong>Élément:</strong> {info.get('Type', 'unknown')}<br>"
+            
+            if info.get('Id') and info.get('Id') != "non défini":
+                info_html += f"<strong>ID:</strong> {info['Id']}<br>"
+            
+            if info.get('Sélecteur'):
+                info_html += f"<strong>Sélecteur:</strong> {info['Sélecteur']}<br>"
+            
+            # Rôle ARIA
+            if info.get('Rôle') and info.get('Rôle') != "non défini":
+                info_html += f"<strong>Rôle:</strong> {info['Rôle']}<br>"
+            
+            # Nom accessible
+            if info.get('Aria-label') and info.get('Aria-label') != "non défini":
+                info_html += f"<strong>Nom accessible:</strong> {info['Aria-label']}<br>"
+            elif info.get('Text') and info.get('Text') != "non défini":
+                info_html += f"<strong>Texte:</strong> {info['Text']}<br>"
+            
+            # Statut de visibilité
+            if info.get('Visible') == "Oui":
+                info_html += "<strong>Visibilité:</strong> ✅ Visible<br>"
+            else:
+                info_html += "<strong>Visibilité:</strong> ❌ Non visible<br>"
+            
+            # Problèmes détectés
+            if issues:
+                info_html += "<strong>Problèmes:</strong><ul style='margin: 4px 0; padding-left: 16px;'>"
+                for issue in issues:
+                    info_html += f"<li style='margin: 2px 0;'>{issue}</li>"
+                info_html += "</ul>"
+            
+            # Statut de conformité
+            if compliant:
+                info_html += "<strong>Statut:</strong> ✅ Conforme"
+            else:
+                info_html += "<strong>Statut:</strong> ❌ Non conforme"
+            
+            info_html += "</div>"
+            return info_html
+            
+        except Exception as e:
+            self.logger.warning(f"Erreur lors de la création du tooltip : {str(e)}")
+            return f"<div>Erreur: {str(e)}</div>"
+
     def _analyze_non_conformites(self, info, element_type, element):
         """Analyse les non-conformités RGAA pour un élément"""
+        # Marquage CSS de l'élément si activé
+        if self.css_marker:
+            self._mark_element_with_css(element, info, element_type)
+        
         if element_type == "Image":
             # Critère 1.3 - Images
             alt = info["Alt"]
