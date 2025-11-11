@@ -1713,14 +1713,26 @@ class RGAAWebCheckerGUI:
     
     def get_tabulation_row_dict(self, element):
         """Convertit un élément tabulaire en dictionnaire pour le DataFrame"""
+        # Construire le rôle ARIA complet avec les rôles parents si présents
+        aria_role = element.get('aria_attributes', {}).get('role', element.get('aria_properties', {}).get('Rôle', ''))
+        parent_roles = element.get('parent_aria_roles', '')
+        if parent_roles and aria_role and aria_role != 'non défini':
+            full_role = f"{aria_role} (parents: {parent_roles})"
+        elif parent_roles:
+            full_role = f"parents: {parent_roles}"
+        else:
+            full_role = aria_role if aria_role else ''
+        
         return {
-            'Index': element.get('tab_index', ''),
+            'Index': element.get('tab_index', element.get('focus_order', '')),
             'Tag': element.get('tag', ''),
             'Texte': element.get('text', '')[:50] + '...' if len(element.get('text', '')) > 50 else element.get('text', ''),
-            'XPath': element.get('xpath', ''),
+            'Alt Image': element.get('image_alt', ''),  # Attribut alt de l'image associée au lien
+            'XPath': element.get('xpath', element.get('element_id', '')),
             'Nom Accessible': element.get('accessible_name', {}).get('name', ''),
             'Source Nom': element.get('accessible_name', {}).get('source', ''),
-            'Rôle ARIA': element.get('aria_attributes', {}).get('role', ''),
+            'Rôle ARIA': full_role,  # Rôle ARIA avec rôles parents si présents
+            'Rôles ARIA Parents': parent_roles,  # Rôles ARIA des éléments parents séparément
             'ID': element.get('basic_attributes', {}).get('id', ''),
             'Classe': element.get('basic_attributes', {}).get('class', ''),
             'Visible': 'Oui' if element.get('is_visible', False) else 'Non',

@@ -15,6 +15,57 @@ class UnifiedTabNavigator:
         self.shared_data = shared_data
         self.aria_analysis_results = []
 
+    def _get_image_alt_from_link(self, element):
+        """Récupère l'attribut alt d'une image associée à un lien"""
+        try:
+            # Vérifier si l'élément est un lien
+            if element.tag_name.lower() != 'a':
+                return None
+            
+            # Chercher une image dans le lien
+            img_alt = self.driver.execute_script("""
+                var link = arguments[0];
+                var img = link.querySelector('img');
+                if (img) {
+                    return img.getAttribute('alt');
+                }
+                return null;
+            """, element)
+            
+            return img_alt if img_alt else None
+        except Exception as e:
+            self.logger.debug(f"Erreur lors de la récupération de l'alt de l'image du lien: {e}")
+            return None
+
+    def _get_parent_aria_roles(self, element):
+        """Récupère les rôles ARIA des éléments parents"""
+        try:
+            # Remonter dans la hiérarchie DOM pour collecter les rôles ARIA des parents
+            parent_roles = self.driver.execute_script("""
+                var element = arguments[0];
+                var roles = [];
+                var parent = element.parentElement;
+                
+                // Parcourir les parents jusqu'à la racine
+                while (parent && parent !== document.body && parent !== document.documentElement) {
+                    var role = parent.getAttribute('role');
+                    if (role) {
+                        roles.push(role);
+                    }
+                    parent = parent.parentElement;
+                }
+                
+                return roles;
+            """, element)
+            
+            # Retourner les rôles séparés par " / " s'il y en a plusieurs
+            if parent_roles:
+                return " / ".join(parent_roles)
+            return None
+        except Exception as e:
+            self.logger.debug(f"Erreur lors de la récupération des rôles ARIA des parents: {e}")
+            return None
+
     def _get_aria_data_for_element(self, element):
         """Récupère les données ARIA d'un élément depuis les données partagées"""
         if not self.shared_data:
@@ -66,6 +117,12 @@ class UnifiedTabNavigator:
             text = element.text.strip() or element.get_attribute("alt") or element.get_attribute("title")
             href = element.get_attribute("href")
             
+            # Récupérer l'attribut alt d'une image associée au lien si c'est un lien
+            image_alt = self._get_image_alt_from_link(element)
+            
+            # Récupérer les rôles ARIA des éléments parents
+            parent_roles = self._get_parent_aria_roles(element)
+            
             # Utiliser l'identifiant unifié
             element_id = ElementIdentifier.generate_identifier(element, self.driver, include_position=True)
             
@@ -75,6 +132,8 @@ class UnifiedTabNavigator:
                 'tag': tag,
                 'text': text,
                 'href': href,
+                'image_alt': image_alt,  # Attribut alt de l'image associée au lien
+                'parent_aria_roles': parent_roles,  # Rôles ARIA des éléments parents
                 'aria_properties': aria_data,
                 'focus_order': index + 1,
                 'timestamp': time.time()
@@ -169,7 +228,13 @@ class UnifiedTabNavigator:
         self.logger.info(f"Identifiant: {aria_analysis['element_id']}")
         self.logger.info(f"Tag: {aria_analysis['tag']}")
         self.logger.info(f"Texte: {aria_analysis['text']}")
+        # Afficher l'attribut alt de l'image si présent
+        if aria_analysis.get('image_alt'):
+            self.logger.info(f"Alt de l'image associée: {aria_analysis['image_alt']}")
         self.logger.info(f"Rôle ARIA: {aria_analysis['aria_role']}")
+        # Afficher les rôles ARIA des parents si présents
+        if aria_analysis.get('parent_aria_roles'):
+            self.logger.info(f"Rôles ARIA parents: {aria_analysis['parent_aria_roles']}")
         
         # Afficher les propriétés ARIA importantes
         if aria_analysis['has_aria_label']:
@@ -298,13 +363,17 @@ class UnifiedTabNavigator:
                     filename1, filename2 = self._take_screenshots(active, i+1)
                     
                     # Logger les informations avec les noms des fichiers
-                    self.logger.info(f"Focus sur: {active.tag_name}, texte: {active.text.strip()}")
+                    image_alt = self._get_image_alt_from_link(active)
+                    log_text = f"Focus sur: {active.tag_name}, texte: {active.text.strip()}"
+                    if image_alt:
+                        log_text += f", alt de l'image: {image_alt}"
+                    self.logger.info(log_text)
                     if filename1:
                         self.logger.info(f"Capture immédiate: {filename1}")
                     if filename2:
                         self.logger.info(f"Capture après délai: {filename2}")
                     
-                    elements_reached.append((active.tag_name, active.text.strip(), active.get_attribute("href")))
+                    elements_reached.append((active.tag_name, active.text.strip(), active.get_attribute("href"), image_alt))
                     
                 except Exception as e:
                     self.logger.error(f"Erreur lors de la tabulation {i+1}: {str(e)}")

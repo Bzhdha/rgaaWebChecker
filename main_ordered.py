@@ -23,6 +23,42 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 from modules.dom_analyzer import DOMAnalyzer
 from modules.image_analyzer import ImageAnalyzer
+from urllib.parse import urlparse
+
+class ModuleAction(argparse.Action):
+    """Action personnalisée pour accepter les modules et détecter les URLs"""
+    def __init__(self, option_strings, dest, nargs=None, **kwargs):
+        if nargs is not None:
+            raise ValueError("nargs not allowed")
+        super(ModuleAction, self).__init__(option_strings, dest, nargs='+', **kwargs)
+    
+    def __call__(self, parser, namespace, values, option_string=None):
+        valid_modules = ['contrast', 'dom', 'daltonism', 'tab', 'screen', 'image', 'navigation']
+        modules = []
+        url = None
+        
+        for value in values:
+            if value in valid_modules:
+                modules.append(value)
+            else:
+                # Vérifier si c'est une URL
+                try:
+                    parsed = urlparse(value)
+                    if parsed.scheme in ('http', 'https'):
+                        # Vérifier si l'URL n'est pas déjà définie
+                        existing_url = getattr(namespace, 'url', None)
+                        if existing_url and existing_url != value:
+                            parser.error(f"Plusieurs URLs trouvées: {existing_url} et {value}")
+                        elif not existing_url:
+                            url = value
+                    else:
+                        parser.error(f"Module invalide: '{value}'. Modules valides: {', '.join(valid_modules)}")
+                except:
+                    parser.error(f"Module invalide: '{value}'. Modules valides: {', '.join(valid_modules)}")
+        
+        setattr(namespace, self.dest, modules if modules else None)
+        if url:
+            setattr(namespace, 'url', url)
 
 def parse_module_flags(module_list):
     """
@@ -72,13 +108,13 @@ if __name__ == "__main__":
     sys.stderr.reconfigure(encoding='utf-8')
 
     parser = argparse.ArgumentParser(description="Analyseur d'accessibilité web avec ordre d'exécution optimisé")
-    parser.add_argument('url', help='URL de la page à analyser')
+    parser.add_argument('url', nargs='?', help='URL de la page à analyser')
     parser.add_argument('--debug', action='store_true', help='Afficher les logs sur la console')
     parser.add_argument('--encoding', choices=['cp1252', 'utf-8'], default='utf-8', help="Encodage du rapport (utf-8 par défaut, ou cp1252)")
     parser.add_argument('--cookie-banner', help='Texte du bouton de la bannière de cookies à cliquer (ex: "Accepter tout")')
     parser.add_argument('--cookies', nargs='*', help='Cookies de consentement à définir au format "nom=valeur" (ex: "consent=accepted" "analytics=true")')
-    parser.add_argument('--modules', nargs='+', choices=['contrast', 'dom', 'daltonism', 'tab', 'screen', 'image', 'navigation'], 
-                      help='Liste des modules à activer (contrast=1, dom=2, daltonism=4, tab=8, screen=16, image=32, navigation=64)')
+    parser.add_argument('--modules', action=ModuleAction, dest='modules',
+                      help='Liste des modules à activer (contrast=1, dom=2, daltonism=4, tab=8, screen=16, image=32, navigation=64). Modules valides: contrast, dom, daltonism, tab, screen, image, navigation')
     parser.add_argument('--output-dir', default='site_images', help='Répertoire de sortie pour les images (défaut: site_images)')
     parser.add_argument('--max-screenshots', type=int, default=50, help='Limite maximale de screenshots pour la navigation au clavier (défaut: 50)')
     parser.add_argument('--validate-only', action='store_true', help='Valider uniquement le plan d\'exécution sans lancer l\'analyse')
@@ -86,6 +122,10 @@ if __name__ == "__main__":
     parser.add_argument('--csv-filename', help='Nom du fichier CSV pour l\'export (optionnel)')
     parser.add_argument('--use-hierarchy', action='store_true', help='Utiliser l\'algorithme hiérarchique optimisé pour l\'analyse des liens (expérimental)')
     args = parser.parse_args()
+    
+    # Si l'URL n'a pas été définie (ni par l'action personnalisée ni par l'argument positionnel)
+    if not args.url:
+        parser.error("L'URL est requise. Utilisez: python main_ordered.py [--modules=tab] <URL>")
     
     url = args.url
     logger = setup_logger(debug=args.debug, encoding=args.encoding)
@@ -104,6 +144,52 @@ if __name__ == "__main__":
     
     # Récupérer la liste des modules activés
     enabled_modules = config.get_enabled_modules()
+    
+    # Activer automatiquement les dépendances manquantes
+    from core.execution_config import ExecutionConfig
+    
+    # Fonction pour mapper les noms internes vers les noms CLI
+    def get_cli_name(internal_name):
+        mapping = {
+            'screen_reader': 'screen',
+            'tab_navigation': 'tab',
+            'dom_analyzer': 'dom',
+            'image_analyzer': 'image',
+            'contrast': 'contrast',
+            'daltonism': 'daltonism',
+            'navigation': 'navigation'
+        }
+        return mapping.get(internal_name)
+    
+    # Trouver et activer les dépendances manquantes
+    missing_deps = []
+    for module in enabled_modules:
+        dependencies = ExecutionConfig.DEPENDENCIES.get(module, [])
+        for dep in dependencies:
+            if dep not in enabled_modules:
+                missing_deps.append((module, dep))
+    
+    # Activer les dépendances manquantes
+    if missing_deps:
+        module_names = Config.get_module_names()
+        # Recalculer les flags actuels à partir des modules activés
+        current_flags = 0
+        for module in enabled_modules:
+            cli_name = get_cli_name(module)
+            if cli_name and cli_name in module_names:
+                current_flags |= module_names[cli_name]
+        
+        # Ajouter les flags des dépendances manquantes
+        for module, dep in missing_deps:
+            dep_cli_name = get_cli_name(dep)
+            if dep_cli_name and dep_cli_name in module_names:
+                dep_flag = module_names[dep_cli_name]
+                current_flags |= dep_flag
+                logger.info(f"⚠️  Module '{dep}' activé automatiquement car requis par '{module}'")
+        
+        # Réappliquer les flags avec les dépendances
+        config.set_modules(current_flags)
+        enabled_modules = config.get_enabled_modules()
     
     # Valider le plan d'exécution
     if not validate_execution_plan(enabled_modules):

@@ -45,4 +45,6 @@ ENV/
 
 # Ignorer les captures d'écran temporaires
 focus_screenshots/
-simulation_*.png 
+simulation_*.png
+
+site_images/
