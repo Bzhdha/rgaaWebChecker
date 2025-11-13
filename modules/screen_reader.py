@@ -1038,6 +1038,12 @@ class ScreenReader:
                     report.append(f"### {issue['type']}")
                     report.append(f"- **Élément**: `{issue['element']}`")
                     report.append(f"- **XPath**: `{issue['xpath']}`")
+                    # Afficher l'impact et la sévérité si disponibles (pour les IDs dupliqués)
+                    if 'impact' in issue:
+                        report.append(f"- **Impact sur l'accessibilité**: {issue['impact']}")
+                    if 'severity' in issue:
+                        severity_emoji = {'critical': '🔴', 'high': '🟠', 'medium': '🟡', 'low': '🟢'}.get(issue['severity'], '⚪')
+                        report.append(f"- **Sévérité**: {severity_emoji} {issue['severity'].upper()}")
                     report.append(f"- **Recommandation**: {issue['recommandation']}\n")
         
         # Écrire le rapport dans un fichier
@@ -1142,8 +1148,113 @@ class ScreenReader:
             self.logger.warning(f"Erreur lors de la gestion de la popin de cookies: {str(e)}")
             return False
 
+    def _analyze_duplicate_id_impact(self, duplicate_id, elements_with_id):
+        """
+        Analyse l'impact spécifique d'un ID dupliqué selon les catégories RGAA
+        
+        Retourne une liste d'impacts détectés avec leurs descriptions
+        """
+        impacts = []
+        
+        # Vérifier si l'ID est référencé par d'autres éléments (aria-labelledby, aria-describedby, etc.)
+        referenced_attributes = ['aria-labelledby', 'aria-describedby', 'aria-controls', 
+                                'aria-owns', 'aria-flowto', 'aria-errormessage', 'aria-details']
+        
+        # Vérifier si l'ID est utilisé dans des labels
+        labels_using_id = self.driver.find_elements(By.XPATH, f'//label[@for="{duplicate_id}"]')
+        
+        # Analyser chaque élément avec l'ID dupliqué
+        for el in elements_with_id:
+            tag_name = el.tag_name.lower()
+            role = el.get_attribute('role')
+            aria_live = el.get_attribute('aria-live')
+            aria_labelledby = el.get_attribute('aria-labelledby')
+            aria_describedby = el.get_attribute('aria-describedby')
+            
+            # Catégorie 1: ID dupliqué pour un label, titre ou bloc ARIA
+            is_label = tag_name == 'label'
+            is_title = tag_name in ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']
+            is_aria_block = role is not None or any([
+                el.get_attribute('aria-label'),
+                el.get_attribute('aria-labelledby'),
+                el.get_attribute('aria-describedby'),
+                el.get_attribute('aria-controls'),
+                el.get_attribute('aria-owns')
+            ])
+            
+            if is_label or is_title or is_aria_block or len(labels_using_id) > 0:
+                impacts.append({
+                    "categorie": "Label, titre ou bloc ARIA",
+                    "impact": "Le lecteur d'écran ne lit pas le bon texte",
+                    "severity": "critical"
+                })
+            
+            # Catégorie 2: ID dupliqué pour un lien interne ou bouton
+            is_link = tag_name == 'a' or role == 'link'
+            is_button = tag_name == 'button' or role == 'button' or role == 'menuitem'
+            href = el.get_attribute('href')
+            # Lien interne = ancre (#) ou lien relatif (sans http/https)
+            is_internal_link = is_link and href and (href.startswith('#') or (not href.startswith('http://') and not href.startswith('https://')))
+            
+            if (is_link and is_internal_link) or is_button:
+                impacts.append({
+                    "categorie": "Lien interne ou bouton",
+                    "impact": "Mauvais focus / zone non atteinte",
+                    "severity": "critical"
+                })
+            
+            # Catégorie 3: ID dupliqué dans une zone dynamique
+            if aria_live and aria_live in ['polite', 'assertive', 'off']:
+                impacts.append({
+                    "categorie": "Zone dynamique (aria-live)",
+                    "impact": "Annonces incohérentes ou non lues",
+                    "severity": "critical"
+                })
+            
+            # Vérifier si l'ID est référencé par d'autres attributs ARIA
+            for attr in referenced_attributes:
+                elements_referencing = self.driver.find_elements(
+                    By.XPATH, f'//*[contains(@{attr}, "{duplicate_id}")]'
+                )
+                if elements_referencing:
+                    impacts.append({
+                        "categorie": "Référence ARIA",
+                        "impact": "Arborescence d'accessibilité corrompue",
+                        "severity": "critical",
+                        "details": f"ID référencé par l'attribut {attr}"
+                    })
+        
+        # Si l'ID est référencé par plusieurs éléments, c'est un problème d'arborescence
+        total_references = len(labels_using_id)
+        for attr in referenced_attributes:
+            total_references += len(self.driver.find_elements(
+                By.XPATH, f'//*[contains(@{attr}, "{duplicate_id}")]'
+            ))
+        
+        if total_references > 0 and len(elements_with_id) > 1:
+            impacts.append({
+                "categorie": "Référence multiple dans le DOM",
+                "impact": "Arborescence d'accessibilité corrompue",
+                "severity": "critical"
+            })
+        
+        # Dédupliquer les impacts
+        seen = set()
+        unique_impacts = []
+        for impact in impacts:
+            key = (impact["categorie"], impact["impact"])
+            if key not in seen:
+                seen.add(key)
+                unique_impacts.append(impact)
+        
+        return unique_impacts if unique_impacts else [{
+            "categorie": "ID dupliqué général",
+            "impact": "Violation de l'unicité des IDs dans le DOM",
+            "severity": "high"
+        }]
+
     def _check_duplicate_ids(self):
-        """Vérifie l'unicité des attributs id dans la page"""
+        """Vérifie l'unicité des attributs id dans la page et analyse l'impact sur l'accessibilité"""
         id_map = defaultdict(list)
         # Récupérer tous les éléments avec un id
         elements = self.driver.find_elements(By.XPATH, '//*[@id]')
@@ -1151,16 +1262,35 @@ class ScreenReader:
             eid = el.get_attribute('id')
             if eid:
                 id_map[eid].append(el)
-        # Chercher les ids dupliqués
+        # Chercher les ids dupliqués et analyser leur impact
         for eid, els in id_map.items():
             if len(els) > 1:
+                # Analyser l'impact spécifique de cet ID dupliqué
+                impacts = self._analyze_duplicate_id_impact(eid, els)
+                
                 for el in els:
                     main_xpath, _ = self._get_xpath(el)
+                    
+                    # Construire la description des impacts
+                    impact_descriptions = []
+                    for impact in impacts:
+                        impact_descriptions.append(
+                            f"{impact['categorie']}: {impact['impact']}"
+                        )
+                    
+                    impact_text = " | ".join(impact_descriptions) if impact_descriptions else "Impact non spécifique"
+                    
+                    # Déterminer la sévérité la plus élevée
+                    max_severity = max([imp.get('severity', 'medium') for imp in impacts], 
+                                      key=lambda x: {'critical': 3, 'high': 2, 'medium': 1}.get(x, 0))
+                    
                     self.non_conformites["duplicate_id"].append({
                         "type": f"Attribut id dupliqué : '{eid}'",
                         "element": self._get_simple_selector(el),
                         "xpath": main_xpath,
-                        "recommandation": f"L'attribut id '{eid}' doit être unique dans la page."
+                        "impact": impact_text,
+                        "severity": max_severity,
+                        "recommandation": f"L'attribut id '{eid}' doit être unique dans la page. {impact_text}"
                     })
 
     def _print_progress(self, current, total, prefix="", suffix="", length=50, fill="█"):
