@@ -1,0 +1,281 @@
+[
+  {
+    "page": "focus_003_2.png",
+    "width": 1390,
+    "height": 946,
+    "blocks": [
+      {
+        "id": 1,
+        "type_detected": "titre",
+        "bbox": [
+          1118,
+          58,
+          221,
+          54
+        ],
+        "text": "PRENDRE RENDEZ-VOUS",
+        "confidence": 0.8600000000000001
+      }
+    ]
+  },
+  {
+    "page": "focus_004_2.png",
+    "width": 1390,
+    "height": 946,
+    "blocks": [
+      {
+        "id": 1,
+        "type_detected": "titre",
+        "bbox": [
+          1118,
+          58,
+          221,
+          54
+        ],
+        "text": "PRENDRE RENDEZ-VOUS",
+        "confidence": 0.8600000000000001
+      }
+    ]
+  },
+  {
+    "page": "focus_003_1.png",
+    "width": 1390,
+    "height": 946,
+    "blocks": [
+      {
+        "id": 1,
+        "type_detected": "image_decorative",
+        "bbox": [
+          737,
+          340,
+          34,
+          16
+        ],
+        "text": "",
+        "confidence": 0.25
+      },
+      {
+        "id": 2,
+        "type_detected": "image_decorative",
+        "bbox": [
+          574,
+          380,
+          31,
+          24
+        ],
+        "text": "",
+        "confidence": 0.25
+      },
+      {
+        "id": 3,
+        "type_detected": "image_decorative",
+        "bbox": [
+          660,
+          395,
+          42,
+          34
+        ],
+        "text": "",
+        "confidence": 0.25
+      },
+      {
+        "id": 4,
+        "type_detected": "image_decorative",
+        "bbox": [
+          664,
+          480,
+          44,
+          26
+        ],
+        "text": "",
+        "confidence": 0.25
+      }
+    ]
+  },
+  {
+    "page": "focus_001_2.png",
+    "width": 1390,
+    "height": 946,
+    "blocks": [
+      {
+        "id": 1,
+        "type_detected": "image_decorative",
+        "bbox": [
+          310,
+          525,
+          133,
+          24
+        ],
+        "text": "",
+        "confidence": 0.25
+      }
+    ]
+  },
+  {
+    "page": "focus_004_1.png",
+    "width": 1390,
+    "height": 946,
+    "blocks": [
+      {
+        "id": 1,
+        "type_detected": "titre",
+        "bbox": [
+          1118,
+          58,
+          221,
+          54
+        ],
+        "text": "PRENDRE RENDEZ-VOUS",
+        "confidence": 0.8600000000000001
+      }
+    ]
+  },
+  {
+    "page": "focus_005_1.png",
+    "width": 1390,
+    "height": 946,
+    "blocks": [
+      {
+        "id": 1,
+        "type_detected": "titre",
+        "bbox": [
+          1118,
+          58,
+          221,
+          54
+        ],
+        "text": "PRENDRE RENDEZ-VOUS",
+        "confidence": 0.8600000000000001
+      }
+    ]
+  },
+  {
+    "page": "focus_001_1.png",
+    "width": 1390,
+    "height": 946,
+    "blocks": [
+      {
+        "id": 1,
+        "type_detected": "image_decorative",
+        "bbox": [
+          310,
+          525,
+          133,
+          24
+        ],
+        "text": "",
+        "confidence": 0.25
+      }
+    ]
+  },
+  {
+    "page": "focus_002_1.png",
+    "width": 1390,
+    "height": 946,
+    "blocks": [
+      {
+        "id": 1,
+        "type_detected": "image_decorative",
+        "bbox": [
+          737,
+          340,
+          34,
+          16
+        ],
+        "text": "",
+        "confidence": 0.25
+      },
+      {
+        "id": 2,
+        "type_detected": "image_decorative",
+        "bbox": [
+          574,
+          380,
+          31,
+          24
+        ],
+        "text": "",
+        "confidence": 0.25
+      },
+      {
+        "id": 3,
+        "type_detected": "image_decorative",
+        "bbox": [
+          660,
+          395,
+          42,
+          34
+        ],
+        "text": "",
+        "confidence": 0.25
+      },
+      {
+        "id": 4,
+        "type_detected": "image_decorative",
+        "bbox": [
+          664,
+          480,
+          44,
+          26
+        ],
+        "text": "",
+        "confidence": 0.25
+      }
+    ]
+  },
+  {
+    "page": "focus_002_2.png",
+    "width": 1390,
+    "height": 946,
+    "blocks": [
+      {
+        "id": 1,
+        "type_detected": "image_decorative",
+        "bbox": [
+          737,
+          340,
+          34,
+          16
+        ],
+        "text": "",
+        "confidence": 0.25
+      },
+      {
+        "id": 2,
+        "type_detected": "image_decorative",
+        "bbox": [
+          574,
+          380,
+          31,
+          24
+        ],
+        "text": "",
+        "confidence": 0.25
+      },
+      {
+        "id": 3,
+        "type_detected": "image_decorative",
+        "bbox": [
+          660,
+          395,
+          42,
+          34
+        ],
+        "text": "",
+        "confidence": 0.25
+      },
+      {
+        "id": 4,
+        "type_detected": "image_decorative",
+        "bbox": [
+          664,
+          480,
+          44,
+          26
+        ],
+        "text": "",
+        "confidence": 0.25
+      }
+    ]
+  }
+]

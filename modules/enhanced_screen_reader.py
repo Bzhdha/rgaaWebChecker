@@ -86,6 +86,26 @@ class EnhancedScreenReader:
             var el = arguments[0];
             var rect = el.getBoundingClientRect();
             var style = window.getComputedStyle(el);
+            // Calculer la position parmi les frères dans le DOM (1-based)
+            var domIndex = (function(){
+                try {
+                    var parent = el.parentNode;
+                    if (!parent) return -1;
+                    var children = Array.prototype.filter.call(parent.children, function(c){ return c.nodeType === 1; });
+                    for (var i=0; i<children.length; i++){ if (children[i] === el) return i+1; }
+                    return -1;
+                } catch (e) { return -1; }
+            })();
+            // Calculer la position du parent parmi ses frères (1-based)
+            var parentIndex = (function(){
+                try {
+                    var parent = el.parentNode;
+                    if (!parent || !parent.parentNode) return -1;
+                    var siblings = Array.prototype.filter.call(parent.parentNode.children, function(c){ return c.nodeType === 1; });
+                    for (var i=0; i<siblings.length; i++){ if (siblings[i] === parent) return i+1; }
+                    return -1;
+                } catch (e) { return -1; }
+            })();
             return {
                 tag: el.tagName,
                 role: el.getAttribute('role'),
@@ -137,7 +157,9 @@ class EnhancedScreenReader:
                 isEnabled: !el.disabled,
                 isFocusable: el.tabIndex >= 0 || el.tagName === 'A' || el.tagName === 'BUTTON' || el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA',
                 mediaPath: el.getAttribute('src') || el.getAttribute('data') || '',
-                mediaType: el.tagName.toLowerCase()
+                mediaType: el.tagName.toLowerCase(),
+                domIndex: domIndex,
+                parentIndex: parentIndex
             };
         ''', element)
 
@@ -192,7 +214,10 @@ class EnhancedScreenReader:
             "Sélecteur": self._get_simple_selector(element),
             "Extrait HTML": (attrs['outerHTML'] or '')[:200] + '...',
             "MediaPath": attrs['mediaPath'] or "non défini",
-            "MediaType": attrs['mediaType'] or "non défini"
+            "MediaType": attrs['mediaType'] or "non défini",
+            # Positions DOM si fournies
+            "Dom-position": attrs.get('domIndex') if isinstance(attrs, dict) and 'domIndex' in attrs else ("non défini"),
+            "Parent-position": attrs.get('parentIndex') if isinstance(attrs, dict) and 'parentIndex' in attrs else ("non défini")
         }
         
         # Stocker les données ARIA pour partage
@@ -215,7 +240,7 @@ class EnhancedScreenReader:
         """Exécute l'analyse d'accessibilité avec stockage des données ARIA"""
         # Réinitialiser le cache des XPath au début de chaque analyse
         self._xpath_cache.clear()
-        
+
         # Afficher l'URL de la page analysée en haut de l'analyse
         try:
             url = self.driver.current_url
@@ -223,15 +248,19 @@ class EnhancedScreenReader:
         except Exception:
             pass
 
-        # En-tête CSV
+        # En-tête CSV (ajout du contexte d'iframe et positions DOM)
         csv_header = [
             "Type", "Sélecteur", "Extrait HTML", "Rôle", "Aria-label", "Text", "Alt", "Title", "Visible", "Focusable", "Id",
             # Nouvelles colonnes ARIA pour les outils de narration
             "Aria-describedby", "Aria-labelledby", "Aria-hidden", "Aria-expanded", "Aria-controls", "Aria-live", "Aria-atomic", "Aria-relevant", "Aria-busy", "Aria-current", "Aria-posinset", "Aria-setsize", "Aria-level", "Aria-sort", "Aria-valuemin", "Aria-valuemax", "Aria-valuenow", "Aria-valuetext", "Aria-haspopup", "Aria-invalid", "Aria-required", "Aria-readonly", "Aria-disabled", "Aria-selected", "Aria-checked", "Aria-pressed", "Aria-multiline", "Aria-multiselectable", "Aria-orientation", "Aria-placeholder", "Aria-roledescription", "Aria-keyshortcuts", "Aria-details", "Aria-errormessage", "Aria-flowto", "Aria-owns", "Tabindex",
+            # Positions dans le DOM
+            "Dom-position", "Parent-position",
+            # Contexte iframe
+            "Frame-src", "Frame-index",
             "X-path principal", "X-path secondaire 1", "X-path secondaire 2"
         ]
         self.csv_lines.append(';'.join(csv_header))
-        
+
         # Log des sections en Markdown
         self.logger.info("## Analyse des éléments d'accessibilité")
         self.logger.info("Cette section analyse les éléments clés pour l'accessibilité selon les critères RGAA :")
@@ -243,128 +272,49 @@ class EnhancedScreenReader:
         self.logger.info("- Landmarks : Structure sémantique de la page")
         self.logger.info("- Attributs ARIA : Rôles et propriétés d'accessibilité\n")
 
-        # Récupération du DOM en une seule fois
+        # Initialiser le contexte de frame par défaut
+        self._current_frame_src = ""
+        self._current_frame_index = -1
+
+        # Analyser le document principal (default content) puis chaque iframe détectée
         try:
-            # Récupérer tous les éléments en une seule fois
-            all_elements = self.driver.find_elements(By.XPATH, "//*")
-            total_elements = len(all_elements)
-            self.logger.info(f"Nombre total d'éléments HTML à analyser : {total_elements}")
-            self.logger.info("Phase 1 : Classification des éléments par type...")
-            
-            # Créer des dictionnaires pour stocker les éléments par type
-            elements_by_type = {
-                "headings": [],
-                "images": [],
-                "links": [],
-                "buttons": [],
-                "forms": [],
-                "landmarks": [],
-                "aria_roles": []
-            }
+            # Analyse du document racine
+            self.driver.switch_to.default_content()
+            self._current_frame_src = ""
+            self._current_frame_index = -1
+            self._analyze_document()
 
-            # Classification optimisée par lots
-            batch_size = 50  # Traiter par lots de 50 éléments
-            for batch_start in range(0, total_elements, batch_size):
-                batch_end = min(batch_start + batch_size, total_elements)
-                batch = all_elements[batch_start:batch_end]
-                
-                # Récupération groupée des informations de classification
-                batch_info = self.driver.execute_script('''
-                    var elements = arguments[0];
-                    var results = [];
-                    for (var i = 0; i < elements.length; i++) {
-                        var el = elements[i];
-                        results.push({
-                            tagName: el.tagName.toLowerCase(),
-                            role: el.getAttribute('role')
-                        });
-                    }
-                    return results;
-                ''', batch)
-                
-                # Classification des éléments du lot
-                for j, info in enumerate(batch_info):
-                    current_index = batch_start + j + 1
-                    if current_index % 10 == 0:  # Mise à jour plus fréquente de la barre de progression
-                        self._print_progress(current_index, total_elements, prefix="Classification :", suffix=f"{current_index}/{total_elements}")
-                    
-                    tag_name = info['tagName']
-                    role = info['role']
-                    
-                    if tag_name.startswith('h') and tag_name[1:].isdigit():
-                        elements_by_type["headings"].append(batch[j])
-                    elif tag_name == 'img':
-                        elements_by_type["images"].append(batch[j])
-                    elif tag_name == 'a':
-                        elements_by_type["links"].append(batch[j])
-                    elif tag_name == 'button':
-                        elements_by_type["buttons"].append(batch[j])
-                    elif tag_name == 'form':
-                        elements_by_type["forms"].append(batch[j])
-                    elif tag_name in ['header', 'nav', 'main', 'aside', 'footer']:
-                        elements_by_type["landmarks"].append(batch[j])
-                    
-                    # Vérifier les rôles ARIA
-                    if role:
-                        elements_by_type["aria_roles"].append(batch[j])
+            # Rechercher les iframes/frames dans le document principal
+            frames = self.driver.find_elements(By.CSS_SELECTOR, "iframe, frame")
+            for idx, frame in enumerate(frames):
+                try:
+                    frame_src = frame.get_attribute('src') or frame.get_attribute('name') or ''
+                    # Passer dans le contexte de la frame
+                    self.driver.switch_to.frame(frame)
+                    self._current_frame_src = frame_src
+                    self._current_frame_index = idx
+                    self.logger.info(f"\nAnalyse iframe #{idx} src='{frame_src}'")
+                    self._analyze_document()
+                except Exception as e:
+                    # Impossible d'accéder au contenu de la frame (ex: cross-origin)
+                    self.logger.warning(f"Impossible d'inspecter iframe #{idx} (src='{frame_src}'): {e}")
+                finally:
+                    # Revenir au contexte principal pour passer à la frame suivante
+                    try:
+                        self.driver.switch_to.default_content()
+                    except Exception:
+                        pass
 
-            print()  # Nouvelle ligne après la barre de progression
-            self.logger.info("\nPhase 2 : Analyse détaillée des éléments par catégorie...")
-            
-            # Analyser les éléments par catégorie
-            categories = [
-                ("headings", "Titres", "Structure hiérarchique du contenu"),
-                ("images", "Images", "Alternatives textuelles et rôles"),
-                ("links", "Liens", "Textes explicites et attributs ARIA"),
-                ("buttons", "Boutons", "Rôles et états"),
-                ("forms", "Formulaires", "Labels et attributs d'accessibilité"),
-                ("landmarks", "Landmarks", "Structure sémantique de la page"),
-                ("aria_roles", "Éléments avec rôles ARIA", "Rôles et propriétés d'accessibilité")
-            ]
-
-            total_processed = 0
-            category_times = {}
-            
-            for category_key, category_name, category_desc in categories:
-                elements = elements_by_type[category_key]
-                if elements:
-                    category_start = time.time()
-                    self.logger.info(f"\n### {category_name} ({len(elements)} éléments)")
-                    self.logger.info(f"Description : {category_desc}")
-                    
-                    # Analyse optimisée pour toutes les catégories
-                    self.logger.info(f"Analyse optimisée des {category_name.lower()} en cours...")
-                    self._analyze_elements_integrated(elements, category_name)
-                    total_processed += len(elements)
-                    
-                    # Calculer et afficher le temps d'analyse
-                    category_time = time.time() - category_start
-                    category_times[category_name] = category_time
-                    speed = len(elements) / category_time if category_time > 0 else 0
-                    self.logger.info(f"⏱️ {category_name}: {category_time:.2f}s ({len(elements)} éléments) - Vitesse: {speed:.1f} éléments/s")
-                    
-                    # Afficher les attributs ARIA après la progression
-                    self._log_aria_attributes()
-
-            # Vérification de l'unicité des id
-            self.logger.info("\nPhase 3 : Vérification des identifiants uniques...")
+            # Après avoir parcouru toutes les frames, vérifier les ids dupliqués (dans chaque contexte on a ajouté les éléments au CSV)
+            self.logger.info("\nPhase finale : Vérification des identifiants uniques...")
             self._check_duplicate_ids()
-            
-            # Afficher le résumé des temps d'analyse
-            if category_times:
-                self.logger.info(f"\n📊 Résumé des temps d'analyse:")
-                total_analysis_time = sum(category_times.values())
-                for category_name, time_taken in category_times.items():
-                    percentage = (time_taken / total_analysis_time * 100) if total_analysis_time > 0 else 0
-                    self.logger.info(f"   - {category_name}: {time_taken:.2f}s ({percentage:.1f}%)")
-                self.logger.info(f"   - Total: {total_analysis_time:.2f}s")
 
         except Exception as e:
-            self.logger.error(f"Erreur lors de l'analyse du DOM : {str(e)}")
+            self.logger.error(f"Erreur lors de l'analyse multi-frame du DOM : {str(e)}")
 
         # Créer le répertoire reports s'il n'existe pas
         os.makedirs('reports', exist_ok=True)
-        
+
         # Écrire le fichier CSV dans le répertoire reports
         with open('reports/accessibility_analysis.csv', 'w', encoding='utf-8-sig') as f:
             f.write('\n'.join(self.csv_lines))
@@ -372,7 +322,7 @@ class EnhancedScreenReader:
         # Générer le rapport après l'analyse
         self.generate_report()
         self.logger.info("\nProgression : Rapport généré avec succès.")
-        
+
         # Afficher un résumé des données ARIA collectées
         self.logger.info(f"\nDonnées ARIA collectées pour {len(self.aria_data_by_element)} éléments")
 
@@ -394,6 +344,10 @@ class EnhancedScreenReader:
             info["secondary_css2"] = css_selectors["secondary_css2"]
             
             # Construction de la ligne CSV avec toutes les données ARIA
+            # Ajouter le contexte de frame dans les infos
+            info["Frame-src"] = getattr(self, '_current_frame_src', "")
+            info["Frame-index"] = getattr(self, '_current_frame_index', -1)
+
             row = [
                 self._clean_csv_field(info["Type"]),
                 self._clean_csv_field(info["Sélecteur"]),
@@ -444,6 +398,12 @@ class EnhancedScreenReader:
                 self._clean_csv_field(info["Aria-flowto"]),
                 self._clean_csv_field(info["Aria-owns"]),
                 self._clean_csv_field(info["Tabindex"]),
+                # Positions DOM
+                self._clean_csv_field(info.get("Dom-position", "")),
+                self._clean_csv_field(info.get("Parent-position", "")),
+                # Contexte iframe
+                self._clean_csv_field(info.get("Frame-src", "")),
+                self._clean_csv_field(info.get("Frame-index", "")),
                 self._clean_csv_field(info["main_xpath"]),
                 self._clean_csv_field(info["secondary_xpath1"]),
                 self._clean_csv_field(info["secondary_xpath2"]),
@@ -467,6 +427,113 @@ class EnhancedScreenReader:
             
         except Exception as e:
             self.logger.error(f"Erreur lors de l'analyse de l'élément {element_type}: {str(e)}")
+
+    def _analyze_document(self):
+        """Analyse le document courant (contexte principal ou iframe)"""
+        try:
+            # Récupérer tous les éléments en une seule fois (document order)
+            all_elements = self.driver.find_elements(By.XPATH, "//*")
+            total_elements = len(all_elements)
+            self.logger.info(f"Nombre total d'éléments HTML à analyser (contexte frame='{getattr(self,'_current_frame_src','')}'): {total_elements}")
+            self.logger.info("Phase 1 : Classification des éléments par type...")
+
+            # Créer des dictionnaires pour stocker les éléments par type
+            elements_by_type = {
+                "headings": [],
+                "images": [],
+                "links": [],
+                "buttons": [],
+                "forms": [],
+                "landmarks": [],
+                "aria_roles": []
+            }
+
+            # Classification optimisée par lots
+            batch_size = 50  # Traiter par lots de 50 éléments
+            for batch_start in range(0, total_elements, batch_size):
+                batch_end = min(batch_start + batch_size, total_elements)
+                batch = all_elements[batch_start:batch_end]
+
+                # Récupération groupée des informations de classification
+                batch_info = self.driver.execute_script('''
+                    var elements = arguments[0];
+                    var results = [];
+                    for (var i = 0; i < elements.length; i++) {
+                        var el = elements[i];
+                        results.push({
+                            tagName: el.tagName.toLowerCase(),
+                            role: el.getAttribute('role')
+                        });
+                    }
+                    return results;
+                ''', batch)
+
+                # Classification des éléments du lot
+                for j, info in enumerate(batch_info):
+                    current_index = batch_start + j + 1
+                    if current_index % 10 == 0:  # Mise à jour plus fréquente de la barre de progression
+                        self._print_progress(current_index, total_elements, prefix="Classification :", suffix=f"{current_index}/{total_elements}")
+
+                    tag_name = info['tagName']
+                    role = info['role']
+
+                    if tag_name.startswith('h') and tag_name[1:].isdigit():
+                        elements_by_type["headings"].append(batch[j])
+                    elif tag_name == 'img':
+                        elements_by_type["images"].append(batch[j])
+                    elif tag_name == 'a':
+                        elements_by_type["links"].append(batch[j])
+                    elif tag_name == 'button':
+                        elements_by_type["buttons"].append(batch[j])
+                    elif tag_name == 'form':
+                        elements_by_type["forms"].append(batch[j])
+                    elif tag_name in ['header', 'nav', 'main', 'aside', 'footer']:
+                        elements_by_type["landmarks"].append(batch[j])
+
+                    # Vérifier les rôles ARIA
+                    if role:
+                        elements_by_type["aria_roles"].append(batch[j])
+
+            print()  # Nouvelle ligne après la barre de progression
+            self.logger.info("\nPhase 2 : Analyse détaillée des éléments par catégorie...")
+
+            # Analyser les éléments par catégorie
+            categories = [
+                ("headings", "Titres", "Structure hiérarchique du contenu"),
+                ("images", "Images", "Alternatives textuelles et rôles"),
+                ("links", "Liens", "Textes explicites et attributs ARIA"),
+                ("buttons", "Boutons", "Rôles et états"),
+                ("forms", "Formulaires", "Labels et attributs d'accessibilité"),
+                ("landmarks", "Landmarks", "Structure sémantique de la page"),
+                ("aria_roles", "Éléments avec rôles ARIA", "Rôles et propriétés d'accessibilité")
+            ]
+
+            total_processed = 0
+            category_times = {}
+
+            for category_key, category_name, category_desc in categories:
+                elements = elements_by_type[category_key]
+                if elements:
+                    category_start = time.time()
+                    self.logger.info(f"\n### {category_name} ({len(elements)} éléments)")
+                    self.logger.info(f"Description : {category_desc}")
+
+                    # Analyse optimisée pour toutes les catégories
+                    self.logger.info(f"Analyse optimisée des {category_name.lower()} en cours...")
+                    self._analyze_elements_integrated(elements, category_name)
+                    total_processed += len(elements)
+
+                    # Calculer et afficher le temps d'analyse
+                    category_time = time.time() - category_start
+                    category_times[category_name] = category_time
+                    speed = len(elements) / category_time if category_time > 0 else 0
+                    self.logger.info(f"⏱️ {category_name}: {category_time:.2f}s ({len(elements)} éléments) - Vitesse: {speed:.1f} éléments/s")
+
+                    # Afficher les attributs ARIA après la progression
+                    self._log_aria_attributes()
+
+        except Exception as e:
+            self.logger.error(f"Erreur lors de l'analyse du DOM : {str(e)}")
 
     def _get_xpath(self, element):
         """Génère le X-path de l'élément avec mise en cache"""
@@ -874,6 +941,25 @@ class EnhancedScreenReader:
                     var el = links[i];
                     var rect = el.getBoundingClientRect();
                     var style = window.getComputedStyle(el);
+                    // positions
+                    var domIndex = (function(){
+                        try {
+                            var parent = el.parentNode;
+                            if (!parent) return -1;
+                            var children = Array.prototype.filter.call(parent.children, function(c){ return c.nodeType === 1; });
+                            for (var k=0;k<children.length;k++){ if (children[k]===el) return k+1; }
+                            return -1;
+                        } catch (e){ return -1; }
+                    })();
+                    var parentIndex = (function(){
+                        try {
+                            var parent = el.parentNode;
+                            if (!parent || !parent.parentNode) return -1;
+                            var siblings = Array.prototype.filter.call(parent.parentNode.children, function(c){ return c.nodeType === 1; });
+                            for (var k=0;k<siblings.length;k++){ if (siblings[k]===parent) return k+1; }
+                            return -1;
+                        } catch (e){ return -1; }
+                    })();
                     results.push({
                         tag: el.tagName,
                         role: el.getAttribute('role'),
@@ -926,7 +1012,9 @@ class EnhancedScreenReader:
                         isFocusable: el.tabIndex >= 0 || el.tagName === 'A' || el.tagName === 'BUTTON' || el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA',
                         mediaPath: el.getAttribute('src') || el.getAttribute('data') || '',
                         mediaType: el.tagName.toLowerCase(),
-                        outerHTML: el.outerHTML
+                        outerHTML: el.outerHTML,
+                        domIndex: domIndex,
+                        parentIndex: parentIndex
                     });
                 }
                 return results;
@@ -986,7 +1074,10 @@ class EnhancedScreenReader:
                         "Sélecteur": self._get_simple_selector_from_attrs(attrs),
                         "Extrait HTML": (attrs['outerHTML'] or '')[:200] + '...',
                         "MediaPath": attrs['mediaPath'] or "non défini",
-                        "MediaType": attrs['mediaType'] or "non défini"
+                        "MediaType": attrs['mediaType'] or "non défini",
+                        # Positions DOM si fournies
+                        "Dom-position": attrs.get('domIndex') if isinstance(attrs, dict) and 'domIndex' in attrs else ("non défini"),
+                        "Parent-position": attrs.get('parentIndex') if isinstance(attrs, dict) and 'parentIndex' in attrs else ("non défini")
                     }
                     
                     # Génération de XPath simplifiés (éviter les appels coûteux)
@@ -1004,6 +1095,10 @@ class EnhancedScreenReader:
                     info["secondary_css1"] = css_selectors["secondary_css1"]
                     info["secondary_css2"] = css_selectors["secondary_css2"]
                     
+                    # Ajouter le contexte de frame
+                    info["Frame-src"] = getattr(self, '_current_frame_src', "")
+                    info["Frame-index"] = getattr(self, '_current_frame_index', -1)
+
                     # Construction de la ligne CSV avec toutes les données ARIA
                     row = [
                         self._clean_csv_field(info["Type"]),
@@ -1054,7 +1149,13 @@ class EnhancedScreenReader:
                         self._clean_csv_field(info["Aria-errormessage"]),
                         self._clean_csv_field(info["Aria-flowto"]),
                         self._clean_csv_field(info["Aria-owns"]),
-                        self._clean_csv_field(info["Tabindex"]),
+                    self._clean_csv_field(info["Tabindex"]),
+                    # Positions DOM
+                    self._clean_csv_field(info.get("Dom-position", "")),
+                    self._clean_csv_field(info.get("Parent-position", "")),
+                    # Contexte iframe
+                    self._clean_csv_field(info.get("Frame-src", "")),
+                    self._clean_csv_field(info.get("Frame-index", "")),
                         self._clean_csv_field(info["main_xpath"]),
                         self._clean_csv_field(info["secondary_xpath1"]),
                         self._clean_csv_field(info["secondary_xpath2"]),
@@ -1111,6 +1212,25 @@ class EnhancedScreenReader:
                     var el = elements[i];
                     var rect = el.getBoundingClientRect();
                     var style = window.getComputedStyle(el);
+                    // positions
+                    var domIndex = (function(){
+                        try {
+                            var parent = el.parentNode;
+                            if (!parent) return -1;
+                            var children = Array.prototype.filter.call(parent.children, function(c){ return c.nodeType === 1; });
+                            for (var k=0;k<children.length;k++){ if (children[k]===el) return k+1; }
+                            return -1;
+                        } catch (e){ return -1; }
+                    })();
+                    var parentIndex = (function(){
+                        try {
+                            var parent = el.parentNode;
+                            if (!parent || !parent.parentNode) return -1;
+                            var siblings = Array.prototype.filter.call(parent.parentNode.children, function(c){ return c.nodeType === 1; });
+                            for (var k=0;k<siblings.length;k++){ if (siblings[k]===parent) return k+1; }
+                            return -1;
+                        } catch (e){ return -1; }
+                    })();
                     results.push({
                         tag: el.tagName,
                         role: el.getAttribute('role'),
@@ -1164,7 +1284,9 @@ class EnhancedScreenReader:
                         isFocusable: el.tabIndex >= 0 || ['A', 'BUTTON', 'INPUT', 'SELECT', 'TEXTAREA'].includes(el.tagName),
                         mediaPath: el.getAttribute('src') || el.getAttribute('data') || '',
                         mediaType: el.tagName.toLowerCase(),
-                        outerHTML: el.outerHTML
+                        outerHTML: el.outerHTML,
+                        domIndex: domIndex,
+                        parentIndex: parentIndex
                     });
                 }
                 return results;
@@ -1224,7 +1346,10 @@ class EnhancedScreenReader:
                         "Sélecteur": self._get_simple_selector_from_attrs(attrs),
                         "Extrait HTML": (attrs['outerHTML'] or '')[:200] + '...',
                         "MediaPath": attrs['mediaPath'] or "non défini",
-                        "MediaType": attrs['mediaType'] or "non défini"
+                        "MediaType": attrs['mediaType'] or "non défini",
+                        # Positions DOM si fournies
+                        "Dom-position": attrs.get('domIndex') if isinstance(attrs, dict) and 'domIndex' in attrs else ("non défini"),
+                        "Parent-position": attrs.get('parentIndex') if isinstance(attrs, dict) and 'parentIndex' in attrs else ("non défini")
                     }
                     
                     # Génération de XPath simplifiés (éviter les appels coûteux)
@@ -1242,6 +1367,10 @@ class EnhancedScreenReader:
                     info["secondary_css1"] = css_selectors["secondary_css1"]
                     info["secondary_css2"] = css_selectors["secondary_css2"]
                     
+                    # Ajouter le contexte de frame
+                    info["Frame-src"] = getattr(self, '_current_frame_src', "")
+                    info["Frame-index"] = getattr(self, '_current_frame_index', -1)
+
                     # Construction de la ligne CSV avec toutes les données ARIA
                     row = [
                         self._clean_csv_field(info["Type"]),
@@ -1293,6 +1422,12 @@ class EnhancedScreenReader:
                         self._clean_csv_field(info["Aria-flowto"]),
                         self._clean_csv_field(info["Aria-owns"]),
                         self._clean_csv_field(info["Tabindex"]),
+                        # Positions DOM
+                        self._clean_csv_field(info.get("Dom-position", "")),
+                        self._clean_csv_field(info.get("Parent-position", "")),
+                        # Contexte iframe
+                        self._clean_csv_field(info.get("Frame-src", "")),
+                        self._clean_csv_field(info.get("Frame-index", "")),
                         self._clean_csv_field(info["main_xpath"]),
                         self._clean_csv_field(info["secondary_xpath1"]),
                         self._clean_csv_field(info["secondary_xpath2"]),
