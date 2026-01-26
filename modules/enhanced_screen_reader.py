@@ -159,7 +159,26 @@ class EnhancedScreenReader:
                 mediaPath: el.getAttribute('src') || el.getAttribute('data') || '',
                 mediaType: el.tagName.toLowerCase(),
                 domIndex: domIndex,
-                parentIndex: parentIndex
+                parentIndex: parentIndex,
+                // position absolue dans le document (1-based)
+                absIndex: (function(){
+                    try {
+                        var all = document.querySelectorAll('*');
+                        for (var k=0;k<all.length;k++){ if (all[k]===el) return k+1; }
+                        return -1;
+                    } catch (e) { return -1; }
+                })()
+            ,
+            // position absolue du parent dans le document (1-based)
+            parentAbsIndex: (function(){
+                try {
+                    var parent = el.parentNode;
+                    if (!parent) return -1;
+                    var all = document.querySelectorAll('*');
+                    for (var k=0;k<all.length;k++){ if (all[k]===parent) return k+1; }
+                    return -1;
+                } catch (e) { return -1; }
+            })()
             };
         ''', element)
 
@@ -216,6 +235,8 @@ class EnhancedScreenReader:
             "MediaPath": attrs['mediaPath'] or "non défini",
             "MediaType": attrs['mediaType'] or "non défini",
             # Positions DOM si fournies
+            "Dom-absolute-position": attrs.get('absIndex') if isinstance(attrs, dict) and 'absIndex' in attrs else ("non défini"),
+            "Parent-absolute-position": attrs.get('parentAbsIndex') if isinstance(attrs, dict) and 'parentAbsIndex' in attrs else ("non défini"),
             "Dom-position": attrs.get('domIndex') if isinstance(attrs, dict) and 'domIndex' in attrs else ("non défini"),
             "Parent-position": attrs.get('parentIndex') if isinstance(attrs, dict) and 'parentIndex' in attrs else ("non défini")
         }
@@ -254,7 +275,7 @@ class EnhancedScreenReader:
             # Nouvelles colonnes ARIA pour les outils de narration
             "Aria-describedby", "Aria-labelledby", "Aria-hidden", "Aria-expanded", "Aria-controls", "Aria-live", "Aria-atomic", "Aria-relevant", "Aria-busy", "Aria-current", "Aria-posinset", "Aria-setsize", "Aria-level", "Aria-sort", "Aria-valuemin", "Aria-valuemax", "Aria-valuenow", "Aria-valuetext", "Aria-haspopup", "Aria-invalid", "Aria-required", "Aria-readonly", "Aria-disabled", "Aria-selected", "Aria-checked", "Aria-pressed", "Aria-multiline", "Aria-multiselectable", "Aria-orientation", "Aria-placeholder", "Aria-roledescription", "Aria-keyshortcuts", "Aria-details", "Aria-errormessage", "Aria-flowto", "Aria-owns", "Tabindex",
             # Positions dans le DOM
-            "Dom-position", "Parent-position",
+            "Dom-absolute-position", "Parent-absolute-position", "Dom-position", "Parent-position",
             # Contexte iframe
             "Frame-src", "Frame-index",
             "X-path principal", "X-path secondaire 1", "X-path secondaire 2"
@@ -960,6 +981,40 @@ class EnhancedScreenReader:
                             return -1;
                         } catch (e){ return -1; }
                     })();
+                    var absIndex = (function(){
+                        try {
+                            var all = document.querySelectorAll('*');
+                            for (var k=0;k<all.length;k++){ if (all[k]===el) return k+1; }
+                            return -1;
+                        } catch (e){ return -1; }
+                    })();
+                    var parentAbsIndex = (function(){
+                        try {
+                            var parent = el.parentNode;
+                            if (!parent) return -1;
+                            var all = document.querySelectorAll('*');
+                            for (var k=0;k<all.length;k++){ if (all[k]===parent) return k+1; }
+                            return -1;
+                        } catch (e){ return -1; }
+                    })();
+                    var parentAbsIndex = (function(){
+                        try {
+                            var parent = el.parentNode;
+                            if (!parent) return -1;
+                            var all = document.querySelectorAll('*');
+                            for (var k=0;k<all.length;k++){ if (all[k]===parent) return k+1; }
+                            return -1;
+                        } catch (e){ return -1; }
+                    })();
+                    var parentAbsIndex = (function(){
+                        try {
+                            var parent = el.parentNode;
+                            if (!parent) return -1;
+                            var all = document.querySelectorAll('*');
+                            for (var k=0;k<all.length;k++){ if (all[k]===parent) return k+1; }
+                            return -1;
+                        } catch (e){ return -1; }
+                    })();
                     results.push({
                         tag: el.tagName,
                         role: el.getAttribute('role'),
@@ -1014,7 +1069,9 @@ class EnhancedScreenReader:
                         mediaType: el.tagName.toLowerCase(),
                         outerHTML: el.outerHTML,
                         domIndex: domIndex,
-                        parentIndex: parentIndex
+                        parentIndex: parentIndex,
+                        absIndex: (typeof absIndex !== 'undefined' ? absIndex : -1),
+                        parentAbsIndex: (typeof parentAbsIndex !== 'undefined' ? parentAbsIndex : -1)
                     });
                 }
                 return results;
@@ -1076,6 +1133,8 @@ class EnhancedScreenReader:
                         "MediaPath": attrs['mediaPath'] or "non défini",
                         "MediaType": attrs['mediaType'] or "non défini",
                         # Positions DOM si fournies
+                        "Dom-absolute-position": attrs.get('absIndex') if isinstance(attrs, dict) and 'absIndex' in attrs else ("non défini"),
+                        "Parent-absolute-position": attrs.get('parentAbsIndex') if isinstance(attrs, dict) and 'parentAbsIndex' in attrs else ("non défini"),
                         "Dom-position": attrs.get('domIndex') if isinstance(attrs, dict) and 'domIndex' in attrs else ("non défini"),
                         "Parent-position": attrs.get('parentIndex') if isinstance(attrs, dict) and 'parentIndex' in attrs else ("non défini")
                     }
@@ -1151,6 +1210,8 @@ class EnhancedScreenReader:
                         self._clean_csv_field(info["Aria-owns"]),
                     self._clean_csv_field(info["Tabindex"]),
                     # Positions DOM
+                    self._clean_csv_field(info.get("Dom-absolute-position", "")),
+                    self._clean_csv_field(info.get("Parent-absolute-position", "")),
                     self._clean_csv_field(info.get("Dom-position", "")),
                     self._clean_csv_field(info.get("Parent-position", "")),
                     # Contexte iframe
@@ -1231,6 +1292,13 @@ class EnhancedScreenReader:
                             return -1;
                         } catch (e){ return -1; }
                     })();
+                    var absIndex = (function(){
+                        try {
+                            var all = document.querySelectorAll('*');
+                            for (var k=0;k<all.length;k++){ if (all[k]===el) return k+1; }
+                            return -1;
+                        } catch (e){ return -1; }
+                    })();
                     results.push({
                         tag: el.tagName,
                         role: el.getAttribute('role'),
@@ -1286,7 +1354,9 @@ class EnhancedScreenReader:
                         mediaType: el.tagName.toLowerCase(),
                         outerHTML: el.outerHTML,
                         domIndex: domIndex,
-                        parentIndex: parentIndex
+                        parentIndex: parentIndex,
+                        absIndex: (typeof absIndex !== 'undefined' ? absIndex : -1),
+                        parentAbsIndex: (typeof parentAbsIndex !== 'undefined' ? parentAbsIndex : -1)
                     });
                 }
                 return results;
@@ -1348,6 +1418,8 @@ class EnhancedScreenReader:
                         "MediaPath": attrs['mediaPath'] or "non défini",
                         "MediaType": attrs['mediaType'] or "non défini",
                         # Positions DOM si fournies
+                        "Dom-absolute-position": attrs.get('absIndex') if isinstance(attrs, dict) and 'absIndex' in attrs else ("non défini"),
+                        "Parent-absolute-position": attrs.get('parentAbsIndex') if isinstance(attrs, dict) and 'parentAbsIndex' in attrs else ("non défini"),
                         "Dom-position": attrs.get('domIndex') if isinstance(attrs, dict) and 'domIndex' in attrs else ("non défini"),
                         "Parent-position": attrs.get('parentIndex') if isinstance(attrs, dict) and 'parentIndex' in attrs else ("non défini")
                     }
@@ -1423,6 +1495,7 @@ class EnhancedScreenReader:
                         self._clean_csv_field(info["Aria-owns"]),
                         self._clean_csv_field(info["Tabindex"]),
                         # Positions DOM
+                        self._clean_csv_field(info.get("Dom-absolute-position", "")),
                         self._clean_csv_field(info.get("Dom-position", "")),
                         self._clean_csv_field(info.get("Parent-position", "")),
                         # Contexte iframe
