@@ -160,21 +160,23 @@ class EnhancedScreenReader:
                 mediaType: el.tagName.toLowerCase(),
                 domIndex: domIndex,
                 parentIndex: parentIndex,
-                // position absolue dans le document (1-based)
+                // position absolue dans le document (1-based, même document que l'élément)
                 absIndex: (function(){
                     try {
-                        var all = document.querySelectorAll('*');
+                        var doc = el.ownerDocument || document;
+                        var all = doc.querySelectorAll('*');
                         for (var k=0;k<all.length;k++){ if (all[k]===el) return k+1; }
                         return -1;
                     } catch (e) { return -1; }
                 })()
             ,
-            // position absolue du parent dans le document (1-based)
+            // position absolue du parent (élément) dans le document (1-based)
             parentAbsIndex: (function(){
                 try {
                     var parent = el.parentNode;
-                    if (!parent) return -1;
-                    var all = document.querySelectorAll('*');
+                    if (!parent || parent.nodeType !== 1) return -1;
+                    var doc = el.ownerDocument || document;
+                    var all = doc.querySelectorAll('*');
                     for (var k=0;k<all.length;k++){ if (all[k]===parent) return k+1; }
                     return -1;
                 } catch (e) { return -1; }
@@ -259,7 +261,8 @@ class EnhancedScreenReader:
     
     def run(self):
         """Exécute l'analyse d'accessibilité avec stockage des données ARIA"""
-        # Réinitialiser le cache des XPath au début de chaque analyse
+        # Réinitialiser les lignes CSV et le cache XPath pour une analyse fraîche
+        self.csv_lines = []
         self._xpath_cache.clear()
 
         # Afficher l'URL de la page analysée en haut de l'analyse
@@ -278,7 +281,7 @@ class EnhancedScreenReader:
             "Dom-absolute-position", "Parent-absolute-position", "Dom-position", "Parent-position",
             # Contexte iframe
             "Frame-src", "Frame-index",
-            "X-path principal", "X-path secondaire 1", "X-path secondaire 2"
+            "X-path simplifié", "X-path complet", "X-path secondaire 1", "X-path secondaire 2"
         ]
         self.csv_lines.append(';'.join(csv_header))
 
@@ -426,6 +429,7 @@ class EnhancedScreenReader:
                 self._clean_csv_field(info.get("Frame-src", "")),
                 self._clean_csv_field(info.get("Frame-index", "")),
                 self._clean_csv_field(info["main_xpath"]),
+                self._clean_csv_field(info.get("xpath_complet", "")),
                 self._clean_csv_field(info["secondary_xpath1"]),
                 self._clean_csv_field(info["secondary_xpath2"]),
                 # Sélecteurs CSS alternatifs
@@ -466,6 +470,7 @@ class EnhancedScreenReader:
                 "buttons": [],
                 "forms": [],
                 "landmarks": [],
+                "structural": [],   # div, section, article — conteneurs et structure du DOM
                 "aria_roles": []
             }
 
@@ -510,6 +515,9 @@ class EnhancedScreenReader:
                         elements_by_type["forms"].append(batch[j])
                     elif tag_name in ['header', 'nav', 'main', 'aside', 'footer']:
                         elements_by_type["landmarks"].append(batch[j])
+                    elif tag_name in ['div', 'section', 'article'] and not role:
+                        # Sans rôle : on les met en structurels (évite doublon avec aria_roles)
+                        elements_by_type["structural"].append(batch[j])
 
                     # Vérifier les rôles ARIA
                     if role:
@@ -526,6 +534,7 @@ class EnhancedScreenReader:
                 ("buttons", "Boutons", "Rôles et états"),
                 ("forms", "Formulaires", "Labels et attributs d'accessibilité"),
                 ("landmarks", "Landmarks", "Structure sémantique de la page"),
+                ("structural", "Éléments structurels", "Conteneurs du DOM (div, section, article)"),
                 ("aria_roles", "Éléments avec rôles ARIA", "Rôles et propriétés d'accessibilité")
             ]
 
@@ -557,64 +566,39 @@ class EnhancedScreenReader:
             self.logger.error(f"Erreur lors de l'analyse du DOM : {str(e)}")
 
     def _get_xpath(self, element):
-        """Génère le X-path de l'élément avec mise en cache"""
+        """Génère le X-path absolu complet de l'élément (chemin depuis /html avec indices), avec mise en cache par élément."""
         try:
-            # Générer une clé unique pour l'élément
+            # Clé incluant l'identité de l'élément pour éviter des collisions (ex. deux divs même classe)
             element_id = element.get_attribute('id')
             element_class = element.get_attribute('class')
             element_tag = element.tag_name
             element_text = element.text[:50] if element.text else ''
+            cache_key = f"{id(element)}:{element_tag}:{element_id}:{element_class}:{element_text}"
             
-            cache_key = f"{element_tag}:{element_id}:{element_class}:{element_text}"
-            
-            # Vérifier si le XPath est déjà en cache
             if cache_key in self._xpath_cache:
                 return self._xpath_cache[cache_key]
             
             def get_xpath(el):
-                """Génère un XPath précis pour l'élément"""
-                # Si l'élément a un ID unique, utiliser directement
-                if element_id:
-                    return f"//*[@id='{element_id}']"
-                
-                # Sinon, construire le chemin complet
+                """Génère un XPath absolu complet (chemin depuis /html avec indices)."""
+                # Si l'élément a un ID unique, on peut retourner le court chemin ;
+                # on génère aussi le chemin complet pour cohérence avec les attentes.
                 path = []
                 current = el
-                
-                while current is not None and current.tag_name.lower() != 'html':
-                    # Obtenir l'index parmi les frères du même type
-                    siblings = current.find_elements(By.XPATH, f"preceding-sibling::{current.tag_name}")
-                    index = len(siblings) + 1
-                    
-                    # Construire le sélecteur pour cet élément
-                    selector = current.tag_name
-                    
-                    # Ajouter des attributs pour plus de précision
-                    attrs = []
-                    
-                    # Ajouter les classes si présentes
-                    classes = current.get_attribute('class')
-                    if classes:
-                        class_list = classes.split()
-                        if len(class_list) == 1:
-                            attrs.append(f"@class='{classes}'")
-                        else:
-                            attrs.append(f"contains(@class, '{class_list[0]}')")
-                    
-                    # Ajouter le texte si présent et unique
-                    text = current.text.strip()
-                    if text and len(text) < 50:  # Limiter la longueur du texte
-                        attrs.append(f"contains(text(), '{text}')")
-                    
-                    # Ajouter l'index si nécessaire
-                    if len(attrs) > 0:
-                        selector = f"{selector}[{' and '.join(attrs)}]"
-                    else:
-                        selector = f"{selector}[{index}]"
-                    
-                    path.insert(0, selector)
-                    current = current.find_element(By.XPATH, '..')
-                
+                try:
+                    while current is not None:
+                        tag_lower = current.tag_name.lower()
+                        if tag_lower == 'html':
+                            break
+                        # Index 1-based parmi les frères du même nom de balise
+                        siblings = current.find_elements(By.XPATH, f"preceding-sibling::{current.tag_name}")
+                        index = len(siblings) + 1
+                        segment = f"{tag_lower}[{index}]"
+                        path.insert(0, segment)
+                        current = current.find_element(By.XPATH, '..')
+                except Exception:
+                    pass
+                if not path:
+                    return f"//*[@id='{element_id}']" if element_id else "//*"
                 return '/html/' + '/'.join(path)
             
             # Générer le XPath principal
@@ -981,9 +965,10 @@ class EnhancedScreenReader:
                             return -1;
                         } catch (e){ return -1; }
                     })();
+                    var doc = el.ownerDocument || document;
                     var absIndex = (function(){
                         try {
-                            var all = document.querySelectorAll('*');
+                            var all = doc.querySelectorAll('*');
                             for (var k=0;k<all.length;k++){ if (all[k]===el) return k+1; }
                             return -1;
                         } catch (e){ return -1; }
@@ -991,26 +976,8 @@ class EnhancedScreenReader:
                     var parentAbsIndex = (function(){
                         try {
                             var parent = el.parentNode;
-                            if (!parent) return -1;
-                            var all = document.querySelectorAll('*');
-                            for (var k=0;k<all.length;k++){ if (all[k]===parent) return k+1; }
-                            return -1;
-                        } catch (e){ return -1; }
-                    })();
-                    var parentAbsIndex = (function(){
-                        try {
-                            var parent = el.parentNode;
-                            if (!parent) return -1;
-                            var all = document.querySelectorAll('*');
-                            for (var k=0;k<all.length;k++){ if (all[k]===parent) return k+1; }
-                            return -1;
-                        } catch (e){ return -1; }
-                    })();
-                    var parentAbsIndex = (function(){
-                        try {
-                            var parent = el.parentNode;
-                            if (!parent) return -1;
-                            var all = document.querySelectorAll('*');
+                            if (!parent || parent.nodeType !== 1) return -1;
+                            var all = doc.querySelectorAll('*');
                             for (var k=0;k<all.length;k++){ if (all[k]===parent) return k+1; }
                             return -1;
                         } catch (e){ return -1; }
@@ -1217,13 +1184,14 @@ class EnhancedScreenReader:
                     # Contexte iframe
                     self._clean_csv_field(info.get("Frame-src", "")),
                     self._clean_csv_field(info.get("Frame-index", "")),
-                        self._clean_csv_field(info["main_xpath"]),
-                        self._clean_csv_field(info["secondary_xpath1"]),
-                        self._clean_csv_field(info["secondary_xpath2"]),
-                        # Sélecteurs CSS alternatifs
-                        self._clean_csv_field(info["main_css"]),
-                        self._clean_csv_field(info["secondary_css1"]),
-                        self._clean_csv_field(info["secondary_css2"])
+                    self._clean_csv_field(info["main_xpath"]),
+                    self._clean_csv_field(info.get("xpath_complet", "")),
+                    self._clean_csv_field(info["secondary_xpath1"]),
+                    self._clean_csv_field(info["secondary_xpath2"]),
+                    # Sélecteurs CSS alternatifs
+                    self._clean_csv_field(info["main_css"]),
+                    self._clean_csv_field(info["secondary_css1"]),
+                    self._clean_csv_field(info["secondary_css2"])
                     ]
                     self.csv_lines.append(';'.join(row))
                     
@@ -1255,12 +1223,17 @@ class EnhancedScreenReader:
             return f"{tag}.{'.'.join(classes.split())}"
         return tag
 
+    # Index des colonnes XPath dans la ligne CSV (pour mise à jour différée)
+    _CSV_COL_XPATH_SIMPLIFIÉ = 50
+    _CSV_COL_XPATH_COMPLET = 51
+
     def _analyze_elements_integrated(self, elements, category_name):
-        """Analyse intégrée pour toutes les catégories - combine analyse des non-conformités et génération CSV en une seule passe"""
-        # Traitement par lots pour réduire les appels JavaScript
+        """Analyse intégrée pour toutes les catégories - combine analyse des non-conformités et génération CSV.
+        Les XPath complets sont calculés après tous les lots à partir des positions absolues (performances)."""
         batch_size = 20
         total_elements = len(elements)
-        
+        rows_data = []  # (info, row_list) pour mise à jour XPath après les lots
+
         for batch_start in range(0, total_elements, batch_size):
             batch_end = min(batch_start + batch_size, total_elements)
             batch = elements[batch_start:batch_end]
@@ -1292,10 +1265,20 @@ class EnhancedScreenReader:
                             return -1;
                         } catch (e){ return -1; }
                     })();
+                    var doc = el.ownerDocument || document;
                     var absIndex = (function(){
                         try {
-                            var all = document.querySelectorAll('*');
+                            var all = doc.querySelectorAll('*');
                             for (var k=0;k<all.length;k++){ if (all[k]===el) return k+1; }
+                            return -1;
+                        } catch (e){ return -1; }
+                    })();
+                    var parentAbsIndex = (function(){
+                        try {
+                            var parent = el.parentNode;
+                            if (!parent || parent.nodeType !== 1) return -1;
+                            var all = doc.querySelectorAll('*');
+                            for (var k=0;k<all.length;k++){ if (all[k]===parent) return k+1; }
                             return -1;
                         } catch (e){ return -1; }
                     })();
@@ -1424,14 +1407,10 @@ class EnhancedScreenReader:
                         "Parent-position": attrs.get('parentIndex') if isinstance(attrs, dict) and 'parentIndex' in attrs else ("non défini")
                     }
                     
-                    # Génération de XPath simplifiés (éviter les appels coûteux)
-                    main_xpath = self._generate_simple_xpath(attrs)
-                    secondary_xpath1 = self._generate_secondary_xpath1(attrs)
-                    secondary_xpath2 = self._generate_secondary_xpath2(attrs)
-                    
-                    info["main_xpath"] = main_xpath
-                    info["secondary_xpath1"] = secondary_xpath1
-                    info["secondary_xpath2"] = secondary_xpath2
+                    # XPath pendant les lots : simple (chemin complet calculé après tous les lots)
+                    info["main_xpath"] = self._generate_simple_xpath(attrs)
+                    info["secondary_xpath1"] = self._generate_secondary_xpath1(attrs)
+                    info["secondary_xpath2"] = self._generate_secondary_xpath2(attrs)
                     
                     # Génération de sélecteurs CSS alternatifs
                     css_selectors = self.css_generator.generate_css_selectors_from_attrs(attrs)
@@ -1496,12 +1475,14 @@ class EnhancedScreenReader:
                         self._clean_csv_field(info["Tabindex"]),
                         # Positions DOM
                         self._clean_csv_field(info.get("Dom-absolute-position", "")),
+                        self._clean_csv_field(info.get("Parent-absolute-position", "")),
                         self._clean_csv_field(info.get("Dom-position", "")),
                         self._clean_csv_field(info.get("Parent-position", "")),
                         # Contexte iframe
                         self._clean_csv_field(info.get("Frame-src", "")),
                         self._clean_csv_field(info.get("Frame-index", "")),
                         self._clean_csv_field(info["main_xpath"]),
+                        self._clean_csv_field(info.get("xpath_complet", "")),
                         self._clean_csv_field(info["secondary_xpath1"]),
                         self._clean_csv_field(info["secondary_xpath2"]),
                         # Sélecteurs CSS alternatifs
@@ -1509,9 +1490,9 @@ class EnhancedScreenReader:
                         self._clean_csv_field(info["secondary_css1"]),
                         self._clean_csv_field(info["secondary_css2"])
                     ]
-                    self.csv_lines.append(';'.join(row))
+                    rows_data.append((info, row))
                     
-                    # Analyse des non-conformités
+                    # Analyse des non-conformités (avec XPath simple ; le CSV aura le XPath complet)
                     self._analyze_non_conformites(info, category_name, batch[j])
                     
                     # Stocker les attributs ARIA pour affichage après la progression
@@ -1528,8 +1509,75 @@ class EnhancedScreenReader:
                 except Exception as e:
                     self.logger.debug(f"Erreur lors de l'analyse de l'élément {category_name}: {str(e)}")
                     continue
+
+        # Après tous les lots : calcul des XPath complets à partir des positions absolues (un seul appel JS)
+        if rows_data:
+            abs_indices = [info.get("Dom-absolute-position") for info, _ in rows_data]
+            full_xpaths = self._compute_full_xpaths_from_abs_indices(abs_indices)
+            for i, (info, row_list) in enumerate(rows_data):
+                if i < len(full_xpaths) and full_xpaths[i]:
+                    info["main_xpath"] = full_xpaths[i]
+                    row_list[self._CSV_COL_XPATH_COMPLET] = self._clean_csv_field(full_xpaths[i])
+                self.csv_lines.append(';'.join(row_list))
         
         print()  # Nouvelle ligne après la barre de progression
+
+    def _compute_full_xpaths_from_abs_indices(self, abs_indices):
+        """Calcule les XPath absolus complets à partir des positions absolues (un seul appel JS)."""
+        if not abs_indices:
+            return []
+        try:
+            # Nettoyer : ne garder que les indices numériques valides (1-based)
+            indices = []
+            for v in abs_indices:
+                if v is None or v == "non défini":
+                    indices.append(-1)
+                else:
+                    try:
+                        n = int(v)
+                        indices.append(n if n >= 1 else -1)
+                    except (TypeError, ValueError):
+                        indices.append(-1)
+            xpaths = self.driver.execute_script('''
+                var indices = arguments[0];
+                var all = document.querySelectorAll("*");
+                var result = [];
+                function getPathForElement(el) {
+                    var path = [];
+                    var current = el;
+                    while (current && current.nodeType === 1) {
+                        var tag = current.tagName.toLowerCase();
+                        if (tag === "html") break;
+                        var parent = current.parentNode;
+                        if (!parent) break;
+                        var sameTag = 0;
+                        for (var i = 0; i < parent.children.length; i++) {
+                            var c = parent.children[i];
+                            if (c.tagName && c.tagName.toLowerCase() === tag) {
+                                sameTag++;
+                                if (c === current) break;
+                            }
+                        }
+                        path.unshift(tag + "[" + sameTag + "]");
+                        current = parent;
+                    }
+                    return path.length ? "/html/" + path.join("/") : "";
+                }
+                for (var k = 0; k < indices.length; k++) {
+                    var idx = indices[k];
+                    if (typeof idx !== "number" || idx < 1 || idx > all.length) {
+                        result.push("");
+                        continue;
+                    }
+                    var el = all[idx - 1];
+                    result.push(getPathForElement(el));
+                }
+                return result;
+            ''', indices)
+            return xpaths if isinstance(xpaths, list) else []
+        except Exception as e:
+            self.logger.debug(f"Calcul XPath par positions absolues : {e}")
+            return []
 
     def _generate_simple_xpath(self, attrs):
         """Génère un XPath simple basé sur les attributs"""
