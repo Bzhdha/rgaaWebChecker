@@ -89,7 +89,7 @@ class OrderedAccessibilityCrawler:
             self.modules_by_priority[3] = phase_3_modules
         
         # Phase 4: DOM Analyzer (en dernier)
-        if 'dom' in enabled_modules:
+        if 'dom_analyzer' in enabled_modules:
             from modules.dom_analyzer import DOMAnalyzer
             dom_analyzer = DOMAnalyzer(self.driver, self.logger)
             self.modules_by_priority[4] = [dom_analyzer]
@@ -136,6 +136,10 @@ class OrderedAccessibilityCrawler:
                     if isinstance(module, EnhancedScreenReader):
                         self._extract_aria_data_from_screen_reader(module)
                         self.logger.info(f"✅ {module_name} terminé - Données ARIA collectées")
+                    # Si c'est le DOMAnalyzer, fusionner les résultats
+                    elif module_name == 'DOMAnalyzer':
+                        self._merge_dom_results(result)
+                        self.logger.info(f"✅ {module_name} terminé - Données DOM complètes fusionnées")
                     else:
                         self.logger.info(f"✅ {module_name} terminé")
                         
@@ -153,6 +157,64 @@ class OrderedAccessibilityCrawler:
         
         # Générer le rapport final avec export CSV si demandé
         self.generate_report(export_csv, csv_filename)
+
+    def _merge_dom_results(self, dom_results):
+        """
+        Fusionne les éléments bruts du DOMAnalyzer dans les données partagées
+        pour s'assurer que tout le DOM est présent dans l'export CSV.
+        """
+        if not dom_results or 'elements' not in dom_results:
+            return
+
+        self.logger.info(f"🔄 Fusion de {len(dom_results['elements'])} éléments du DOM Analyzer...")
+        
+        # 1. Identifier les éléments déjà existants pour éviter les doublons
+        # On utilise le sélecteur CSS comme clé de déduplication approximative
+        existing_selectors = set()
+        for data in self.shared_data.aria_data.values():
+            if 'Sélecteur' in data:
+                existing_selectors.add(data['Sélecteur'])
+        
+        added_count = 0
+        
+        # 2. Parcourir tous les éléments trouvés par DOMAnalyzer
+        for element in dom_results['elements']:
+            selector = element.get('css_selector')
+            
+            # Si l'élément n'est pas déjà dans nos données (via ScreenReader)
+            if selector and selector not in existing_selectors:
+                # Créer un ID unique pour le stockage
+                unique_id = f"dom_{element.get('tag', 'unknown')}_{added_count}"
+                
+                # Mapper les données du DOMAnalyzer vers le format attendu par CSVExporter
+                mapped_data = {
+                    "Type": element.get('tag'),
+                    "Rôle": element.get('role') or "non défini",
+                    "Aria-label": element.get('aria_label') or "non défini",
+                    "Aria-describedby": element.get('aria_describedby') or "non défini",
+                    "Aria-labelledby": element.get('aria_labelledby') or "non défini",
+                    "Aria-hidden": str(element.get('aria_hidden')) if element.get('aria_hidden') else "non défini",
+                    "Aria-expanded": str(element.get('aria_expanded')) if element.get('aria_expanded') else "non défini",
+                    "Aria-controls": element.get('aria_controls') or "non défini",
+                    # Champs génériques
+                    "Text": element.get('text', '').strip() or "non défini",
+                    "Alt": element.get('alt') or "non défini",
+                    "Title": element.get('title') or "non défini",
+                    "Visible": "Oui" if element.get('is_visible') else "Non",
+                    "Focusable": "Oui" if element.get('is_focusable') else "Non",
+                    "Id": element.get('id') or "non défini",
+                    "Sélecteur": selector,
+                    "Extrait HTML": "Non disponible (Source: DOMAnalyzer)",
+                    "Tabindex": "non défini",
+                    "MediaPath": element.get('media_path') or "non défini",
+                    "MediaType": element.get('media_type') or "non défini"
+                }
+                
+                # Ajouter aux données partagées
+                self.shared_data.add_aria_data(unique_id, mapped_data)
+                added_count += 1
+                
+        self.logger.info(f"➕ {added_count} éléments génériques du DOM ajoutés à l'export CSV")
 
     def _extract_aria_data_from_screen_reader(self, screen_reader):
         """Extrait les données ARIA du ScreenReader"""

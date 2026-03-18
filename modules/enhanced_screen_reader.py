@@ -1240,6 +1240,12 @@ class EnhancedScreenReader:
                     # Affichage de la progression
                     current_index = batch_start + j + 1
                     self._print_progress(current_index, total_links, prefix=f"Analyse Liens:", suffix=f"{current_index}/{total_links}")
+                    
+                    # Stocker les données ARIA pour partage (CORRECTION CRITIQUE)
+                    # Utiliser un ID basé sur les attributs car on ne veut pas relire l'élément
+                    # On simule un identifiant unique
+                    simulated_id = f"{attrs['tag']}#{attrs['id']}" if attrs['id'] else f"{attrs['tag']}[text='{attrs['text'][:30]}']" if attrs['text'] else f"{attrs['tag']}.{attrs['className'].split()[0]}" if attrs['className'] else f"{attrs['tag']}_{j}"
+                    self.aria_data_by_element[simulated_id] = info
                         
                 except Exception as e:
                     self.logger.debug(f"Erreur lors de l'analyse du lien : {str(e)}")
@@ -1524,6 +1530,10 @@ class EnhancedScreenReader:
                     # Affichage de la progression
                     current_index = batch_start + j + 1
                     self._print_progress(current_index, total_elements, prefix=f"Analyse {category_name}:", suffix=f"{current_index}/{total_elements}")
+                    
+                    # Stocker les données ARIA pour partage (CORRECTION CRITIQUE)
+                    simulated_id = f"{attrs['tag']}#{attrs['id']}" if attrs['id'] else f"{attrs['tag']}[text='{attrs['text'][:30]}']" if attrs['text'] else f"{attrs['tag']}.{attrs['className'].split()[0]}" if attrs['className'] else f"{attrs['tag']}_{j}"
+                    self.aria_data_by_element[simulated_id] = info
                         
                 except Exception as e:
                     self.logger.debug(f"Erreur lors de l'analyse de l'élément {category_name}: {str(e)}")
