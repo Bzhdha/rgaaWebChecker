@@ -282,6 +282,7 @@ class EnhancedScreenReader:
             # Contexte iframe
             "Frame-src", "Frame-index",
             "X-path simplifié", "X-path complet", "X-path secondaire 1", "X-path secondaire 2"
+            , "Sélecteur CSS principal", "Sélecteur CSS secondaire 1", "Sélecteur CSS secondaire 2"
         ]
         self.csv_lines.append(';'.join(csv_header))
 
@@ -460,107 +461,16 @@ class EnhancedScreenReader:
             all_elements = self.driver.find_elements(By.XPATH, "//*")
             total_elements = len(all_elements)
             self.logger.info(f"Nombre total d'éléments HTML à analyser (contexte frame='{getattr(self,'_current_frame_src','')}'): {total_elements}")
-            self.logger.info("Phase 1 : Classification des éléments par type...")
+            self.logger.info("Analyse: export du DOM complet...")
 
-            # Créer des dictionnaires pour stocker les éléments par type
-            elements_by_type = {
-                "headings": [],
-                "images": [],
-                "links": [],
-                "buttons": [],
-                "forms": [],
-                "landmarks": [],
-                "structural": [],   # div, section, article — conteneurs et structure du DOM
-                "aria_roles": []
-            }
-
-            # Classification optimisée par lots
-            batch_size = 50  # Traiter par lots de 50 éléments
-            for batch_start in range(0, total_elements, batch_size):
-                batch_end = min(batch_start + batch_size, total_elements)
-                batch = all_elements[batch_start:batch_end]
-
-                # Récupération groupée des informations de classification
-                batch_info = self.driver.execute_script('''
-                    var elements = arguments[0];
-                    var results = [];
-                    for (var i = 0; i < elements.length; i++) {
-                        var el = elements[i];
-                        results.push({
-                            tagName: el.tagName.toLowerCase(),
-                            role: el.getAttribute('role')
-                        });
-                    }
-                    return results;
-                ''', batch)
-
-                # Classification des éléments du lot
-                for j, info in enumerate(batch_info):
-                    current_index = batch_start + j + 1
-                    if current_index % 10 == 0:  # Mise à jour plus fréquente de la barre de progression
-                        self._print_progress(current_index, total_elements, prefix="Classification :", suffix=f"{current_index}/{total_elements}")
-
-                    tag_name = info['tagName']
-                    role = info['role']
-
-                    if tag_name.startswith('h') and tag_name[1:].isdigit():
-                        elements_by_type["headings"].append(batch[j])
-                    elif tag_name == 'img':
-                        elements_by_type["images"].append(batch[j])
-                    elif tag_name == 'a':
-                        elements_by_type["links"].append(batch[j])
-                    elif tag_name == 'button':
-                        elements_by_type["buttons"].append(batch[j])
-                    elif tag_name == 'form':
-                        elements_by_type["forms"].append(batch[j])
-                    elif tag_name in ['header', 'nav', 'main', 'aside', 'footer']:
-                        elements_by_type["landmarks"].append(batch[j])
-                    elif tag_name in ['div', 'section', 'article'] and not role:
-                        # Sans rôle : on les met en structurels (évite doublon avec aria_roles)
-                        elements_by_type["structural"].append(batch[j])
-
-                    # Vérifier les rôles ARIA
-                    if role:
-                        elements_by_type["aria_roles"].append(batch[j])
-
-            print()  # Nouvelle ligne après la barre de progression
-            self.logger.info("\nPhase 2 : Analyse détaillée des éléments par catégorie...")
-
-            # Analyser les éléments par catégorie
-            categories = [
-                ("headings", "Titres", "Structure hiérarchique du contenu"),
-                ("images", "Images", "Alternatives textuelles et rôles"),
-                ("links", "Liens", "Textes explicites et attributs ARIA"),
-                ("buttons", "Boutons", "Rôles et états"),
-                ("forms", "Formulaires", "Labels et attributs d'accessibilité"),
-                ("landmarks", "Landmarks", "Structure sémantique de la page"),
-                ("structural", "Éléments structurels", "Conteneurs du DOM (div, section, article)"),
-                ("aria_roles", "Éléments avec rôles ARIA", "Rôles et propriétés d'accessibilité")
-            ]
-
-            total_processed = 0
-            category_times = {}
-
-            for category_key, category_name, category_desc in categories:
-                elements = elements_by_type[category_key]
-                if elements:
-                    category_start = time.time()
-                    self.logger.info(f"\n### {category_name} ({len(elements)} éléments)")
-                    self.logger.info(f"Description : {category_desc}")
-
-                    # Analyse optimisée pour toutes les catégories
-                    self.logger.info(f"Analyse optimisée des {category_name.lower()} en cours...")
-                    self._analyze_elements_integrated(elements, category_name)
-                    total_processed += len(elements)
-
-                    # Calculer et afficher le temps d'analyse
-                    category_time = time.time() - category_start
-                    category_times[category_name] = category_time
-                    speed = len(elements) / category_time if category_time > 0 else 0
-                    self.logger.info(f"⏱️ {category_name}: {category_time:.2f}s ({len(elements)} éléments) - Vitesse: {speed:.1f} éléments/s")
-
-                    # Afficher les attributs ARIA après la progression
-                    self._log_aria_attributes()
+            # Important: on exporte tous les éléments du DOM (dans le contexte courant
+            # principal ou iframe) afin d'avoir la totalité des lignes dans
+            # `reports/accessibility_analysis.csv`.
+            start = time.time()
+            self._analyze_elements_integrated(all_elements, "DOM_COMPLET")
+            self._log_aria_attributes()
+            elapsed = time.time() - start
+            self.logger.info(f"⏱️ Analyse DOM complète: {elapsed:.2f}s ({total_elements} éléments)")
 
         except Exception as e:
             self.logger.error(f"Erreur lors de l'analyse du DOM : {str(e)}")
@@ -648,10 +558,15 @@ class EnhancedScreenReader:
 
     def _analyze_non_conformites(self, info, element_type, element):
         """Analyse les non-conformités RGAA pour un élément"""
-        if element_type == "Image":
+        # On détermine la logique d'analyse à partir du tag courant (et pas du
+        # nom de la catégorie), afin de rester cohérent quand on analyse le DOM
+        # complet (au lieu de catégories).
+        tag = (info.get("Type") or "").lower()
+        role = info.get("Rôle", "non défini")
+
+        if tag == "img":
             # Critère 1.3 - Images
             alt = info["Alt"]
-            role = info["Rôle"]
             if alt == "non défini" and role != "presentation":
                 self.non_conformites["images"].append({
                     "type": "Image sans alternative textuelle",
@@ -667,12 +582,12 @@ class EnhancedScreenReader:
                     "recommandation": "Remplacer le nom de fichier par une description pertinente de l'image"
                 })
 
-        elif element_type == "Lien":
-            # Utilisation de la nouvelle méthode optimisée pour les liens
+        elif tag == "a":
+            # Critère liens
             results = self._analyze_links_batch([element])
             self.non_conformites["liens"].extend(results)
 
-        elif element_type.startswith("H"):
+        elif tag.startswith("h") and tag[1:].isdigit():
             # Critère 9.1 - Titres
             if "sr-only" in info["Sélecteur"]:
                 self.non_conformites["titres"].append({
@@ -682,7 +597,7 @@ class EnhancedScreenReader:
                     "recommandation": "Vérifier que le titre est pertinent pour la structure du document"
                 })
 
-        elif element_type == "Nav":
+        elif tag == "nav":
             # Critère 12.1 - Navigation
             aria_label = info["Aria-label"]
             if aria_label == "non défini":
@@ -694,7 +609,6 @@ class EnhancedScreenReader:
                 })
 
         # Analyse des rôles ARIA
-        role = info["Rôle"]
         if role != "non défini":
             if role not in self.ARIA_ROLES_VALIDES:
                 self.non_conformites["roles_aria"].append({
@@ -710,12 +624,21 @@ class EnhancedScreenReader:
                     "xpath": info["main_xpath"],
                     "recommandation": f"Le rôle ARIA '{role}' est déprécié et ne doit plus être utilisé."
                 })
-        elif role == "non défini" and element_type in ["Button", "Link", "Image", "Form"]:
+        elif role == "non défini" and tag in ["button", "a", "img", "form"]:
+            # On ne signale que les cas principaux (bouton, lien, image, formulaire)
+            # pour éviter trop de bruit sur le DOM complet.
+            tag_to_label = {
+                "button": "Button",
+                "a": "Link",
+                "img": "Image",
+                "form": "Form",
+            }
+            element_label = tag_to_label.get(tag, tag)
             self.non_conformites["roles_aria"].append({
-                "type": f"Élément {element_type} sans rôle ARIA",
+                "type": f"Élément {element_label} sans rôle ARIA",
                 "element": info["Sélecteur"],
                 "xpath": info["main_xpath"],
-                "recommandation": f"Ajouter un rôle ARIA approprié pour l'élément {element_type}"
+                "recommandation": f"Ajouter un rôle ARIA approprié pour l'élément {element_label}"
             })
 
     def _analyze_links_batch(self, links):
