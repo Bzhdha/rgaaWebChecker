@@ -7,14 +7,15 @@ from modules.enhanced_screen_reader import EnhancedScreenReader
 from modules.hierarchical_screen_reader import HierarchicalScreenReader
 from modules.image_analyzer import ImageAnalyzer
 from modules.navigation import NavigationModule
-from utils.log_utils import setup_logger
+import logging
+
 from core.shared_data import SharedData
 
 class OrderedAccessibilityCrawler:
-    def __init__(self, config, use_hierarchy=False):
+    def __init__(self, config, use_hierarchy=False, logger=None):
         self.config = config
         self.driver = None
-        self.logger = setup_logger()
+        self.logger = logger or logging.getLogger("AccessibilityCrawler")
         self.shared_data = SharedData()
         self.use_hierarchy = use_hierarchy
         
@@ -51,10 +52,12 @@ class OrderedAccessibilityCrawler:
         # Phase 2: TabNavigator (utilise les données ARIA)
         if 'tab_navigation' in enabled_modules:
             tab_navigator = EnhancedTabNavigator(
-                self.driver, 
-                self.logger, 
+                self.driver,
+                self.logger,
                 self.config.get_max_screenshots(),
-                self.shared_data
+                self.shared_data,
+                second_screenshot=self.config.get_focus_second_screenshot(),
+                second_screenshot_delay=self.config.get_focus_second_screenshot_delay(),
             )
             if 2 not in self.modules_by_priority:
                 self.modules_by_priority[2] = []
@@ -84,13 +87,35 @@ class OrderedAccessibilityCrawler:
         if 'navigation' in enabled_modules:
             phase_3_modules.append(NavigationModule(self.driver, self.logger))
             self.logger.info("✓ NavigationModule chargé (Phase 3)")
+
+        if 'titles' in enabled_modules:
+            from modules.titles_analyzer import TitlesAnalyzer
+            phase_3_modules.append(TitlesAnalyzer(self.driver, self.logger))
+            self.logger.info("✓ TitlesAnalyzer chargé (Phase 3)")
         
         if phase_3_modules:
             self.modules_by_priority[3] = phase_3_modules
-        
-        # Phase 4: DOM Analyzer (en dernier)
-        if 'dom' in enabled_modules:
+
+        use_legacy_dom = getattr(self.config, "use_legacy_dom_analyzer", False)
+        batch_dom_rapport = (
+            "dom_analyzer" in enabled_modules
+            and not use_legacy_dom
+            and not self.use_hierarchy
+            and "screen_reader" in enabled_modules
+        )
+
+        if batch_dom_rapport:
+            for mod in self.modules_by_priority.get(1, []):
+                if isinstance(mod, EnhancedScreenReader):
+                    mod.emit_dom_rapport = True
+            self.logger.info(
+                "✓ Rapport DOM (rapport_analyse_dom.*) via batch EnhancedScreenReader — phase 4 DOMAnalyzer désactivée"
+            )
+
+        # Phase 4: DOMAnalyzer classique (legacy, hiérarchique, ou sans screen_reader)
+        if "dom_analyzer" in enabled_modules and not batch_dom_rapport:
             from modules.dom_analyzer import DOMAnalyzer
+
             dom_analyzer = DOMAnalyzer(self.driver, self.logger)
             self.modules_by_priority[4] = [dom_analyzer]
             self.logger.info("✓ DOMAnalyzer chargé (Phase 4)")
@@ -108,20 +133,17 @@ class OrderedAccessibilityCrawler:
             modules = self.modules_by_priority[phase]
             
             if phase == 1:
-                self.logger.info(f"\n📊 PHASE {phase}: COLLECTE DES DONNÉES ARIA")
-                self.logger.info("Collecte des données ARIA de tous les éléments de la page...")
-                
+                self.logger.info(
+                    f"\n📊 PHASE {phase} — collecte ARIA (tous les éléments de la page)"
+                )
             elif phase == 2:
-                self.logger.info(f"\n🎯 PHASE {phase}: NAVIGATION TABULAIRE AVEC DONNÉES ARIA")
-                self.logger.info("Navigation au clavier avec analyse ARIA enrichie...")
-                
+                self.logger.info(
+                    f"\n🎯 PHASE {phase} — navigation clavier avec données ARIA enrichies"
+                )
             elif phase == 3:
-                self.logger.info(f"\n⚡ PHASE {phase}: ANALYSES PARALLÈLES")
-                self.logger.info("Exécution des autres modules d'analyse...")
-                
+                self.logger.info(f"\n⚡ PHASE {phase} — analyses parallèles (modules restants)")
             elif phase == 4:
-                self.logger.info(f"\n🔍 PHASE {phase}: ANALYSE DOM COMPLÈTE")
-                self.logger.info("Analyse finale de la structure DOM...")
+                self.logger.info(f"\n🔍 PHASE {phase} — analyse DOM complète (legacy)")
             
             # Exécuter les modules de cette phase
             for module in modules:
@@ -133,7 +155,7 @@ class OrderedAccessibilityCrawler:
                     result = module.run()
                     
                     # Si c'est le ScreenReader, extraire les données ARIA
-                    if isinstance(module, EnhancedScreenReader):
+                    if hasattr(module, "get_all_aria_data"):
                         self._extract_aria_data_from_screen_reader(module)
                         self.logger.info(f"✅ {module_name} terminé - Données ARIA collectées")
                     else:

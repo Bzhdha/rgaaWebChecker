@@ -1,3 +1,6 @@
+import os
+
+
 class Config:
     # Constantes pour les modules (puissances de 2)
     MODULE_CONTRAST = 1      # 2^0
@@ -7,6 +10,7 @@ class Config:
     MODULE_SCREEN = 16     # 2^4
     MODULE_IMAGE = 32      # 2^5
     MODULE_NAVIGATION = 64 # 2^6
+    MODULE_TITLES = 128    # 2^7
 
     def __init__(self):
         self.driver_path = None
@@ -15,6 +19,12 @@ class Config:
         self.base_url = None
         self.output_dir = 'site_images'
         self.max_screenshots = 50  # Limite par défaut pour les screenshots
+        # EnhancedTabNavigator : 2e capture après délai (désactivé par défaut = plus fluide)
+        self.focus_second_screenshot = False
+        self.focus_second_screenshot_delay = 0.5
+        # True = conserver l’ancienne phase 4 DOMAnalyzer (Selenium élément par élément)
+        env_legacy = os.environ.get("USE_LEGACY_DOM_ANALYZER", "").strip().lower()
+        self.use_legacy_dom_analyzer = env_legacy in ("1", "true", "yes", "on")
 
     def set_driver_path(self, path):
         self.driver_path = path
@@ -37,6 +47,18 @@ class Config:
     def get_max_screenshots(self):
         return self.max_screenshots
 
+    def set_focus_second_screenshot(self, enabled: bool):
+        self.focus_second_screenshot = bool(enabled)
+
+    def get_focus_second_screenshot(self):
+        return self.focus_second_screenshot
+
+    def set_focus_second_screenshot_delay(self, seconds: float):
+        self.focus_second_screenshot_delay = float(seconds)
+
+    def get_focus_second_screenshot_delay(self):
+        return self.focus_second_screenshot_delay
+
     def set_modules(self, module_flags):
         """
         Active les modules en fonction des flags binaires
@@ -58,6 +80,8 @@ class Config:
             self.enabled_modules.append('image_analyzer')
         if module_flags & self.MODULE_NAVIGATION:
             self.enabled_modules.append('navigation')
+        if module_flags & self.MODULE_TITLES:
+            self.enabled_modules.append('titles')
 
     @staticmethod
     def get_module_names():
@@ -71,5 +95,6 @@ class Config:
             'tab': Config.MODULE_TAB,
             'screen': Config.MODULE_SCREEN,
             'image': Config.MODULE_IMAGE,
-            'navigation': Config.MODULE_NAVIGATION
+            'navigation': Config.MODULE_NAVIGATION,
+            'titles': Config.MODULE_TITLES
         }

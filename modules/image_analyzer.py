@@ -30,7 +30,7 @@ class ImageAnalyzer:
         Path(output_dir).mkdir(parents=True, exist_ok=True)
 
     def run(self):
-        log_with_step(self.logger, logging.INFO, "IMAGES", "\nAnalyse des images du site...")
+        log_with_step(self.logger, logging.INFO, "IMAGES", "Analyse des images du site…")
         
         try:
             # Vérifier que le driver est toujours valide
@@ -67,7 +67,12 @@ class ImageAnalyzer:
                         
                         # Afficher la progression
                         progress = (index / total_images) * 100
-                        log_with_step(self.logger, logging.INFO, "IMAGES", f"Progression : {progress:.1f}% ({index}/{total_images})")
+                        log_with_step(
+                            self.logger,
+                            logging.DEBUG,
+                            "IMAGES",
+                            f"Progression {progress:.1f}% ({index}/{total_images})",
+                        )
                     
                 except Exception as e:
                     log_with_step(self.logger, logging.WARNING, "IMAGES", f"Erreur lors de l'analyse d'une image : {str(e)}")
@@ -409,7 +414,7 @@ class ImageAnalyzer:
         failed = sum(1 for img in self.image_info_list if img['status'] != 'success')
         visible = sum(1 for img in self.image_info_list if img['is_visible'])
         
-        log_with_step(self.logger, logging.INFO, "IMAGES", "\nRésumé de l'analyse des images :")
+        log_with_step(self.logger, logging.INFO, "IMAGES", "Résumé de l'analyse des images :")
         log_with_step(self.logger, logging.INFO, "IMAGES", f"Images détectées : {total_detected}")
         log_with_step(self.logger, logging.INFO, "IMAGES", f"Images analysées : {total_analyzed}")
         log_with_step(self.logger, logging.INFO, "IMAGES", f"Images visibles : {visible}")

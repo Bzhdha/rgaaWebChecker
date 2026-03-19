@@ -151,3 +151,35 @@ Ajouter un module Python activable via `--modules titles` qui produit des notes 
 - 9.1.1 exclut les masqués du calcul
 - 9.1.2 applique bien la frontière de section “jusqu’au suivant level <=”
 
+---
+
+### Suivi demandé (ajout)
+- Ajouter à la todo globale : migration du module `dom` vers Playwright **après** stabilisation du module `titles`.
+- Priorité actuelle maintenue : poursuivre les actions attendues sur `titles` (phases 3 -> 8).
+
+---
+
+### Avancement actuel (2026-03-19)
+- [x] Phase 1 - Intégration framework modules (`config`, `main`, `crawler`)
+- [x] Phase 2 - Base `TitlesAnalyzer` + normalisation NFKC/lower/strip/collapse espaces
+- [x] Phase 3 - Extraction headings RGAA (`h1..h6` + `role=heading[aria-level]`) + filtrage masquage pour 9.1.1
+- [x] Phase 4 - Calcul 9.1.1 + export incohérences CSV + section rapport
+- [~] Phase 5 - 9.1.2 :
+  - [x] Frontières de section calculées (`<= level` suivant)
+  - [x] Export CSV prêt
+  - [x] Lecture optionnelle des résultats IA depuis `reports/titles_9_1_2_ai_results.json`
+  - [x] Calcul `note_9_1_2` basé sur `ai_ok` (1/0; pending => 0)
+  - [~] Captures de section automatisées (dossier `reports/titles_9_1_2_sections/`)
+  - [x] Appel IA vision automatisé (avec fallback si API absente)
+- [~] Phase 6 - 9.1.3 :
+  - [x] Matching strict normalisé et export mismatches CSV
+  - [x] Découpage scroll + captures automatiques des segments (`reports/titles_9_1_3_segments/`)
+  - [x] Export manifeste segments (`reports/titles_9_1_3_segments_manifest.json`)
+  - [x] Appel IA vision automatisé pour générer `titles_9_1_3_ai_detections.json` (avec fallback possible)
+- [~] Phase 8 - Tests :
+  - [x] tests `normalize_heading_text`
+  - [x] tests incohérences hiérarchiques 9.1.1
+  - [x] tests matching strict 9.1.3
+  - [x] tests enrichissement IA 9.1.2 + calcul note 9.1.2
+  - [ ] test d'intégration sur page réelle (Selenium/Playwright)
+

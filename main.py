@@ -1,21 +1,12 @@
 from core.config import Config
-from core.crawler import AccessibilityCrawler
+from core.ordered_crawler import OrderedAccessibilityCrawler
 from utils.log_utils import setup_logger, log_with_step
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
 import os
 import glob
 import sys
 import time
 import argparse
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 import random
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.action_chains import ActionChains
-from modules.image_analyzer import ImageAnalyzer
 import subprocess
 import logging
 
@@ -36,6 +27,12 @@ def parse_module_flags(module_list):
     
     return total
 
+
+def run_with_playwright(config, logger):
+    from core.playwright_crawler import PlaywrightCrawler
+    crawler = PlaywrightCrawler(config, logger)
+    return crawler.run()
+
 if __name__ == "__main__":
     # Forcer l'encodage UTF-8 pour stdout et stderr
     sys.stdout.reconfigure(encoding='utf-8')
@@ -47,10 +44,22 @@ if __name__ == "__main__":
     parser.add_argument('--encoding', choices=['cp1252', 'utf-8'], default='utf-8', help="Encodage du rapport (utf-8 par défaut, ou cp1252)")
     parser.add_argument('--cookie-banner', help='Texte du bouton de la bannière de cookies à cliquer (ex: "Accepter tout")')
     parser.add_argument('--cookies', nargs='*', help='Cookies de consentement à définir au format "nom=valeur" (ex: "consent=accepted" "analytics=true")')
-    parser.add_argument('--modules', nargs='+', choices=['contrast', 'dom', 'daltonism', 'tab', 'screen', 'image', 'navigation'], 
-                      help='Liste des modules à activer (contrast=1, dom=2, daltonism=4, tab=8, screen=16, image=32, navigation=64)')
+    parser.add_argument('--modules', nargs='+', choices=['contrast', 'dom', 'daltonism', 'tab', 'screen', 'image', 'navigation', 'titles'],
+                      help='Liste des modules à activer (contrast=1, dom=2, daltonism=4, tab=8, screen=16, image=32, navigation=64, titles=128)')
+    parser.add_argument('--engine', choices=['playwright', 'selenium'], default='playwright',
+                      help="Moteur navigateur (playwright par défaut, selenium en mode legacy)")
     parser.add_argument('--output-dir', default='site_images', help='Répertoire de sortie pour les images (défaut: site_images)')
     parser.add_argument('--max-screenshots', type=int, default=50, help='Limite maximale de screenshots pour la navigation au clavier (défaut: 50)')
+    parser.add_argument('--enable-tab-delay', action='store_true',
+                      help='Active un délai de 0.5s entre les captures lors de la navigation clavier (mode Selenium)')
+    parser.add_argument('--tab-delay', type=float, default=0.0,
+                      help='Délai personnalisé (en secondes) entre les captures clavier (mode Selenium)')
+    parser.add_argument('--focus-second-screenshot', action='store_true',
+                      help='Deuxième capture par étape de focus après un délai (désactivé par défaut = exécution plus rapide)')
+    parser.add_argument('--focus-second-delay', type=float, default=0.5,
+                      help='Secondes d\'attente avant la 2e capture focus (défaut: 0.5 ; sans effet sans --focus-second-screenshot)')
+    parser.add_argument('--use-hierarchy', action='store_true',
+                      help='Mode Selenium : lecteur d\'écran hiérarchique (OrderedAccessibilityCrawler, expérimental)')
     parser.add_argument('--export-csv', action='store_true', help='Exporter les données collectées en CSV')
     parser.add_argument('--csv-filename', help='Nom du fichier CSV pour l\'export (optionnel)')
     args = parser.parse_args()
@@ -61,6 +70,8 @@ if __name__ == "__main__":
     config.set_base_url(url)
     config.set_output_dir(args.output_dir)
     config.set_max_screenshots(args.max_screenshots)
+    config.set_focus_second_screenshot(args.focus_second_screenshot)
+    config.set_focus_second_screenshot_delay(args.focus_second_delay)
     
     # Configuration des modules
     if args.modules:
@@ -68,19 +79,37 @@ if __name__ == "__main__":
         config.set_modules(module_flags)
     else:
         # Par défaut, activer tous les modules
-        config.set_modules(127)  # 1 + 2 + 4 + 8 + 16 + 32 + 64
+        config.set_modules(255)  # 1 + 2 + 4 + 8 + 16 + 32 + 64 + 128
+
+    if args.engine == 'playwright':
+        try:
+            run_with_playwright(config, logger)
+            sys.exit(0)
+        except Exception as e:
+            log_with_step(logger, logging.ERROR, "PLAYWRIGHT", f"Erreur lors de l'analyse Playwright: {str(e)}")
+            sys.exit(1)
     
+    from selenium import webdriver
+    from selenium.webdriver.chrome.service import Service
+    from selenium.webdriver.chrome.options import Options
+    from selenium.webdriver.support.ui import WebDriverWait
+    from selenium.webdriver.support import expected_conditions as EC
+    from selenium.webdriver.common.keys import Keys
+    from selenium.webdriver.common.action_chains import ActionChains
+    from webdriver_manager.chrome import ChromeDriverManager
     chrome_options = Options()
     # Ajout des en-têtes pour simuler un navigateur réel
     chrome_options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
     chrome_options.add_argument('--disable-blink-features=AutomationControlled')
     chrome_options.add_argument('--disable-gpu')
+    chrome_options.add_argument('--log-level=3')
+    chrome_options.add_argument('--disable-logging')
     chrome_options.add_argument('--window-size=1920,1080')
     chrome_options.add_argument('--window-position=0,0')  # Forcer la position de la fenêtre sur l'écran principal
     chrome_options.add_argument('--force-device-scale-factor=1')  # Éviter les problèmes de zoom
     
     # Masquer l'automatisation
-    chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    chrome_options.add_experimental_option("excludeSwitches", ["enable-automation", "enable-logging"])
     chrome_options.add_experimental_option('useAutomationExtension', False)
     
     # Ajouter des préférences pour simuler un navigateur normal
@@ -334,30 +363,23 @@ if __name__ == "__main__":
             tab_delay = args.tab_delay  # Délai personnalisé
         
         if tab_delay > 0:
-            log_with_step(logger, logging.INFO, "CONFIGURATION", f"Délai de tabulation activé: {tab_delay} seconde(s)")
+            log_with_step(
+                logger,
+                logging.INFO,
+                "CONFIGURATION",
+                f"Délai de tabulation {tab_delay}s : non appliqué par le crawler ordonné "
+                f"(EnhancedTabNavigator ; utiliser l'ancien AccessibilityCrawler si besoin).",
+            )
         else:
             log_with_step(logger, logging.INFO, "CONFIGURATION", "Délai de tabulation désactivé")
             
         log_with_step(logger, logging.INFO, "DRIVER", f"Page visitée: {url}")
-        crawler = AccessibilityCrawler(config, logger, tab_delay)
+        crawler = OrderedAccessibilityCrawler(config, use_hierarchy=args.use_hierarchy, logger=logger)
         crawler.set_driver(driver)
-        log_with_step(logger, logging.INFO, "DRIVER", "Driver assigné au crawler.")
-        crawler.crawl()
-        crawler.generate_report(export_csv=args.export_csv, csv_filename=args.csv_filename)
-
-        # Initialiser l'analyseur DOM
-        dom_analyzer = DOMAnalyzer(driver, logger)
-        dom_results = dom_analyzer.run()
-        
-        # Si l'analyse des images est activée
-        if 'image' in args.modules:
-            image_analyzer = ImageAnalyzer(driver, logger, args.url, args.output_dir)
-            image_results = image_analyzer.run()
-            
-            # Vérifier que les résultats d'images ne sont pas None
-            if image_results is None:
-                image_results = []
-                log_with_step(logger, logging.WARNING, "DRIVER", "Aucun résultat d'analyse d'images obtenu, utilisation d'une liste vide")
+        log_with_step(logger, logging.INFO, "DRIVER", "Driver assigné au crawler ordonné.")
+        for summary_line in crawler.get_execution_summary():
+            log_with_step(logger, logging.INFO, "CRAWLER", summary_line)
+        crawler.crawl(export_csv=args.export_csv, csv_filename=args.csv_filename)
     except Exception as e:
         log_with_step(logger, logging.ERROR, "DRIVER", f"Erreur lors de l'analyse: {str(e)}")
     finally:

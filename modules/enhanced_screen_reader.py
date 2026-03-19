@@ -4,11 +4,22 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import StaleElementReferenceException
 import time
+import tempfile
+from datetime import datetime
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import math
 import os
 from utils.css_selector_generator import CSSSelectorGenerator
+from modules.dom_accessibility_from_batch import (
+    DOM_BATCH_EXTRACT_SCRIPT,
+    build_dom_element_record,
+    check_accessibility_issues_from_dict,
+    stable_css_selector_from_attrs,
+    write_dom_analysis_reports,
+)
+import logging
+from utils.log_utils import log_with_step
 
 class EnhancedScreenReader:
     def __init__(self, driver, logger):
@@ -16,6 +27,10 @@ class EnhancedScreenReader:
         self.logger = logger
         self.page_url = None
         self.csv_lines = []  # Pour stocker les lignes CSV
+        # Rapport DOM aligné DOMAnalyzer (batch) — activé par OrderedAccessibilityCrawler si module dom sans legacy
+        self.emit_dom_rapport = False
+        self._dom_report_elements = []
+        self._dom_report_issues = []
         self.css_generator = CSSSelectorGenerator()  # Générateur de sélecteurs CSS
         self.non_conformites = {
             "images": [],
@@ -243,8 +258,8 @@ class EnhancedScreenReader:
             "Parent-position": attrs.get('parentIndex') if isinstance(attrs, dict) and 'parentIndex' in attrs else ("non défini")
         }
         
-        # Stocker les données ARIA pour partage
-        element_id = self._get_element_identifier(element)
+        # Stocker les données ARIA pour partage (clé alignée sur EnhancedTabNavigator)
+        element_id = self._get_shared_element_key(element)
         self.aria_data_by_element[element_id] = info
         
         return info
@@ -264,11 +279,15 @@ class EnhancedScreenReader:
         # Réinitialiser les lignes CSV et le cache XPath pour une analyse fraîche
         self.csv_lines = []
         self._xpath_cache.clear()
+        self._dom_report_elements = []
+        self._dom_report_issues = []
+        self._last_dom_total_elements = 0
+        self.aria_data_by_element = {}
 
         # Afficher l'URL de la page analysée en haut de l'analyse
         try:
             url = self.driver.current_url
-            self.logger.info(f"\n**URL analysée** : {url}\n")
+            log_with_step(self.logger, logging.INFO, "SCREEN", f"URL analysée : {url}")
         except Exception:
             pass
 
@@ -282,20 +301,20 @@ class EnhancedScreenReader:
             # Contexte iframe
             "Frame-src", "Frame-index",
             "X-path simplifié", "X-path complet", "X-path secondaire 1", "X-path secondaire 2"
-            , "Sélecteur CSS principal", "Sélecteur CSS secondaire 1", "Sélecteur CSS secondaire 2"
+            , "Sélecteur CSS principal", "Sélecteur CSS secondaire 1", "Sélecteur CSS secondaire 2",
+            "InnerText", "Name-attr", "Type-attr", "Value-attr", "Placeholder-attr", "HasLabelFor",
+            "Accessible-name", "AccName-source", "Is-displayed-DOM", "Rect-page", "ComputedStyle-short",
         ]
         self.csv_lines.append(';'.join(csv_header))
 
-        # Log des sections en Markdown
+        # En-tête (fichier + console structurée)
         self.logger.info("## Analyse des éléments d'accessibilité")
-        self.logger.info("Cette section analyse les éléments clés pour l'accessibilité selon les critères RGAA :")
-        self.logger.info("- Titres : Structure hiérarchique du contenu")
-        self.logger.info("- Images : Alternatives textuelles et rôles")
-        self.logger.info("- Liens : Textes explicites et attributs ARIA")
-        self.logger.info("- Boutons : Rôles et états")
-        self.logger.info("- Formulaires : Labels et attributs d'accessibilité")
-        self.logger.info("- Landmarks : Structure sémantique de la page")
-        self.logger.info("- Attributs ARIA : Rôles et propriétés d'accessibilité\n")
+        log_with_step(
+            self.logger,
+            logging.INFO,
+            "SCREEN",
+            "Périmètre RGAA : titres, images, liens, boutons, formulaires, landmarks, attributs ARIA",
+        )
 
         # Initialiser le contexte de frame par défaut
         self._current_frame_src = ""
@@ -318,7 +337,12 @@ class EnhancedScreenReader:
                     self.driver.switch_to.frame(frame)
                     self._current_frame_src = frame_src
                     self._current_frame_index = idx
-                    self.logger.info(f"\nAnalyse iframe #{idx} src='{frame_src}'")
+                    log_with_step(
+                        self.logger,
+                        logging.INFO,
+                        "SCREEN",
+                        f"Analyse iframe #{idx} src={frame_src!r}",
+                    )
                     self._analyze_document()
                 except Exception as e:
                     # Impossible d'accéder au contenu de la frame (ex: cross-origin)
@@ -331,25 +355,38 @@ class EnhancedScreenReader:
                         pass
 
             # Après avoir parcouru toutes les frames, vérifier les ids dupliqués (dans chaque contexte on a ajouté les éléments au CSV)
-            self.logger.info("\nPhase finale : Vérification des identifiants uniques...")
+            log_with_step(self.logger, logging.INFO, "SCREEN", "Phase finale : vérification des identifiants uniques")
             self._check_duplicate_ids()
 
         except Exception as e:
             self.logger.error(f"Erreur lors de l'analyse multi-frame du DOM : {str(e)}")
 
-        # Créer le répertoire reports s'il n'existe pas
-        os.makedirs('reports', exist_ok=True)
+        self._write_accessibility_csv()
 
-        # Écrire le fichier CSV dans le répertoire reports
-        with open('reports/accessibility_analysis.csv', 'w', encoding='utf-8-sig') as f:
-            f.write('\n'.join(self.csv_lines))
+        if self.emit_dom_rapport and self._dom_report_elements:
+            summary = {
+                "total_elements": self._last_dom_total_elements or len(self._dom_report_elements),
+                "analyzed_elements": len(self._dom_report_elements),
+                "issues_found": len(self._dom_report_issues),
+            }
+            write_dom_analysis_reports(
+                self._dom_report_elements,
+                self._dom_report_issues,
+                summary,
+                csv_filename="rapport_analyse_dom.csv",
+                json_filename="rapport_analyse_dom.json",
+                logger=self.logger,
+            )
 
         # Générer le rapport après l'analyse
         self.generate_report()
-        self.logger.info("\nProgression : Rapport généré avec succès.")
-
-        # Afficher un résumé des données ARIA collectées
-        self.logger.info(f"\nDonnées ARIA collectées pour {len(self.aria_data_by_element)} éléments")
+        log_with_step(self.logger, logging.INFO, "SCREEN", "Rapport lecteur d'écran généré avec succès.")
+        log_with_step(
+            self.logger,
+            logging.INFO,
+            "SCREEN",
+            f"Données ARIA collectées : {len(self.aria_data_by_element)} éléments",
+        )
 
     def _print_element_table(self, element, element_type):
         """Analyse un élément et ajoute ses informations au rapport"""
@@ -460,8 +497,14 @@ class EnhancedScreenReader:
             # Récupérer tous les éléments en une seule fois (document order)
             all_elements = self.driver.find_elements(By.XPATH, "//*")
             total_elements = len(all_elements)
-            self.logger.info(f"Nombre total d'éléments HTML à analyser (contexte frame='{getattr(self,'_current_frame_src','')}'): {total_elements}")
-            self.logger.info("Analyse: export du DOM complet...")
+            self._last_dom_total_elements += total_elements
+            frame_ctx = getattr(self, "_current_frame_src", "") or "(principal)"
+            log_with_step(
+                self.logger,
+                logging.INFO,
+                "SCREEN",
+                f"DOM frame={frame_ctx!r} : {total_elements} éléments — export complet…",
+            )
 
             # Important: on exporte tous les éléments du DOM (dans le contexte courant
             # principal ou iframe) afin d'avoir la totalité des lignes dans
@@ -470,7 +513,12 @@ class EnhancedScreenReader:
             self._analyze_elements_integrated(all_elements, "DOM_COMPLET")
             self._log_aria_attributes()
             elapsed = time.time() - start
-            self.logger.info(f"⏱️ Analyse DOM complète: {elapsed:.2f}s ({total_elements} éléments)")
+            log_with_step(
+                self.logger,
+                logging.INFO,
+                "SCREEN",
+                f"Analyse DOM terminée en {elapsed:.2f}s ({total_elements} éléments)",
+            )
 
         except Exception as e:
             self.logger.error(f"Erreur lors de l'analyse du DOM : {str(e)}")
@@ -833,13 +881,49 @@ class EnhancedScreenReader:
                     })
 
     def _print_progress(self, current, total, prefix="", suffix="", length=50, fill="="):
-        """Affiche une barre de progression sur la même ligne"""
+        """Barre de progression : uniquement en --debug (évite le mélange avec les logs structurés)."""
+        if not self.logger.isEnabledFor(logging.DEBUG):
+            return
         percent = f"{100 * (current / float(total)):.1f}"
         filled_length = int(length * current // total)
         bar = fill * filled_length + '-' * (length - filled_length)
         print(f'\r{prefix} |{bar}| {percent}% {suffix}', end='', flush=True)
         if current == total:
-            print()  # Nouvelle ligne seulement à la fin
+            print()
+
+    def _write_accessibility_csv(self):
+        """Écriture atomique ; repli si le fichier cible est verrouillé (ex. ouvert dans Excel)."""
+        path = "reports/accessibility_analysis.csv"
+        os.makedirs("reports", exist_ok=True)
+        body = "\n".join(self.csv_lines)
+        try:
+            fd, tmp_path = tempfile.mkstemp(prefix="acc_", suffix=".csv", dir="reports")
+            try:
+                with os.fdopen(fd, "w", encoding="utf-8-sig", newline="") as f:
+                    f.write(body)
+                os.replace(tmp_path, path)
+            except Exception:
+                if os.path.isfile(tmp_path):
+                    try:
+                        os.unlink(tmp_path)
+                    except OSError:
+                        pass
+                raise
+        except (PermissionError, OSError) as e:
+            if not isinstance(e, PermissionError) and getattr(e, "errno", None) != 13:
+                raise
+            alt = os.path.join(
+                "reports",
+                f"accessibility_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+            )
+            with open(alt, "w", encoding="utf-8-sig", newline="") as f:
+                f.write(body)
+            log_with_step(
+                self.logger,
+                logging.WARNING,
+                "SCREEN",
+                f"Fichier verrouillé, impossible d'écrire {path}. Données enregistrées dans : {alt}",
+            )
 
     def _log_aria_attributes(self):
         """Affiche les attributs ARIA stockés pendant l'analyse"""
@@ -1135,8 +1219,6 @@ class EnhancedScreenReader:
                 except Exception as e:
                     self.logger.debug(f"Erreur lors de l'analyse du lien : {str(e)}")
                     continue
-        
-        print()  # Nouvelle ligne après la barre de progression
 
     def _get_simple_selector_from_attrs(self, attrs):
         """Génère un sélecteur simple à partir des attributs récupérés"""
@@ -1146,127 +1228,19 @@ class EnhancedScreenReader:
             return f"{tag}.{'.'.join(classes.split())}"
         return tag
 
-    # Index des colonnes XPath dans la ligne CSV (pour mise à jour différée)
-    _CSV_COL_XPATH_SIMPLIFIÉ = 50
-    _CSV_COL_XPATH_COMPLET = 51
-
     def _analyze_elements_integrated(self, elements, category_name):
         """Analyse intégrée pour toutes les catégories - combine analyse des non-conformités et génération CSV.
         Les XPath complets sont calculés après tous les lots à partir des positions absolues (performances)."""
         batch_size = 20
         total_elements = len(elements)
-        rows_data = []  # (info, row_list) pour mise à jour XPath après les lots
+        rows_data = []  # (info, row_list, attrs) pour XPath complet + rapport DOM batch
 
         for batch_start in range(0, total_elements, batch_size):
             batch_end = min(batch_start + batch_size, total_elements)
             batch = elements[batch_start:batch_end]
-            
-            # Récupération groupée des attributs pour tout le lot
-            batch_attrs = self.driver.execute_script('''
-                var elements = arguments[0];
-                var results = [];
-                for (var i = 0; i < elements.length; i++) {
-                    var el = elements[i];
-                    var rect = el.getBoundingClientRect();
-                    var style = window.getComputedStyle(el);
-                    // positions
-                    var domIndex = (function(){
-                        try {
-                            var parent = el.parentNode;
-                            if (!parent) return -1;
-                            var children = Array.prototype.filter.call(parent.children, function(c){ return c.nodeType === 1; });
-                            for (var k=0;k<children.length;k++){ if (children[k]===el) return k+1; }
-                            return -1;
-                        } catch (e){ return -1; }
-                    })();
-                    var parentIndex = (function(){
-                        try {
-                            var parent = el.parentNode;
-                            if (!parent || !parent.parentNode) return -1;
-                            var siblings = Array.prototype.filter.call(parent.parentNode.children, function(c){ return c.nodeType === 1; });
-                            for (var k=0;k<siblings.length;k++){ if (siblings[k]===parent) return k+1; }
-                            return -1;
-                        } catch (e){ return -1; }
-                    })();
-                    var doc = el.ownerDocument || document;
-                    var absIndex = (function(){
-                        try {
-                            var all = doc.querySelectorAll('*');
-                            for (var k=0;k<all.length;k++){ if (all[k]===el) return k+1; }
-                            return -1;
-                        } catch (e){ return -1; }
-                    })();
-                    var parentAbsIndex = (function(){
-                        try {
-                            var parent = el.parentNode;
-                            if (!parent || parent.nodeType !== 1) return -1;
-                            var all = doc.querySelectorAll('*');
-                            for (var k=0;k<all.length;k++){ if (all[k]===parent) return k+1; }
-                            return -1;
-                        } catch (e){ return -1; }
-                    })();
-                    results.push({
-                        tag: el.tagName,
-                        role: el.getAttribute('role'),
-                        ariaLabel: el.getAttribute('aria-label'),
-                        ariaDescribedby: el.getAttribute('aria-describedby'),
-                        ariaLabelledby: el.getAttribute('aria-labelledby'),
-                        ariaHidden: el.getAttribute('aria-hidden'),
-                        ariaExpanded: el.getAttribute('aria-expanded'),
-                        ariaControls: el.getAttribute('aria-controls'),
-                        ariaLive: el.getAttribute('aria-live'),
-                        ariaAtomic: el.getAttribute('aria-atomic'),
-                        ariaRelevant: el.getAttribute('aria-relevant'),
-                        ariaBusy: el.getAttribute('aria-busy'),
-                        ariaCurrent: el.getAttribute('aria-current'),
-                        ariaPosinset: el.getAttribute('aria-posinset'),
-                        ariaSetsize: el.getAttribute('aria-setsize'),
-                        ariaLevel: el.getAttribute('aria-level'),
-                        ariaSort: el.getAttribute('aria-sort'),
-                        ariaValuemin: el.getAttribute('aria-valuemin'),
-                        ariaValuemax: el.getAttribute('aria-valuemax'),
-                        ariaValuenow: el.getAttribute('aria-valuenow'),
-                        ariaValuetext: el.getAttribute('aria-valuetext'),
-                        ariaHaspopup: el.getAttribute('aria-haspopup'),
-                        ariaInvalid: el.getAttribute('aria-invalid'),
-                        ariaRequired: el.getAttribute('aria-required'),
-                        ariaReadonly: el.getAttribute('aria-readonly'),
-                        ariaDisabled: el.getAttribute('aria-disabled'),
-                        ariaSelected: el.getAttribute('aria-selected'),
-                        ariaChecked: el.getAttribute('aria-checked'),
-                        ariaPressed: el.getAttribute('aria-pressed'),
-                        ariaMultiline: el.getAttribute('aria-multiline'),
-                        ariaMultiselectable: el.getAttribute('aria-multiselectable'),
-                        ariaOrientation: el.getAttribute('aria-orientation'),
-                        ariaPlaceholder: el.getAttribute('aria-placeholder'),
-                        ariaRoledescription: el.getAttribute('aria-roledescription'),
-                        ariaKeyshortcuts: el.getAttribute('aria-keyshortcuts'),
-                        ariaDetails: el.getAttribute('aria-details'),
-                        ariaErrormessage: el.getAttribute('aria-errormessage'),
-                        ariaFlowto: el.getAttribute('aria-flowto'),
-                        ariaOwns: el.getAttribute('aria-owns'),
-                        tabindex: el.getAttribute('tabindex'),
-                        title: el.getAttribute('title'),
-                        alt: el.getAttribute('alt'),
-                        id: el.getAttribute('id'),
-                        className: el.getAttribute('class'),
-                        text: el.textContent ? el.textContent.trim() : '',
-                        href: el.getAttribute('href'),
-                        src: el.getAttribute('src'),
-                        isVisible: !(style.display === 'none' || style.visibility === 'hidden' || rect.width === 0 || rect.height === 0),
-                        isEnabled: !el.disabled,
-                        isFocusable: el.tabIndex >= 0 || ['A', 'BUTTON', 'INPUT', 'SELECT', 'TEXTAREA'].includes(el.tagName),
-                        mediaPath: el.getAttribute('src') || el.getAttribute('data') || '',
-                        mediaType: el.tagName.toLowerCase(),
-                        outerHTML: el.outerHTML,
-                        domIndex: domIndex,
-                        parentIndex: parentIndex,
-                        absIndex: (typeof absIndex !== 'undefined' ? absIndex : -1),
-                        parentAbsIndex: (typeof parentAbsIndex !== 'undefined' ? parentAbsIndex : -1)
-                    });
-                }
-                return results;
-            ''', batch)
+
+            # Récupération groupée (script partagé avec DOMAnalyzer — voir dom_accessibility_from_batch)
+            batch_attrs = self.driver.execute_script(DOM_BATCH_EXTRACT_SCRIPT, batch) or []
             
             # Traitement des résultats du lot
             for j, attrs in enumerate(batch_attrs):
@@ -1413,8 +1387,35 @@ class EnhancedScreenReader:
                         self._clean_csv_field(info["secondary_css1"]),
                         self._clean_csv_field(info["secondary_css2"])
                     ]
-                    rows_data.append((info, row))
-                    
+                    an = attrs.get("accessibleName") or {}
+                    rpg = attrs.get("rectPage") or {}
+                    cs = attrs.get("computedStyle") or {}
+                    style_short = " ".join(
+                        x for x in (cs.get("display"), cs.get("visibility"), cs.get("opacity")) if x
+                    ).strip()
+                    rect_s = ""
+                    if isinstance(rpg, dict) and rpg:
+                        rect_s = f"{rpg.get('x', '')},{rpg.get('y', '')},{rpg.get('width', '')},{rpg.get('height', '')}"
+                    row.extend([
+                        self._clean_csv_field((attrs.get("innerText") or "").strip()),
+                        self._clean_csv_field(attrs.get("nameAttr") or ""),
+                        self._clean_csv_field(attrs.get("inputType") or ""),
+                        self._clean_csv_field(attrs.get("value") or ""),
+                        self._clean_csv_field(attrs.get("placeholder") or ""),
+                        self._clean_csv_field("Oui" if attrs.get("hasLabelFor") else "Non"),
+                        self._clean_csv_field(an.get("name", "")),
+                        self._clean_csv_field(an.get("source", "")),
+                        self._clean_csv_field("Oui" if attrs.get("isDisplayed") else "Non"),
+                        self._clean_csv_field(rect_s or "non défini"),
+                        self._clean_csv_field(style_short or "non défini"),
+                    ])
+                    rows_data.append((info, row, attrs))
+                    try:
+                        sk = self._get_shared_element_key(batch[j])
+                        self.aria_data_by_element[sk] = info
+                    except Exception:
+                        pass
+
                     # Analyse des non-conformités (avec XPath simple ; le CSV aura le XPath complet)
                     self._analyze_non_conformites(info, category_name, batch[j])
                     
@@ -1435,15 +1436,31 @@ class EnhancedScreenReader:
 
         # Après tous les lots : calcul des XPath complets à partir des positions absolues (un seul appel JS)
         if rows_data:
-            abs_indices = [info.get("Dom-absolute-position") for info, _ in rows_data]
+            abs_indices = [info.get("Dom-absolute-position") for info, _, _ in rows_data]
             full_xpaths = self._compute_full_xpaths_from_abs_indices(abs_indices)
-            for i, (info, row_list) in enumerate(rows_data):
+            header_parts = self.csv_lines[0].split(";")
+            try:
+                ix_xpath_simple = header_parts.index("X-path simplifié")
+                ix_xpath_full = header_parts.index("X-path complet")
+            except ValueError:
+                ix_xpath_simple = ix_xpath_full = None
+            for i, (info, row_list, attrs) in enumerate(rows_data):
+                xp = ""
                 if i < len(full_xpaths) and full_xpaths[i]:
-                    info["main_xpath"] = full_xpaths[i]
-                    row_list[self._CSV_COL_XPATH_COMPLET] = self._clean_csv_field(full_xpaths[i])
-                self.csv_lines.append(';'.join(row_list))
-        
-        print()  # Nouvelle ligne après la barre de progression
+                    xp = full_xpaths[i]
+                if xp:
+                    info["main_xpath"] = xp
+                    if ix_xpath_simple is not None and ix_xpath_simple < len(row_list):
+                        row_list[ix_xpath_simple] = self._clean_csv_field(xp)
+                    if ix_xpath_full is not None and ix_xpath_full < len(row_list):
+                        row_list[ix_xpath_full] = self._clean_csv_field(xp)
+                if self.emit_dom_rapport:
+                    rec = build_dom_element_record(
+                        attrs, info["main_xpath"], stable_css_selector_from_attrs(attrs)
+                    )
+                    check_accessibility_issues_from_dict(rec, self._dom_report_issues)
+                    self._dom_report_elements.append(rec)
+                self.csv_lines.append(";".join(row_list))
 
     def _compute_full_xpaths_from_abs_indices(self, abs_indices):
         """Calcule les XPath absolus complets à partir des positions absolues (un seul appel JS)."""
@@ -1550,6 +1567,51 @@ class EnhancedScreenReader:
                     report.append(f"- **Élément**: `{issue['element']}`")
                     report.append(f"- **XPath**: `{issue['xpath']}`")
                     report.append(f"- **Recommandation**: {issue['recommandation']}\n")
+
+        # Mini résumé Titles (si disponible)
+        titles_report_path = "reports/titles_report.md"
+        if os.path.exists(titles_report_path):
+            try:
+                with open(titles_report_path, "r", encoding="utf-8") as tf:
+                    lines = tf.read().splitlines()
+                wanted_keys = {
+                    "note_9_1_1",
+                    "note_9_1_2",
+                    "note_9_1_3",
+                    "sections traitées via API",
+                    "sections fallback (clé/API manquante ou erreur)",
+                    "segments capturés",
+                    "segments avec détections IA",
+                }
+                extracted = {}
+                for line in lines:
+                    if not line.startswith("- "):
+                        continue
+                    content = line[2:]
+                    if ":" not in content:
+                        continue
+                    key, value = content.split(":", 1)
+                    key = key.strip()
+                    if key in wanted_keys:
+                        extracted[key] = value.strip()
+
+                if extracted:
+                    report.append("\n## TITLES - Mini résumé")
+                    report.append(f"- **9.1.1**: {extracted.get('note_9_1_1', '-')}")
+                    report.append(f"- **9.1.2**: {extracted.get('note_9_1_2', '-')}")
+                    report.append(f"- **9.1.3**: {extracted.get('note_9_1_3', '-')}")
+                    report.append(
+                        "- **Couverture IA sections (API/fallback)**: "
+                        f"{extracted.get('sections traitées via API', '-')}/"
+                        f"{extracted.get('sections fallback (clé/API manquante ou erreur)', '-')}"
+                    )
+                    report.append(
+                        "- **Couverture IA segments (avec détections / capturés)**: "
+                        f"{extracted.get('segments avec détections IA', '-')}/"
+                        f"{extracted.get('segments capturés', '-')}\n"
+                    )
+            except Exception as e:
+                self.logger.debug(f"Impossible d'ajouter le mini résumé Titles: {e}")
         
         # Écrire le rapport dans un fichier
         with open('reports/accessibility_report.md', 'w', encoding='utf-8') as f:

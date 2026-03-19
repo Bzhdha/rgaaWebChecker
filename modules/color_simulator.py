@@ -9,7 +9,7 @@ class ColorSimulator:
         self.logger = logger
 
     def run(self):
-        log_with_step(self.logger, logging.INFO, "DALTONISME", "\nSimulation de daltonisme en cours...")
+        log_with_step(self.logger, logging.INFO, "DALTONISME", "Simulation de daltonisme en cours…")
         screenshot = self.driver.get_screenshot_as_png()
         for mode in ['protanopia', 'deuteranopia', 'tritanopia']:
             simulated = simulate_daltonism(screenshot, mode)

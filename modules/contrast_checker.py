@@ -10,7 +10,7 @@ class ContrastChecker:
         self.logger = logger
 
     def run(self):
-        log_with_step(self.logger, logging.INFO, "CONTRASTE", "\nAnalyse des contrastes WCAG en cours...")
+        log_with_step(self.logger, logging.INFO, "CONTRASTE", "Analyse des contrastes WCAG en cours…")
         elements = self.driver.find_elements(By.XPATH, "//*[text() or @alt or @title]")
         contrast_report = []
         for element in elements:
@@ -25,7 +25,7 @@ class ContrastChecker:
             except JavascriptException:
                 continue
         if contrast_report:
-            log_with_step(self.logger, logging.WARNING, "CONTRASTE", "\nRapport de contrastes insuffisants:")
+            log_with_step(self.logger, logging.WARNING, "CONTRASTE", "Rapport de contrastes insuffisants :")
             for line in contrast_report:
                 log_with_step(self.logger, logging.WARNING, "CONTRASTE", line)
         else:

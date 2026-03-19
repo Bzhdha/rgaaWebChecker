@@ -15,7 +15,7 @@ class DOMAnalyzer:
         self.issues = []
 
     def run(self):
-        log_with_step(self.logger, logging.INFO, "DOM", "\nAnalyse des éléments d'accessibilité...")
+        log_with_step(self.logger, logging.INFO, "DOM", "Analyse des éléments d'accessibilité…")
         
         # Attendre que la page soit stable
         WebDriverWait(self.driver, 10).until(
@@ -52,13 +52,21 @@ class DOMAnalyzer:
                     log_with_step(self.logger, logging.WARNING, "DOM", f"Erreur lors de l'analyse d'un élément : {str(e)}")
                     continue
             
-            # Afficher la progression
             progress = (i + len(batch)) / total_elements * 100
-            log_with_step(self.logger, logging.INFO, "DOM", f"Progression : {progress:.1f}% ({i + len(batch)}/{total_elements})")
-            
-            # Attendre un peu entre chaque lot pour laisser le temps à la page de se stabiliser
-            time.sleep(0.5)
-        
+            log_with_step(
+                self.logger,
+                logging.DEBUG,
+                "DOM",
+                f"Progression {progress:.1f}% ({i + len(batch)}/{total_elements})",
+            )
+
+        log_with_step(
+            self.logger,
+            logging.INFO,
+            "DOM",
+            f"Analyse terminée : {len(analyzed_elements)}/{total_elements} éléments traités",
+        )
+
         # Retourner à la fois les éléments analysés et les problèmes détectés
         result = {
             'elements': analyzed_elements,

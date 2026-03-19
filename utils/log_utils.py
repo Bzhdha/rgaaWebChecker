@@ -1,67 +1,87 @@
 import logging
 import os
+import re
 import sys
 from datetime import datetime
-from .report_converter import ReportConverter
-from .progress_display import ProgressDisplay
 
-class ConsoleFormatter(logging.Formatter):
-    def __init__(self):
-        super().__init__()
-        self.progress = ProgressDisplay()
-        self.last_message = ""
-        self.is_header = False
+# Titres markdown ATX (# à ###### suivi d'un espace), pas les lignes type "#1 · …"
+_MARKDOWN_ATX = re.compile(r"^#{1,6}\s")
+
+
+def _is_markdown_heading(text: str) -> bool:
+    s = text.strip()
+    return bool(_MARKDOWN_ATX.match(s))
+
+
+class StructuredConsoleFormatter(logging.Formatter):
+    """
+    Console : une ligne par événement (heure | niveau | module | message).
+    Les titres markdown (# …) et séparateurs (===, ---) restent en blocs multi-lignes.
+    """
+
+    _SHORT = {
+        logging.DEBUG: "DBG",
+        logging.INFO: "INF",
+        logging.WARNING: "WRN",
+        logging.ERROR: "ERR",
+        logging.CRITICAL: "CRT",
+    }
+
+    def formatTime(self, record, datefmt=None):
+        return datetime.fromtimestamp(record.created).strftime(datefmt or "%H:%M:%S")
 
     def format(self, record):
-        if hasattr(record, 'step_tag'):
-            record.msg = f"[{record.step_tag}] {record.msg}"
-        if record.levelno == logging.INFO:
-            if record.msg.startswith('=') or record.msg.startswith('#'):
-                self.progress.clear()
-                self.is_header = True
-                return f"\n{record.msg}\n"
-            else:
-                # Éviter la duplication des messages
-                if record.msg != self.last_message:
-                    if not self.is_header:
-                        # Mettre à jour l'affichage de progression
-                        self.progress.update(f"Progression : {record.msg}")
-                    self.last_message = record.msg
-                    self.is_header = False
-                    # Afficher les messages importants
-                    if "initialisé" in record.msg.lower() or "assigné" in record.msg.lower() or "visité" in record.msg.lower():
-                        return f"\n{record.msg}\n"
-                return ""  # Ne rien afficher pour les autres messages
-        elif record.levelno in (logging.WARNING, logging.ERROR):
-            self.progress.clear()
-            self.is_header = True
-            return f"\n{record.msg}\n"
-        return ""
+        msg = record.getMessage()
+        stripped = msg.strip()
+        if not stripped:
+            return ""
+
+        # Titres / séparateurs : une seule ligne (le handler ajoute déjà un saut de ligne)
+        if _is_markdown_heading(stripped) or stripped == "---" or (
+            len(stripped) >= 8 and set(stripped) == {"="}
+        ):
+            return stripped
+
+        tag = getattr(record, "step_tag", None) or "RUN"
+        tag = (str(tag)[:12]).ljust(12)
+        lvl = self._SHORT.get(record.levelno, record.levelname[:3].upper())
+        ts = self.formatTime(record)
+        single_line = " ".join(stripped.split())
+        # Séparateurs ASCII (compat. console Windows cp1252)
+        return f"{ts} | {lvl} | {tag} | {single_line}"
+
 
 class FileFormatter(logging.Formatter):
+    """Rapport fichier .md : préserve les titres et met en forme avertissements / erreurs."""
+
     def format(self, record):
-        if hasattr(record, 'step_tag'):
-            record.msg = f"[{record.step_tag}] {record.msg}"
+        msg = record.getMessage()
+        prefix = f"[{record.step_tag}] " if getattr(record, "step_tag", None) else ""
+        full = prefix + msg
+        s = full.strip()
+
         if record.levelno == logging.INFO:
-            if record.msg.startswith('=') or record.msg.startswith('#'):
-                return f"\n{record.msg}\n"
-            elif record.msg.startswith('✓'):
-                return f"- {record.msg}"
-            elif record.msg.startswith('✗'):
-                return f"- ⚠️ {record.msg}"
-            else:
-                return record.msg
-        elif record.levelno == logging.WARNING:
-            return f"\n⚠️ **Attention**: {record.msg}\n"
-        elif record.levelno == logging.ERROR:
-            return f"\n❌ **Erreur**: {record.msg}\n"
+            if _is_markdown_heading(s) or s == "---" or (len(s) >= 8 and set(s) == {"="}):
+                return f"\n{s}\n"
+            if s.startswith("✓"):
+                return f"- {s}"
+            if s.startswith("✗") or s.startswith("❌"):
+                return f"- ⚠️ {s}"
+            return s
+        if record.levelno == logging.WARNING:
+            return f"\n⚠️ **Attention**: {s}\n"
+        if record.levelno == logging.ERROR:
+            return f"\n❌ **Erreur**: {s}\n"
+        if record.levelno == logging.DEBUG:
+            return f"    [DBG] {s}\n"
         return super().format(record)
+
 
 def setup_logger(debug=False, encoding='utf-8'):
     logger = logging.getLogger('AccessibilityCrawler')
-    logger.setLevel(logging.DEBUG if debug else logging.INFO)
-
-    logger.handlers = []
+    logger.handlers.clear()
+    logger.setLevel(logging.DEBUG)
+    logger.propagate = False
 
     os.makedirs('reports', exist_ok=True)
 
@@ -69,12 +89,13 @@ def setup_logger(debug=False, encoding='utf-8'):
     log_file = f'reports/rapport_accessibilite_{timestamp}.md'
 
     file_handler = logging.FileHandler(log_file, encoding=encoding)
+    file_handler.setLevel(logging.DEBUG)
     file_handler.setFormatter(FileFormatter())
     logger.addHandler(file_handler)
 
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(logging.DEBUG if debug else logging.INFO)
-    console_handler.setFormatter(ConsoleFormatter())
+    console_handler.setFormatter(StructuredConsoleFormatter())
     logger.addHandler(console_handler)
 
     logger.info('=' * 50)
@@ -83,21 +104,11 @@ def setup_logger(debug=False, encoding='utf-8'):
 
     return logger
 
+
 def log_with_step(logger, level, step_tag, message):
     """
-    Log un message avec un tag d'étape d'analyse
-    
-    Args:
-        logger: Le logger à utiliser
-        level: Le niveau de log (INFO, WARNING, ERROR, DEBUG)
-        step_tag: Le tag de l'étape d'analyse
-        message: Le message à logger
+    Enregistre un message avec un tag module (colonne « module » en console, préfixe en fichier).
     """
-    # Créer un record avec le tag d'étape
-    record = logger.makeRecord(
-        logger.name, level, "", 0, message, (), None
-    )
-    record.step_tag = step_tag
-    
-    # Logger le message
-    logger.handle(record)
+    if not logger.isEnabledFor(level):
+        return
+    logger.log(level, message, extra={"step_tag": step_tag})

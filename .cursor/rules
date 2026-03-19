@@ -1,0 +1,163 @@
+---
+description: Maintain and generate architecture, design, and technical documentation (using text or Mermaid diagrams)
+globs:
+  - '**/*.py'
+  - '**/*.jsx'
+  - '**/*.ts'
+  - '**/*.tsx'
+  - 'package.json'
+  - 'README.md'
+  - 'docs/**/*.md'
+alwaysApply: true
+---
+
+You are working in a JavaScript/TypeScript repository.
+
+When the user asks for architecture documentation, design documentation, code design, class diagram, sequence diagram, flow diagram, decision diagram, domain model, module relationships, request flow, or technical documentation, generate Mermaid diagrams that reflect the actual codebase.
+
+General behavior:
+
+- When making code changes or refactoring, always proactively review and update the related architecture and design documentation (including text descriptions and Mermaid diagrams) to ensure it stays in sync with the actual codebase.
+- While Mermaid diagrams are helpful, they are not always required. If a text explanation is clearer, simpler, or more appropriate for the given request, use text documentation instead of forcing a diagram.
+- Inspect the repository structure, imports, exported symbols, framework conventions, and runtime boundaries before drawing conclusions.
+- Prefer diagrams derived from code over guessed architecture.
+- If the code is incomplete or ambiguous, say so explicitly and produce the most defensible diagram from available evidence.
+- Keep diagrams readable. Do not dump every class, every file, or every function into one diagram.
+- Split large systems into several focused Mermaid diagrams instead of one oversized diagram.
+- Use Mermaid fenced blocks only:
+
+  ```mermaid
+
+  ```
+
+- When useful, precede each diagram with a short title and 1-5 lines explaining what it shows.
+- Do not invent technologies, services, classes, APIs, queues, databases, or relationships that are not evidenced by the repository or clearly labeled assumptions.
+- Prefer stable logical names over raw filenames when the intent is obvious.
+
+Documentation Philosophy & Path:
+
+- Target Audience: The documentation is for developers. It should act as the starting point for their "learning journey" when they begin working on a component.
+- High-level to Low-level: Always follow a "path" when documenting. Start with a high-level overview of what the project/component does, then progressively dive into how it does it.
+- Right Amount of Detail: Provide enough context to help a developer understand the system, but avoid getting bogged down in excessive detail. The documentation should complement the code, not replace it.
+- Location: All architecture, design, and technical documentation must be stored in the `docs/` directory.
+- Modularity & Linking: If the documentation becomes large or covers distinct components, break it down into multiple `.md` files and link them together to maintain readability and organization.
+
+Diagram selection rules:
+
+- Use a class diagram for domain entities, service classes, repositories, adapters, and inheritance/composition relationships.
+- Use a sequence diagram for runtime interactions, request lifecycles, async flows, event processing, and cross-layer call chains.
+- Use a decision diagram as a Mermaid flowchart using decision nodes for branching logic, validation paths, orchestration rules, state-based routing, and business rules.
+- Use multiple diagrams when needed:
+
+  - System/module overview
+  - Class/domain model
+  - Request sequence
+  - Decision flow
+
+- Mermaid standards for this project:
+
+1. Class diagrams
+
+- Use classDiagram.
+- Show only architecturally meaningful types:
+
+  - controllers / routes / handlers
+  - services / use cases
+  - repositories / gateways / clients
+  - core domain entities / value objects
+  - interfaces / abstract contracts when visible in the code
+
+- Include key fields and methods only when they matter for understanding design.
+- Prefer these relationships:
+
+  - inheritance: <|--
+  - implementation / contract realization when appropriate
+  - composition / association: -->
+  - dependency: ..>
+
+- Do not include trivial DTOs unless they are important to the design.
+- If TypeScript interfaces are central, include them explicitly.
+- If the project is function-oriented rather than class-oriented, do not force a class diagram; say that the code is module/function-centric and provide a component or sequence diagram instead.
+
+2. Sequence diagrams
+
+- Use sequenceDiagram.
+- Show the actual actors and layers involved, such as:
+  - User
+  - Browser / Client
+  - Route / Controller
+  - Service / UseCase
+  - Repository
+  - External API
+  - DB / Cache / Queue
+- Label messages with meaningful operations, not generic “call”.
+- Reflect async behavior when visible in the code.
+- Include success and relevant failure branches when they materially affect behavior.
+- For Node/Express/Nest/Next style apps, prefer showing request entrypoint → validation/auth → business service → persistence/external dependency → response.
+
+3. Decision diagrams
+
+- Represent decision diagrams as Mermaid flowcharts, usually flowchart TD.
+- Use decision diamonds with concise branch labels.
+- Good use cases:
+
+  - validation logic
+  - authorization checks
+  - retry / fallback decisions
+  - workflow routing
+  - feature flag branching
+  - command handling branches
+
+- Keep decision labels short and operational.
+- Avoid mixing too many unrelated decisions in one chart.
+
+Codebase-specific heuristics for JS/TS:
+
+- Infer architecture from:
+
+  - folder structure
+  - imports / exports
+  - dependency injection patterns
+  - framework conventions
+  - naming such as controller/service/repository/client/model/entity/usecase
+  - test structure when it reveals intended boundaries
+
+- For Express / Fastify / Nest / Next.js / React / Node services:
+  - distinguish transport layer, application layer, domain layer, infrastructure layer when the code supports that separation.
+- For React / Next frontends:
+  - distinguish pages/routes, components, hooks, stores, services, API clients, and backend dependencies.
+- For monorepos:
+  - identify apps and libs/packages first
+  - show cross-package dependencies at the package level before drilling into internal class/module structure
+
+Output quality rules:
+
+- Optimize for documentation quality, not syntactic minimalism.
+- Produce Mermaid that renders cleanly on GitHub and VS Code Markdown preview.
+- Use short node names and clear labels.
+- Avoid excessive styling or advanced Mermaid features unless explicitly requested.
+- Prefer top-down or left-right layouts that maximize readability.
+- For large outputs, provide:
+  1. a high-level diagram
+  2. one or more focused detail diagrams
+
+When the user asks for “document the design”:
+
+- By default provide:
+  - a high-level architecture flowchart
+  - a class diagram for the core domain/services
+  - a sequence diagram for one key runtime flow
+  - a decision flowchart if the code contains meaningful branching logic
+- When the user asks for “generate Mermaid from this code”:
+  - Read the supplied code carefully.
+  - Base the diagram only on the supplied code and clearly mark any inferred relationships.
+  - If necessary, say: “The repository appears module-oriented rather than class-oriented, so a class diagram would be artificial; here is a component/sequence view instead.”
+
+Formatting expectations:
+
+- Put each diagram in its own Mermaid code fence.
+- Add a short heading before each diagram.
+- Keep surrounding prose concise and technical.
+- Do not explain Mermaid syntax unless the user asks.
+- Good default patterns:
+- High-level architecture:

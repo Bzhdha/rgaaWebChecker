@@ -5,13 +5,25 @@ from PIL import Image, ImageDraw
 import io
 import time
 from selenium.webdriver.support.ui import WebDriverWait
+import logging
+from utils.log_utils import log_with_step
 
 class EnhancedTabNavigator:
-    def __init__(self, driver, logger, max_screenshots=50, shared_data=None):
+    def __init__(
+        self,
+        driver,
+        logger,
+        max_screenshots=50,
+        shared_data=None,
+        second_screenshot=False,
+        second_screenshot_delay=0.5,
+    ):
         self.driver = driver
         self.logger = logger
         self.max_screenshots = max_screenshots
         self.shared_data = shared_data  # Référence vers les données partagées
+        self.second_screenshot = bool(second_screenshot)
+        self.second_screenshot_delay = max(0.0, float(second_screenshot_delay))
         self.aria_analysis_results = []  # Stockage des résultats d'analyse ARIA
 
     def _get_image_alt_from_link(self, element):
@@ -243,77 +255,84 @@ class EnhancedTabNavigator:
             return f"unknown_{hash(str(element))}"
 
     def _log_aria_analysis(self, aria_analysis):
-        """Affiche l'analyse ARIA dans les logs"""
+        """Une ligne INFO par focus ; le détail complet est en DEBUG (--debug)."""
         if not aria_analysis:
             return
-            
-        self.logger.info(f"=== Analyse ARIA pour l'élément {aria_analysis['focus_order']} ===")
-        self.logger.info(f"Tag: {aria_analysis['tag']}")
-        self.logger.info(f"Texte: {aria_analysis['text']}")
-        # Afficher l'attribut alt de l'image si présent
-        if aria_analysis.get('image_alt'):
-            self.logger.info(f"Alt de l'image associée: {aria_analysis['image_alt']}")
-        self.logger.info(f"Rôle ARIA: {aria_analysis['aria_role']}")
-        # Afficher les rôles ARIA des parents si présents
-        if aria_analysis.get('parent_aria_roles'):
-            self.logger.info(f"Rôles ARIA parents: {aria_analysis['parent_aria_roles']}")
-        
-        # Afficher les propriétés ARIA importantes
-        if aria_analysis['has_aria_label']:
-            self.logger.info(f"✓ Aria-label: {aria_analysis['aria_properties'].get('Aria-label', '')}")
-        if aria_analysis['has_aria_describedby']:
-            self.logger.info(f"✓ Aria-describedby: {aria_analysis['aria_properties'].get('Aria-describedby', '')}")
-        if aria_analysis['has_aria_labelledby']:
-            self.logger.info(f"✓ Aria-labelledby: {aria_analysis['aria_properties'].get('Aria-labelledby', '')}")
-            
-        # Afficher les états ARIA
+
+        parts = [
+            f"[{aria_analysis['focus_order']}]",
+            f"<{aria_analysis['tag']}>",
+            f"rôle={aria_analysis['aria_role']}",
+        ]
+        text = (aria_analysis.get("text") or "").replace("\n", " ").strip()
+        if text:
+            parts.append(f"texte={text[:80]!r}{'…' if len(text) > 80 else ''}")
+        if aria_analysis.get("image_alt"):
+            parts.append(f"img_alt={aria_analysis['image_alt']!r}")
+        if aria_analysis.get("parent_aria_roles"):
+            parts.append(f"parents={aria_analysis['parent_aria_roles']}")
+        log_with_step(self.logger, logging.INFO, "TAB", " · ".join(parts))
+
+        if not self.logger.isEnabledFor(logging.DEBUG):
+            return
+
+        self.logger.debug(f"=== Analyse ARIA détaillée élément {aria_analysis['focus_order']} ===")
+        if aria_analysis["has_aria_label"]:
+            self.logger.debug(f"Aria-label: {aria_analysis['aria_properties'].get('Aria-label', '')}")
+        if aria_analysis["has_aria_describedby"]:
+            self.logger.debug(f"Aria-describedby: {aria_analysis['aria_properties'].get('Aria-describedby', '')}")
+        if aria_analysis["has_aria_labelledby"]:
+            self.logger.debug(f"Aria-labelledby: {aria_analysis['aria_properties'].get('Aria-labelledby', '')}")
         states = []
-        if aria_analysis['is_aria_expanded']:
+        if aria_analysis["is_aria_expanded"]:
             states.append("expanded")
-        if aria_analysis['is_aria_selected']:
+        if aria_analysis["is_aria_selected"]:
             states.append("selected")
-        if aria_analysis['is_aria_checked']:
+        if aria_analysis["is_aria_checked"]:
             states.append("checked")
-        if aria_analysis['is_aria_pressed']:
+        if aria_analysis["is_aria_pressed"]:
             states.append("pressed")
-        if aria_analysis['is_aria_disabled']:
+        if aria_analysis["is_aria_disabled"]:
             states.append("disabled")
-        if aria_analysis['is_aria_required']:
+        if aria_analysis["is_aria_required"]:
             states.append("required")
-        if aria_analysis['is_aria_readonly']:
+        if aria_analysis["is_aria_readonly"]:
             states.append("readonly")
-        if aria_analysis['is_aria_hidden']:
+        if aria_analysis["is_aria_hidden"]:
             states.append("hidden")
-            
         if states:
-            self.logger.info(f"États ARIA: {', '.join(states)}")
-        
-        # Afficher les relations ARIA
+            self.logger.debug(f"États ARIA: {', '.join(states)}")
         relations = []
-        if aria_analysis['aria_controls'] != 'non défini':
+        if aria_analysis["aria_controls"] != "non défini":
             relations.append(f"controls={aria_analysis['aria_controls']}")
-        if aria_analysis['aria_owns'] != 'non défini':
+        if aria_analysis["aria_owns"] != "non défini":
             relations.append(f"owns={aria_analysis['aria_owns']}")
-        if aria_analysis['aria_flowto'] != 'non défini':
+        if aria_analysis["aria_flowto"] != "non défini":
             relations.append(f"flowto={aria_analysis['aria_flowto']}")
-            
         if relations:
-            self.logger.info(f"Relations ARIA: {', '.join(relations)}")
-        
-        # Afficher les propriétés de région
-        if aria_analysis['aria_live'] != 'non défini':
-            self.logger.info(f"Région live: {aria_analysis['aria_live']}")
-        
-        # Afficher les propriétés de valeur
-        if aria_analysis['aria_valuenow'] != 'non défini':
-            self.logger.info(f"Valeur: {aria_analysis['aria_valuenow']} (min: {aria_analysis['aria_valuemin']}, max: {aria_analysis['aria_valuemax']})")
-        
-        self.logger.info("=" * 50)
+            self.logger.debug(f"Relations ARIA: {', '.join(relations)}")
+        if aria_analysis["aria_live"] != "non défini":
+            self.logger.debug(f"Région live: {aria_analysis['aria_live']}")
+        if aria_analysis["aria_valuenow"] != "non défini":
+            self.logger.debug(
+                f"Valeur: {aria_analysis['aria_valuenow']} "
+                f"(min: {aria_analysis['aria_valuemin']}, max: {aria_analysis['aria_valuemax']})"
+            )
 
     def run(self):
         """Exécute la navigation tabulaire avec analyse ARIA"""
-        self.logger.info("\nSimulation de navigation réelle au clavier avec analyse ARIA...")
-        self.logger.info("La navigation s'arrêtera automatiquement lors de la détection d'un cycle (retour sur un élément déjà visité)")
+        self.logger.debug(
+            "Navigation clavier : arrêt automatique si cycle (élément déjà visité)."
+        )
+        if self.second_screenshot:
+            log_with_step(
+                self.logger,
+                logging.INFO,
+                "TAB",
+                f"Captures focus : 2 images/étape (délai {self.second_screenshot_delay}s avant la 2e).",
+            )
+        else:
+            log_with_step(self.logger, logging.INFO, "TAB", "Captures focus : 1 image/étape (mode fluide).")
         
         try:
             # Vérifier que le driver est valide
@@ -360,7 +379,7 @@ class EnhancedTabNavigator:
                     
                     # Vérifier si l'élément est vraiment focusable avant de continuer
                     if not self._is_element_focusable(active):
-                        self.logger.info(f"L'élément {i+1} n'est pas focusable, passage au suivant")
+                        self.logger.debug(f"Itération {i+1} : élément non focusable, ignoré")
                         continue
                     
                     # Générer un identifiant unique pour l'élément actif
@@ -368,8 +387,12 @@ class EnhancedTabNavigator:
                     
                     # Vérifier si on a déjà visité cet élément (détection de cycle)
                     if element_id in visited_elements:
-                        self.logger.info(f"Cycle détecté ! Retour sur l'élément déjà visité: {element_id}")
-                        self.logger.info(f"Navigation terminée après {i+1} tabulations (cycle détecté)")
+                        log_with_step(
+                            self.logger,
+                            logging.INFO,
+                            "TAB",
+                            f"Cycle détecté après {i+1} tabulations — fin de la navigation.",
+                        )
                         break
                     
                     # Ajouter l'élément à la liste des éléments visités
@@ -389,11 +412,11 @@ class EnhancedTabNavigator:
                     log_text = f"Focus sur: {active.tag_name}, texte: {active.text.strip()}"
                     if image_alt:
                         log_text += f", alt de l'image: {image_alt}"
-                    self.logger.info(log_text)
+                    self.logger.debug(log_text)
                     if filename1:
-                        self.logger.info(f"Capture immédiate: {filename1}")
+                        self.logger.debug(f"Capture immédiate: {filename1}")
                     if filename2:
-                        self.logger.info(f"Capture après délai: {filename2}")
+                        self.logger.debug(f"Capture après délai: {filename2}")
                     
                     elements_reached.append((active.tag_name, active.text.strip(), active.get_attribute("href"), image_alt))
                     
@@ -406,8 +429,13 @@ class EnhancedTabNavigator:
             
             # Message de fin de navigation
             if len(visited_elements) > 0:
-                self.logger.info(f"Navigation terminée. {len(visited_elements)} éléments uniques visités.")
-                self.logger.info(f"Analyse ARIA effectuée sur {len(self.aria_analysis_results)} éléments.")
+                log_with_step(
+                    self.logger,
+                    logging.INFO,
+                    "TAB",
+                    f"Terminé : {len(visited_elements)} focus uniques, "
+                    f"{len(self.aria_analysis_results)} analyses ARIA.",
+                )
             else:
                 self.logger.warning("Aucun élément focusable trouvé sur la page.")
             
@@ -526,7 +554,7 @@ class EnhancedTabNavigator:
         try:
             # Vérifier d'abord si l'élément est vraiment focusable
             if not self._is_element_focusable(element):
-                self.logger.info(f"L'élément {index} n'est pas focusable, pas de capture d'écran")
+                self.logger.debug(f"Élément {index} non focusable, pas de capture d'écran")
                 return None, None
             
             # Créer le dossier pour les captures d'écran si nécessaire
@@ -537,16 +565,15 @@ class EnhancedTabNavigator:
             highlighted_img1 = self._highlight_element(element, screenshot1)
             filename1 = f"reports/focus_screenshots/focus_{index:03d}_1.png"
             highlighted_img1.save(filename1)
-            
-            # Attendre 0.5 seconde pour laisser le temps au contenu de s'afficher
-            time.sleep(0.5)
-            
-            # Seconde capture après le délai
-            screenshot2 = self.driver.get_screenshot_as_png()
-            highlighted_img2 = self._highlight_element(element, screenshot2)
-            filename2 = f"reports/focus_screenshots/focus_{index:03d}_2.png"
-            highlighted_img2.save(filename2)
-            
+
+            filename2 = None
+            if self.second_screenshot:
+                time.sleep(self.second_screenshot_delay)
+                screenshot2 = self.driver.get_screenshot_as_png()
+                highlighted_img2 = self._highlight_element(element, screenshot2)
+                filename2 = f"reports/focus_screenshots/focus_{index:03d}_2.png"
+                highlighted_img2.save(filename2)
+
             return filename1, filename2
             
         except Exception as e:

@@ -1045,6 +1045,51 @@ class ScreenReader:
                         severity_emoji = {'critical': '🔴', 'high': '🟠', 'medium': '🟡', 'low': '🟢'}.get(issue['severity'], '⚪')
                         report.append(f"- **Sévérité**: {severity_emoji} {issue['severity'].upper()}")
                     report.append(f"- **Recommandation**: {issue['recommandation']}\n")
+
+        # Mini résumé Titles (si disponible)
+        titles_report_path = "reports/titles_report.md"
+        if os.path.exists(titles_report_path):
+            try:
+                with open(titles_report_path, "r", encoding="utf-8") as tf:
+                    lines = tf.read().splitlines()
+                wanted_keys = {
+                    "note_9_1_1",
+                    "note_9_1_2",
+                    "note_9_1_3",
+                    "sections traitées via API",
+                    "sections fallback (clé/API manquante ou erreur)",
+                    "segments capturés",
+                    "segments avec détections IA",
+                }
+                extracted = {}
+                for line in lines:
+                    if not line.startswith("- "):
+                        continue
+                    content = line[2:]
+                    if ":" not in content:
+                        continue
+                    key, value = content.split(":", 1)
+                    key = key.strip()
+                    if key in wanted_keys:
+                        extracted[key] = value.strip()
+
+                if extracted:
+                    report.append("\n## TITLES - Mini résumé")
+                    report.append(f"- **9.1.1**: {extracted.get('note_9_1_1', '-')}")
+                    report.append(f"- **9.1.2**: {extracted.get('note_9_1_2', '-')}")
+                    report.append(f"- **9.1.3**: {extracted.get('note_9_1_3', '-')}")
+                    report.append(
+                        "- **Couverture IA sections (API/fallback)**: "
+                        f"{extracted.get('sections traitées via API', '-')}/"
+                        f"{extracted.get('sections fallback (clé/API manquante ou erreur)', '-')}"
+                    )
+                    report.append(
+                        "- **Couverture IA segments (avec détections / capturés)**: "
+                        f"{extracted.get('segments avec détections IA', '-')}/"
+                        f"{extracted.get('segments capturés', '-')}\n"
+                    )
+            except Exception as e:
+                self.logger.debug(f"Impossible d'ajouter le mini résumé Titles: {e}")
         
         # Écrire le rapport dans un fichier
         with open('reports/accessibility_report.md', 'w', encoding='utf-8') as f:

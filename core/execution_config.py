@@ -13,7 +13,8 @@ class ExecutionConfig:
         'contrast': [],  # ContrastChecker est indépendant
         'daltonism': [],  # ColorSimulator est indépendant
         'navigation': [],  # NavigationModule est indépendant
-        'dom_analyzer': []  # DOMAnalyzer est indépendant
+        'dom_analyzer': [],  # DOMAnalyzer est indépendant
+        'titles': [],
     }
     
     # Priorités d'exécution (plus le nombre est bas, plus c'est prioritaire)
@@ -25,12 +26,13 @@ class ExecutionConfig:
         'daltonism': 3,          # Peut s'exécuter en parallèle
         'image_analyzer': 3,     # Peut s'exécuter en parallèle
         'navigation': 3,         # Peut s'exécuter en parallèle
+        'titles': 3,
         'dom_analyzer': 4        # En dernier
     }
     
     # Modules qui peuvent s'exécuter en parallèle
     PARALLEL_MODULES = {
-        3: ['contrast', 'daltonism', 'image_analyzer', 'navigation']
+        3: ['contrast', 'daltonism', 'image_analyzer', 'navigation', 'titles']
     }
     
     @classmethod
@@ -174,7 +176,8 @@ class ExecutionConfig:
             'daltonism': 10,
             'image_analyzer': 20,
             'navigation': 15,
-            'dom_analyzer': 25
+            'dom_analyzer': 25,
+            'titles': 40,
         }
         
         total_time = 0

@@ -21,8 +21,6 @@ from selenium.webdriver.support import expected_conditions as EC
 import random
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
-from modules.dom_analyzer import DOMAnalyzer
-from modules.image_analyzer import ImageAnalyzer
 from urllib.parse import urlparse
 
 class ModuleAction(argparse.Action):
@@ -117,6 +115,10 @@ if __name__ == "__main__":
                       help='Liste des modules à activer (contrast=1, dom=2, daltonism=4, tab=8, screen=16, image=32, navigation=64). Modules valides: contrast, dom, daltonism, tab, screen, image, navigation')
     parser.add_argument('--output-dir', default='site_images', help='Répertoire de sortie pour les images (défaut: site_images)')
     parser.add_argument('--max-screenshots', type=int, default=50, help='Limite maximale de screenshots pour la navigation au clavier (défaut: 50)')
+    parser.add_argument('--focus-second-screenshot', action='store_true',
+                      help='Deuxième capture par étape de focus après un délai (désactivé par défaut = exécution plus rapide)')
+    parser.add_argument('--focus-second-delay', type=float, default=0.5,
+                      help='Secondes d\'attente avant la 2e capture focus (défaut: 0.5 ; sans effet sans --focus-second-screenshot)')
     parser.add_argument('--validate-only', action='store_true', help='Valider uniquement le plan d\'exécution sans lancer l\'analyse')
     parser.add_argument('--export-csv', action='store_true', help='Exporter les données collectées en CSV')
     parser.add_argument('--csv-filename', help='Nom du fichier CSV pour l\'export (optionnel)')
@@ -133,6 +135,8 @@ if __name__ == "__main__":
     config.set_base_url(url)
     config.set_output_dir(args.output_dir)
     config.set_max_screenshots(args.max_screenshots)
+    config.set_focus_second_screenshot(args.focus_second_screenshot)
+    config.set_focus_second_screenshot_delay(args.focus_second_delay)
     
     # Configuration des modules
     if args.modules:
@@ -205,12 +209,14 @@ if __name__ == "__main__":
     chrome_options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
     chrome_options.add_argument('--disable-blink-features=AutomationControlled')
     chrome_options.add_argument('--disable-gpu')
+    chrome_options.add_argument('--log-level=3')
+    chrome_options.add_argument('--disable-logging')
     chrome_options.add_argument('--window-size=1920,1080')
     chrome_options.add_argument('--window-position=0,0')
     chrome_options.add_argument('--force-device-scale-factor=1')
     
     # Masquer l'automatisation
-    chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    chrome_options.add_experimental_option("excludeSwitches", ["enable-automation", "enable-logging"])
     chrome_options.add_experimental_option('useAutomationExtension', False)
     
     # Ajouter des préférences pour simuler un navigateur normal
@@ -309,10 +315,9 @@ if __name__ == "__main__":
         logger.info(f"Page visitée: {url}")
         
         # Utiliser le crawler avec ordre optimisé
-        crawler = OrderedAccessibilityCrawler(config, use_hierarchy=args.use_hierarchy)
+        crawler = OrderedAccessibilityCrawler(config, use_hierarchy=args.use_hierarchy, logger=logger)
         crawler.set_driver(driver)
         logger.info("Driver assigné au crawler ordonné.")
-        crawler.logger = logger
         
         # Afficher l'algorithme utilisé
         if args.use_hierarchy:
@@ -334,12 +339,6 @@ if __name__ == "__main__":
         logger.info(f"\n📊 Résultats finaux:")
         logger.info(f"   - Données ARIA collectées: {len(shared_data.aria_data)} éléments")
         logger.info(f"   - Éléments focusables: {len(shared_data.focusable_elements)}")
-        
-        # Analyse DOM supplémentaire si activée
-        if 'dom' in enabled_modules:
-            logger.info("\n🔍 Analyse DOM supplémentaire...")
-            dom_analyzer = DOMAnalyzer(driver, logger)
-            dom_results = dom_analyzer.run()
             
     except Exception as e:
         logger.error(f"Erreur lors de l'analyse: {str(e)}")

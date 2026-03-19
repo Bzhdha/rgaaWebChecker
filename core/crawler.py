@@ -4,6 +4,8 @@ from modules.tab_navigator import TabNavigator
 from modules.screen_reader import ScreenReader
 from modules.image_analyzer import ImageAnalyzer
 from modules.navigation import NavigationModule
+from modules.dom_analyzer import DOMAnalyzer
+from modules.titles_analyzer import TitlesAnalyzer
 from utils.log_utils import setup_logger
 
 class AccessibilityCrawler:
@@ -20,7 +22,7 @@ class AccessibilityCrawler:
             self.modules.append(ContrastChecker(self.driver, self.logger))
         if 'dom_analyzer' in self.config.get_enabled_modules():
             self.modules.append(DOMAnalyzer(self.driver, self.logger))
-        if 'accessibility' in self.config.get_enabled_modules():
+        if 'screen_reader' in self.config.get_enabled_modules():
             self.modules.append(ScreenReader(self.driver, self.logger))
         if 'daltonism' in self.config.get_enabled_modules():
             self.modules.append(ColorSimulator(self.driver, self.logger))
@@ -30,6 +32,8 @@ class AccessibilityCrawler:
             self.modules.append(ImageAnalyzer(self.driver, self.logger, self.config.base_url, self.config.output_dir))
         if 'navigation' in self.config.get_enabled_modules():
             self.modules.append(NavigationModule(self.driver, self.logger))
+        if 'titles' in self.config.get_enabled_modules():
+            self.modules.append(TitlesAnalyzer(self.driver, self.logger))
 
     def crawl(self):
         if self.driver is None:

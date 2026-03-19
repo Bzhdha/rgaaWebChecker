@@ -29,10 +29,12 @@ class EnhancedAccessibilityCrawler:
         if 'tab_navigation' in self.config.get_enabled_modules():
             # Utiliser l'EnhancedTabNavigator avec partage de données
             self.modules.append(EnhancedTabNavigator(
-                self.driver, 
-                self.logger, 
+                self.driver,
+                self.logger,
                 self.config.get_max_screenshots(),
-                self.shared_data
+                self.shared_data,
+                second_screenshot=self.config.get_focus_second_screenshot(),
+                second_screenshot_delay=self.config.get_focus_second_screenshot_delay(),
             ))
         if 'image_analyzer' in self.config.get_enabled_modules():
             self.modules.append(ImageAnalyzer(self.driver, self.logger, self.config.base_url, self.config.output_dir))
